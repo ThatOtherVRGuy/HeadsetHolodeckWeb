@@ -161,7 +161,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     })
     .addComponent(Interactable);
   panelEntity.object3D!.position.copy(shell.placement.statusPanel.position);
-  panelEntity.object3D!.quaternion.copy(shell.placement.statusPanel.quaternion);
+  panelEntity.object3D!.lookAt(camera.position);
 
   world.registerSystem(PanelSystem);
 
