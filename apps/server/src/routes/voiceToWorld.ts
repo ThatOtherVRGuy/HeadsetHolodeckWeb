@@ -1,10 +1,16 @@
 import type { FastifyInstance } from "fastify";
 import type { TranscriptionClient } from "../openai/transcriptionClient.js";
+import type { DownloadedSplat } from "../worldlabs/downloadSplat.js";
 import type { WorldLabsClient } from "../worldlabs/worldLabsClient.js";
+import type { WorldResult } from "../worldlabs/worldTypes.js";
 
 export interface VoiceToWorldRouteDeps {
   transcriptionClient: TranscriptionClient;
   worldLabsClient: Pick<WorldLabsClient, "generateWorldFromText">;
+  splatDownloader?: (
+    world: WorldResult,
+    options: { signal: AbortSignal }
+  ) => Promise<DownloadedSplat>;
 }
 
 export async function registerVoiceToWorldRoute(
@@ -55,8 +61,12 @@ export async function registerVoiceToWorldRoute(
         transcript,
         { signal: abortController.signal }
       );
+      const localSplat = await tryDownloadSplat(world);
 
-      return reply.send(world);
+      return reply.send({
+        ...world,
+        ...(localSplat ? { localSplat } : {})
+      });
     } catch (error) {
       if (abortController.signal.aborted) {
         request.log.info({ err: error }, "voice-to-world request aborted");
@@ -90,6 +100,21 @@ export async function registerVoiceToWorldRoute(
     function removeAbortListeners() {
       request.raw.off("aborted", abort);
       reply.raw.off("close", abortIfResponseDidNotFinish);
+    }
+
+    async function tryDownloadSplat(world: WorldResult) {
+      if (!deps.splatDownloader) {
+        return null;
+      }
+
+      try {
+        return await deps.splatDownloader(world, {
+          signal: abortController.signal
+        });
+      } catch (error) {
+        request.log.warn({ err: error }, "splat download failed");
+        return null;
+      }
     }
   });
 }
