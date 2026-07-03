@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { localSplatUrlFromSearch } from "./localSplatUrl.js";
+import {
+  localSplatRenderUrl,
+  localSplatUrlFromSearch
+} from "./localSplatUrl.js";
 
 describe("localSplatUrlFromSearch", () => {
   it("turns a bare query path into a generated-worlds URL", () => {
@@ -22,5 +25,23 @@ describe("localSplatUrlFromSearch", () => {
     expect(localSplatUrlFromSearch("?../secret/full_res.spz")).toBeNull();
     expect(localSplatUrlFromSearch("?https://example.test/full_res.spz")).toBeNull();
     expect(localSplatUrlFromSearch("?world-123/readme.txt")).toBeNull();
+  });
+
+  it("resolves generated-worlds URLs against the API server", () => {
+    expect(
+      localSplatRenderUrl(
+        "/generated-worlds/world-123/full_res.spz",
+        "http://localhost:4817"
+      )
+    ).toBe("http://localhost:4817/generated-worlds/world-123/full_res.spz");
+  });
+
+  it("leaves absolute splat URLs unchanged", () => {
+    expect(
+      localSplatRenderUrl(
+        "https://assets.example.test/world/full_res.spz",
+        "http://localhost:4817"
+      )
+    ).toBe("https://assets.example.test/world/full_res.spz");
   });
 });

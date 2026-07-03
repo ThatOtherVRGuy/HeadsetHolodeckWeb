@@ -1,5 +1,13 @@
 const generatedWorldsPrefix = "/generated-worlds/";
 
+export function localSplatRenderUrl(url: string, apiBaseUrl: string): string {
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  return new URL(url, apiBaseUrl).toString();
+}
+
 export function localSplatUrlFromSearch(search: string): string | null {
   if (!search.startsWith("?") || search.length <= 1) {
     return null;

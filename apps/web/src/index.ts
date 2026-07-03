@@ -41,7 +41,10 @@ import { SplatRenderer } from "./holodeck/rendering/splatRenderer";
 import { HolodeckStateMachine } from "./holodeck/state/holodeckState";
 import { BrowserVoiceRecorder } from "./holodeck/voice/browserVoiceRecorder";
 import { createLocalSplatWorld } from "./holodeck/world/localSplatWorld";
-import { localSplatUrlFromSearch } from "./holodeck/world/localSplatUrl";
+import {
+  localSplatRenderUrl,
+  localSplatUrlFromSearch
+} from "./holodeck/world/localSplatUrl";
 
 const apiBaseUrl = "http://localhost:4817";
 
@@ -116,9 +119,10 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   });
   window.holodeck = {
     loadLocalSplat: async (url: string) => {
+      const renderUrl = localSplatRenderUrl(url, apiBaseUrl);
       state.forceState("Generating");
       state.setStatusMessage(`Loading local splat ${url}`);
-      await worldRenderer.load(createLocalSplatWorld(url));
+      await worldRenderer.load(createLocalSplatWorld(renderUrl));
       worldRenderer.show();
       state.forceState("Ready");
     },
