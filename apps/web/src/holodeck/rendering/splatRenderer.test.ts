@@ -75,6 +75,7 @@ describe("SplatRenderer", () => {
     expect(scene.children[0].name).toBe("HolodeckSparkRenderer");
     expect(scene.children[1].name).toBe("WorldSplat_world-123");
     expect(scene.children[1].visible).toBe(false);
+    expect(scene.children[1].scale.y).toBe(-1);
 
     renderer.show();
     expect(scene.children[1].visible).toBe(true);

@@ -2,7 +2,7 @@ import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
 import Fastify from "fastify";
 import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import {
   registerVoiceToWorldRoute,
@@ -29,6 +29,57 @@ export async function buildServer(options: BuildServerOptions = {}) {
 
   if (options.generatedWorldsDir) {
     const generatedWorldsDir = resolve(options.generatedWorldsDir);
+    app.get("/generated-worlds", async () => {
+      const splats = [];
+      const worldEntries = await readdir(generatedWorldsDir, {
+        withFileTypes: true
+      });
+
+      for (const worldEntry of worldEntries) {
+        if (!worldEntry.isDirectory() || !isSafePathSegment(worldEntry.name)) {
+          continue;
+        }
+
+        const worldDir = resolve(join(generatedWorldsDir, worldEntry.name));
+        if (!isPathInside(worldDir, generatedWorldsDir)) {
+          continue;
+        }
+
+        const fileEntries = await readdir(worldDir, { withFileTypes: true });
+        for (const fileEntry of fileEntries) {
+          if (
+            !fileEntry.isFile() ||
+            !isSafePathSegment(fileEntry.name) ||
+            !fileEntry.name.toLowerCase().endsWith(".spz")
+          ) {
+            continue;
+          }
+
+          const filePath = resolve(join(worldDir, fileEntry.name));
+          if (!isPathInside(filePath, generatedWorldsDir)) {
+            continue;
+          }
+
+          const fileStat = await stat(filePath);
+          splats.push({
+            worldId: worldEntry.name,
+            fileName: fileEntry.name,
+            byteLength: fileStat.size,
+            publicUrl: `/generated-worlds/${encodeURIComponent(
+              worldEntry.name
+            )}/${encodeURIComponent(fileEntry.name)}`
+          });
+        }
+      }
+
+      splats.sort((left, right) =>
+        left.worldId.localeCompare(right.worldId) ||
+        left.fileName.localeCompare(right.fileName)
+      );
+
+      return { splats };
+    });
+
     app.get<{
       Params: { worldId: string; fileName: string };
     }>("/generated-worlds/:worldId/:fileName", async (request, reply) => {

@@ -53,6 +53,7 @@ export class SplatRenderer implements WorldRenderer {
     });
     mesh.name = `WorldSplat_${world.worldId}`;
     mesh.visible = false;
+    mesh.scale.y = -1;
 
     await mesh.initialized;
 

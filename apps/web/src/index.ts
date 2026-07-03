@@ -40,6 +40,9 @@ import { PreferredWorldRenderer } from "./holodeck/rendering/preferredWorldRende
 import { SplatRenderer } from "./holodeck/rendering/splatRenderer";
 import { HolodeckStateMachine } from "./holodeck/state/holodeckState";
 import { BrowserVoiceRecorder } from "./holodeck/voice/browserVoiceRecorder";
+import { createLocalSplatWorld } from "./holodeck/world/localSplatWorld";
+
+const apiBaseUrl = "http://localhost:4817";
 
 const assets: AssetManifest = {
   chimeSound: {
@@ -71,7 +74,7 @@ const assets: AssetManifest = {
 
 const state = new HolodeckStateMachine();
 const recorder = new BrowserVoiceRecorder();
-const api = new HolodeckApiClient();
+const api = new HolodeckApiClient(apiBaseUrl);
 
 World.create(document.getElementById("scene-container") as HTMLDivElement, {
   assets,
@@ -110,6 +113,25 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     coordinator,
     renderer: worldRenderer,
   });
+  window.holodeck = {
+    loadLocalSplat: async (url: string) => {
+      state.forceState("Generating");
+      state.setStatusMessage(`Loading local splat ${url}`);
+      await worldRenderer.load(createLocalSplatWorld(url));
+      worldRenderer.show();
+      state.forceState("Ready");
+    },
+    listLocalSplats: async () => {
+      const response = await fetch(`${apiBaseUrl}/generated-worlds`);
+      if (!response.ok) {
+        throw new Error(
+          `Local splat list failed: HTTP ${response.status} ${await response.text()}`
+        );
+      }
+
+      return response.json();
+    }
+  };
 
   camera.position.set(-4, 1.5, -6);
   camera.rotateY(-Math.PI * 0.75);
@@ -197,4 +219,13 @@ function statusMessageForVoiceToWorldJob(
   }
 
   return message;
+}
+
+declare global {
+  interface Window {
+    holodeck?: {
+      loadLocalSplat(url: string): Promise<void>;
+      listLocalSplats(): Promise<unknown>;
+    };
+  }
 }
