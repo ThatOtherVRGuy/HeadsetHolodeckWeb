@@ -9,6 +9,7 @@ export type HolodeckState =
 export interface HolodeckStateSnapshot {
   current: HolodeckState;
   errorMessage: string;
+  statusMessage: string;
 }
 
 type HolodeckStateListener = (snapshot: HolodeckStateSnapshot) => void;
@@ -25,6 +26,7 @@ const allowedTransitions: Record<HolodeckState, ReadonlySet<HolodeckState>> = {
 export class HolodeckStateMachine {
   current: HolodeckState = "Idle";
   errorMessage = "";
+  statusMessage = "";
   private readonly listeners = new Set<HolodeckStateListener>();
 
   tryTransitionTo(next: HolodeckState): boolean {
@@ -47,11 +49,18 @@ export class HolodeckStateMachine {
   setError(message: string): void {
     this.current = "Error";
     this.errorMessage = message;
+    this.statusMessage = "";
     this.notify();
   }
 
   clearErrorAndReturnToIdle(): void {
+    this.statusMessage = "";
     this.forceState("Idle");
+  }
+
+  setStatusMessage(message: string): void {
+    this.statusMessage = message;
+    this.notify();
   }
 
   subscribe(listener: HolodeckStateListener): () => void {
@@ -64,7 +73,8 @@ export class HolodeckStateMachine {
   snapshot(): HolodeckStateSnapshot {
     return {
       current: this.current,
-      errorMessage: this.errorMessage
+      errorMessage: this.errorMessage,
+      statusMessage: this.statusMessage
     };
   }
 

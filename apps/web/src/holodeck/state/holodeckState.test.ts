@@ -52,11 +52,32 @@ describe("HolodeckStateMachine", () => {
     expect(listener).toHaveBeenCalledTimes(2);
     expect(listener).toHaveBeenNthCalledWith(1, {
       current: "ListeningForCommand",
-      errorMessage: ""
+      errorMessage: "",
+      statusMessage: ""
     });
     expect(listener).toHaveBeenNthCalledWith(2, {
       current: "Error",
-      errorMessage: "Microphone permission denied"
+      errorMessage: "Microphone permission denied",
+      statusMessage: ""
+    });
+  });
+
+  it("stores and notifies a transient status message", () => {
+    const stateMachine = new HolodeckStateMachine();
+    const listener = vi.fn();
+
+    stateMachine.subscribe(listener);
+    stateMachine.setStatusMessage("Rendering splats");
+
+    expect(stateMachine.snapshot()).toEqual({
+      current: "Idle",
+      errorMessage: "",
+      statusMessage: "Rendering splats"
+    });
+    expect(listener).toHaveBeenCalledWith({
+      current: "Idle",
+      errorMessage: "",
+      statusMessage: "Rendering splats"
     });
   });
 });

@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { TranscriptionClient } from "../openai/transcriptionClient.js";
 import type { DownloadedSplat } from "../worldlabs/downloadSplat.js";
 import type { WorldLabsClient } from "../worldlabs/worldLabsClient.js";
+import type { WorldLabsProgress } from "../worldlabs/worldLabsClient.js";
 import type { WorldResult } from "../worldlabs/worldTypes.js";
 
 export interface VoiceToWorldRouteDeps {
@@ -13,10 +14,41 @@ export interface VoiceToWorldRouteDeps {
   ) => Promise<DownloadedSplat>;
 }
 
+type VoiceToWorldJobStage =
+  | "queued"
+  | "transcription"
+  | "world-generation"
+  | "splat-download"
+  | "complete"
+  | "error";
+
+type VoiceToWorldJobStatus = "queued" | "running" | "complete" | "error";
+
+interface VoiceToWorldJob {
+  jobId: string;
+  status: VoiceToWorldJobStatus;
+  stage: VoiceToWorldJobStage;
+  message: string;
+  createdAt: string;
+  updatedAt: string;
+  operationId?: string;
+  progress?: {
+    status: string;
+    description?: string;
+    worldId?: string;
+  };
+  world?: WorldResult & { localSplat?: DownloadedSplat };
+  error?: string;
+}
+
+let nextJobNumber = 1;
+
 export async function registerVoiceToWorldRoute(
   app: FastifyInstance,
   deps: VoiceToWorldRouteDeps
 ) {
+  const jobs = new Map<string, VoiceToWorldJob>();
+
   app.post("/api/voice-to-world", async (request, reply) => {
     const abortController = new AbortController();
     const abort = () => abortController.abort();
@@ -117,4 +149,155 @@ export async function registerVoiceToWorldRoute(
       }
     }
   });
+
+  app.post("/api/voice-to-world/jobs", async (request, reply) => {
+    const file = await request.file();
+
+    if (!file || file.fieldname !== "audio") {
+      return reply.code(400).send({
+        error: "Audio file is required"
+      });
+    }
+
+    const audio = await file.toBuffer();
+
+    if (audio.length === 0) {
+      return reply.code(400).send({
+        error: "Audio file is empty"
+      });
+    }
+
+    const job = createJob();
+    jobs.set(job.jobId, job);
+
+    runVoiceToWorldJob(job, {
+      audio: new Uint8Array(audio),
+      filename: file.filename,
+      mimetype: file.mimetype
+    }).catch((error) => {
+      request.log.error({ err: error, jobId: job.jobId }, "voice-to-world job crashed");
+      markJobError(job, "Voice-to-world job failed");
+    });
+
+    return reply.code(202).send(job);
+  });
+
+  app.get<{
+    Params: { jobId: string };
+  }>("/api/voice-to-world/jobs/:jobId", async (request, reply) => {
+    const job = jobs.get(request.params.jobId);
+
+    if (!job) {
+      return reply.code(404).send({ error: "Voice-to-world job not found" });
+    }
+
+    return reply.send(job);
+  });
+
+  function createJob(): VoiceToWorldJob {
+    const now = new Date().toISOString();
+
+    return {
+      jobId: `job_${nextJobNumber++}`,
+      status: "running",
+      stage: "transcription",
+      message: "Transcribing voice prompt.",
+      createdAt: now,
+      updatedAt: now
+    };
+  }
+
+  async function runVoiceToWorldJob(
+    job: VoiceToWorldJob,
+    file: { audio: Uint8Array; filename: string; mimetype: string }
+  ) {
+    const abortController = new AbortController();
+
+    try {
+      const transcript = await deps.transcriptionClient.transcribe(
+        file.audio,
+        file.filename,
+        file.mimetype,
+        { signal: abortController.signal }
+      );
+      updateJob(job, {
+        stage: "world-generation",
+        message: "Generating world."
+      });
+      const world = await deps.worldLabsClient.generateWorldFromText(
+        transcript,
+        transcript,
+        {
+          signal: abortController.signal,
+          onProgress: (progress: WorldLabsProgress) => {
+            updateJobProgress(job, progress);
+          }
+        }
+      );
+      updateJob(job, {
+        stage: "splat-download",
+        message: "Saving generated splat."
+      });
+      const localSplat = await tryDownloadSplatForJob(job, world, abortController.signal);
+      updateJob(job, {
+        status: "complete",
+        stage: "complete",
+        message: "World ready.",
+        world: {
+          ...world,
+          ...(localSplat ? { localSplat } : {})
+        }
+      });
+    } catch (error) {
+      markJobError(
+        job,
+        error instanceof Error ? error.message : "Voice-to-world job failed"
+      );
+    }
+  }
+
+  function updateJob(job: VoiceToWorldJob, patch: Partial<VoiceToWorldJob>) {
+    Object.assign(job, patch, {
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  function updateJobProgress(job: VoiceToWorldJob, progress: WorldLabsProgress) {
+    updateJob(job, {
+      stage: "world-generation",
+      message: progress.description ?? "Generating world.",
+      operationId: progress.operationId,
+      progress: {
+        status: progress.status,
+        ...(progress.description ? { description: progress.description } : {}),
+        ...(progress.worldId ? { worldId: progress.worldId } : {})
+      }
+    });
+  }
+
+  function markJobError(job: VoiceToWorldJob, message: string) {
+    updateJob(job, {
+      status: "error",
+      stage: "error",
+      message,
+      error: message
+    });
+  }
+
+  async function tryDownloadSplatForJob(
+    job: VoiceToWorldJob,
+    world: WorldResult,
+    signal: AbortSignal
+  ) {
+    if (!deps.splatDownloader) {
+      return null;
+    }
+
+    try {
+      return await deps.splatDownloader(world, { signal });
+    } catch (error) {
+      app.log.warn({ err: error, jobId: job.jobId }, "splat download failed");
+      return null;
+    }
+  }
 }

@@ -48,6 +48,61 @@ describe("VoiceToWorldCoordinator", () => {
     expect(rendererCalls).toEqual(["world_123", "show"]);
   });
 
+  it("polls a voice-to-world job and reports progress until the world is ready", async () => {
+    const state = new HolodeckStateMachine();
+    const world = createWorld();
+    const progressMessages: string[] = [];
+    const api: HolodeckApi = {
+      voiceToWorld: vi.fn(),
+      startVoiceToWorldJob: vi.fn().mockResolvedValue({
+        jobId: "job_123",
+        status: "running",
+        stage: "transcription",
+        message: "Transcribing voice prompt."
+      }),
+      getVoiceToWorldJob: vi
+        .fn()
+        .mockResolvedValueOnce({
+          jobId: "job_123",
+          status: "running",
+          stage: "world-generation",
+          message: "Rendering splats",
+          progress: {
+            status: "running",
+            description: "Rendering splats"
+          }
+        })
+        .mockResolvedValueOnce({
+          jobId: "job_123",
+          status: "complete",
+          stage: "complete",
+          message: "World ready.",
+          world
+        })
+    };
+    const rendererCalls: string[] = [];
+    const renderer = createRenderer(rendererCalls);
+    const coordinator = new VoiceToWorldCoordinator({
+      state,
+      api,
+      renderer,
+      pollIntervalMs: 0,
+      onProgress: (job) => progressMessages.push(job.message)
+    });
+
+    await coordinator.generateFromAudio(new Blob(["fake audio"]));
+
+    expect(api.startVoiceToWorldJob).toHaveBeenCalledOnce();
+    expect(api.getVoiceToWorldJob).toHaveBeenCalledWith("job_123");
+    expect(state.current).toBe("Ready");
+    expect(progressMessages).toEqual([
+      "Transcribing voice prompt.",
+      "Rendering splats",
+      "World ready."
+    ]);
+    expect(rendererCalls).toEqual(["world_123", "show"]);
+  });
+
   it("sets an error for empty audio without calling the API or renderer", async () => {
     const state = new HolodeckStateMachine();
     const api: HolodeckApi = {

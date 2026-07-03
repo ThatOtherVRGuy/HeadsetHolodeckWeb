@@ -79,7 +79,7 @@ export class PanelSystem extends createSystem({
           return;
         }
 
-        setStatus(statusMessageFor(snapshot.current));
+        setStatus(snapshot.statusMessage || statusMessageFor(snapshot.current));
       });
 
       const onRecordClick = async () => {

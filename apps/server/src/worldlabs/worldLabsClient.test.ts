@@ -221,6 +221,87 @@ describe("WorldLabsClient", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
+  it("reports operation id and progress snapshots while polling", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    fetch
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ operation_id: "op-123" }), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            done: false,
+            metadata: {
+              progress: {
+                status: "RUNNING",
+                description: "Rendering splats"
+              }
+            }
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            done: true,
+            metadata: {
+              progress: {
+                status: "SUCCEEDED",
+                description: "World generation completed successfully"
+              },
+              world_id: "world-123"
+            },
+            response: {
+              world_id: "world-123",
+              display_name: "Autumn Park",
+              assets: {
+                imagery: {
+                  pano_url: "https://example.test/park.png"
+                }
+              }
+            }
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          }
+        )
+      );
+    const client = new WorldLabsClient("worldlabs-key", {
+      baseUrl: "https://worldlabs.test",
+      fetch,
+      pollIntervalMs: 0,
+      timeoutMs: 100
+    });
+    const onProgress = vi.fn();
+
+    await client.generateWorldFromText("park", "park", { onProgress });
+
+    expect(onProgress).toHaveBeenNthCalledWith(1, {
+      operationId: "op-123",
+      status: "created",
+      description: "World generation operation created"
+    });
+    expect(onProgress).toHaveBeenNthCalledWith(2, {
+      operationId: "op-123",
+      status: "running",
+      description: "Rendering splats"
+    });
+    expect(onProgress).toHaveBeenNthCalledWith(3, {
+      operationId: "op-123",
+      status: "succeeded",
+      description: "World generation completed successfully",
+      worldId: "world-123"
+    });
+  });
+
   it("throws when polling times out before the operation is done", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>();
     fetch

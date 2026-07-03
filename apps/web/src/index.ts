@@ -94,6 +94,11 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     state,
     api,
     renderer: worldRenderer,
+    onProgress: (job) => {
+      state.setStatusMessage(
+        job.progress?.description ?? job.message ?? "Generating world."
+      );
+    },
   });
   configureHolodeckPanelControls({
     state,

@@ -470,3 +470,142 @@ describe("POST /api/voice-to-world", () => {
     }
   });
 });
+
+describe("voice-to-world jobs", () => {
+  it("starts a background generation job and exposes progress until completion", async () => {
+    const transcription = deferred<string>();
+    const worldGeneration = deferred<{
+      worldId: string;
+      displayName: string;
+      prompt: string;
+      transcript: string;
+      panoUrl: string;
+      spzUrls: Record<string, string>;
+      raw: unknown;
+    }>();
+    const transcribe = vi
+      .fn<TranscriptionClient["transcribe"]>()
+      .mockReturnValue(transcription.promise);
+    const generateWorldFromText =
+      vi.fn<WorldLabsClient["generateWorldFromText"]>();
+    generateWorldFromText.mockImplementation(async (_prompt, _transcript, options) => {
+      options?.onProgress?.({
+        operationId: "op-123",
+        status: "running",
+        description: "Rendering splats"
+      });
+      return worldGeneration.promise;
+    });
+    const splatDownloader = vi.fn().mockResolvedValue({
+      resolution: "full_res",
+      sourceUrl: "https://example.test/full_res.spz",
+      filePath: "/tmp/world-123/full_res.spz",
+      publicUrl: "/generated-worlds/world-123/full_res.spz",
+      byteLength: 123
+    });
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: { transcribe },
+        worldLabsClient: { generateWorldFromText },
+        splatDownloader
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "prompt.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const started = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world/jobs",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(started.statusCode).toBe(202);
+      const { jobId } = started.json() as { jobId: string };
+      expect(jobId).toMatch(/^job_/);
+
+      const transcribing = await app.inject({
+        method: "GET",
+        url: `/api/voice-to-world/jobs/${jobId}`
+      });
+      expect(transcribing.statusCode).toBe(200);
+      expect(transcribing.json()).toMatchObject({
+        jobId,
+        status: "running",
+        stage: "transcription",
+        message: "Transcribing voice prompt."
+      });
+
+      transcription.resolve("A glass forest at sunrise");
+
+      await vi.waitFor(async () => {
+        const generating = await app.inject({
+          method: "GET",
+          url: `/api/voice-to-world/jobs/${jobId}`
+        });
+        expect(generating.json()).toMatchObject({
+          jobId,
+          status: "running",
+          stage: "world-generation",
+          operationId: "op-123",
+          progress: {
+            status: "running",
+            description: "Rendering splats"
+          }
+        });
+      });
+
+      worldGeneration.resolve({
+        worldId: "world-123",
+        displayName: "Glass Forest",
+        prompt: "A glass forest at sunrise",
+        transcript: "A glass forest at sunrise",
+        panoUrl: "https://example.test/pano.jpg",
+        spzUrls: {
+          full_res: "https://example.test/full_res.spz"
+        },
+        raw: { world_id: "world-123" }
+      });
+
+      await vi.waitFor(async () => {
+        const completed = await app.inject({
+          method: "GET",
+          url: `/api/voice-to-world/jobs/${jobId}`
+        });
+        expect(completed.statusCode).toBe(200);
+        expect(completed.json()).toMatchObject({
+          jobId,
+          status: "complete",
+          stage: "complete",
+          world: {
+            worldId: "world-123",
+            localSplat: {
+              publicUrl: "/generated-worlds/world-123/full_res.spz"
+            }
+          }
+        });
+      });
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
+}

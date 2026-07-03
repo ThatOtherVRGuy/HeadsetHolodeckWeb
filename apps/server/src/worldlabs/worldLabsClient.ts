@@ -10,6 +10,7 @@ interface WorldLabsClientOptions {
 
 interface WorldLabsRequestOptions {
   signal?: AbortSignal;
+  onProgress?: (progress: WorldLabsProgress) => void;
 }
 
 interface WorldLabsOperation {
@@ -17,12 +18,21 @@ interface WorldLabsOperation {
   operation_id?: unknown;
   done?: unknown;
   metadata?: {
+    world_id?: unknown;
     progress?: {
       status?: unknown;
+      description?: unknown;
     };
   };
   response?: unknown;
   error?: unknown;
+}
+
+export interface WorldLabsProgress {
+  operationId: string;
+  status: string;
+  description?: string;
+  worldId?: string;
 }
 
 export class WorldLabsClient {
@@ -88,7 +98,17 @@ export class WorldLabsClient {
       throw new Error("World Labs world generation did not return operation_id");
     }
 
-    const operation = await this.waitForOperation(operationId, options.signal);
+    options.onProgress?.({
+      operationId,
+      status: "created",
+      description: "World generation operation created"
+    });
+
+    const operation = await this.waitForOperation(
+      operationId,
+      options.signal,
+      options.onProgress
+    );
 
     if (!operation.response || typeof operation.response !== "object") {
       throw new Error(
@@ -101,7 +121,8 @@ export class WorldLabsClient {
 
   private async waitForOperation(
     operationId: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    onProgress?: (progress: WorldLabsProgress) => void
   ): Promise<WorldLabsOperation> {
     const startedAt = Date.now();
 
@@ -126,6 +147,17 @@ export class WorldLabsClient {
 
       const operation = (await response.json()) as WorldLabsOperation;
       const status = readOperationStatus(operation);
+      const description = readOperationDescription(operation);
+      const worldId = readOperationWorldId(operation);
+
+      if (status || description || worldId) {
+        onProgress?.({
+          operationId,
+          status: status || "polling",
+          ...(description ? { description } : {}),
+          ...(worldId ? { worldId } : {})
+        });
+      }
 
       if (operation.error || status === "error" || status === "failed") {
         throw new Error(
@@ -163,6 +195,18 @@ function readOperationStatus(operation: WorldLabsOperation): string {
   return typeof progressStatus === "string"
     ? progressStatus.toLowerCase()
     : "";
+}
+
+function readOperationDescription(operation: WorldLabsOperation): string {
+  const description = operation.metadata?.progress?.description;
+
+  return typeof description === "string" ? description : "";
+}
+
+function readOperationWorldId(operation: WorldLabsOperation): string {
+  const worldId = operation.metadata?.world_id;
+
+  return typeof worldId === "string" ? worldId : "";
 }
 
 async function readResponseMessage(response: Response): Promise<string> {
