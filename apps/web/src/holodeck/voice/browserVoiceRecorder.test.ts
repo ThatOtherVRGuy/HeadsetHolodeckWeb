@@ -117,6 +117,33 @@ describe("BrowserVoiceRecorder", () => {
     );
   });
 
+  it("rejects duplicate starts while microphone permission is pending", async () => {
+    let resolveStream: (stream: MediaStream) => void = () => {};
+    const pendingStream = new Promise<MediaStream>((resolve) => {
+      resolveStream = resolve;
+    });
+    const stream = {
+      getTracks: () => []
+    } as unknown as MediaStream;
+    const recorder = new BrowserVoiceRecorder({
+      mediaDevices: {
+        getUserMedia: vi.fn().mockReturnValue(pendingStream)
+      },
+      mediaRecorder: FakeMediaRecorder as unknown as typeof MediaRecorder
+    });
+
+    const firstStart = recorder.start();
+
+    await expect(recorder.start()).rejects.toThrow(
+      "Voice recording is already starting"
+    );
+
+    resolveStream(stream);
+    await firstStart;
+
+    expect(recorder.isRecording).toBe(true);
+  });
+
   it("rejects stops without captured audio", async () => {
     const stop = vi.fn();
     const stream = {
@@ -135,6 +162,39 @@ describe("BrowserVoiceRecorder", () => {
       "No microphone samples were captured"
     );
     expect(stop).toHaveBeenCalledOnce();
+  });
+
+  it("cancels an active recording without returning audio", async () => {
+    const stop = vi.fn();
+    const stream = {
+      getTracks: () => [{ stop }]
+    } as unknown as MediaStream;
+    const recorder = new BrowserVoiceRecorder({
+      mediaDevices: {
+        getUserMedia: vi.fn().mockResolvedValue(stream)
+      },
+      mediaRecorder: FakeMediaRecorder as unknown as typeof MediaRecorder
+    });
+
+    await recorder.start();
+    await recorder.cancel();
+
+    expect(recorder.isRecording).toBe(false);
+    expect(stop).toHaveBeenCalledOnce();
+    await expect(recorder.stop()).rejects.toThrow(
+      "Voice recording is not active"
+    );
+  });
+
+  it("treats cancel without an active recording as a no-op", async () => {
+    const recorder = new BrowserVoiceRecorder({
+      mediaDevices: {
+        getUserMedia: vi.fn()
+      },
+      mediaRecorder: FakeMediaRecorder as unknown as typeof MediaRecorder
+    });
+
+    await expect(recorder.cancel()).resolves.toBeUndefined();
   });
 
   it("stops the stream if the recorder fails to start", async () => {

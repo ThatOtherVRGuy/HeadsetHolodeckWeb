@@ -15,7 +15,11 @@ export default defineConfig({
       verbose: true,
     }),
 
-    compileUIKit({ sourceDir: "ui", outputDir: "public/ui", verbose: true }),
+    compileUIKit({
+      sourceDir: "src/holodeck/ui",
+      outputDir: "public/ui/holodeck",
+      verbose: true,
+    }),
   ],
   server: { host: "0.0.0.0", port: 8081, open: true },
   build: {

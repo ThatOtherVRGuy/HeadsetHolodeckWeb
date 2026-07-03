@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { HolodeckStateMachine } from "./holodeckState";
 
@@ -37,5 +37,26 @@ describe("HolodeckStateMachine", () => {
 
     expect(stateMachine.current).toBe("Idle");
     expect(stateMachine.errorMessage).toBe("");
+  });
+
+  it("notifies subscribers when state changes", () => {
+    const stateMachine = new HolodeckStateMachine();
+    const listener = vi.fn();
+
+    const unsubscribe = stateMachine.subscribe(listener);
+    stateMachine.tryTransitionTo("ListeningForCommand");
+    stateMachine.setError("Microphone permission denied");
+    unsubscribe();
+    stateMachine.clearErrorAndReturnToIdle();
+
+    expect(listener).toHaveBeenCalledTimes(2);
+    expect(listener).toHaveBeenNthCalledWith(1, {
+      current: "ListeningForCommand",
+      errorMessage: ""
+    });
+    expect(listener).toHaveBeenNthCalledWith(2, {
+      current: "Error",
+      errorMessage: "Microphone permission denied"
+    });
   });
 });

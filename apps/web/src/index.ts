@@ -22,11 +22,16 @@ import {
 
 import { EnvironmentType, LocomotionEnvironment } from "@iwsdk/core";
 
-import { PanelSystem } from "./panel.js";
+import { configureHolodeckPanelControls, PanelSystem } from "./panel.js";
 
 import { Robot } from "./robot.js";
 
 import { RobotSystem } from "./robot.js";
+import { HolodeckApiClient } from "./holodeck/api/holodeckApiClient";
+import { VoiceToWorldCoordinator } from "./holodeck/coordinator/voiceToWorldCoordinator";
+import { PanoramaRenderer } from "./holodeck/rendering/panoramaRenderer";
+import { HolodeckStateMachine } from "./holodeck/state/holodeckState";
+import { BrowserVoiceRecorder } from "./holodeck/voice/browserVoiceRecorder";
 
 const assets: AssetManifest = {
   chimeSound: {
@@ -56,6 +61,10 @@ const assets: AssetManifest = {
   },
 };
 
+const state = new HolodeckStateMachine();
+const recorder = new BrowserVoiceRecorder();
+const api = new HolodeckApiClient();
+
 World.create(document.getElementById("scene-container") as HTMLDivElement, {
   assets,
   xr: {
@@ -71,7 +80,20 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     environmentRaycast: false,
   },
 }).then((world) => {
+  const { scene } = world;
   const { camera } = world;
+  const panoramaRenderer = new PanoramaRenderer(scene);
+  const coordinator = new VoiceToWorldCoordinator({
+    state,
+    api,
+    renderer: panoramaRenderer,
+  });
+  configureHolodeckPanelControls({
+    state,
+    recorder,
+    coordinator,
+    renderer: panoramaRenderer,
+  });
 
   camera.position.set(-4, 1.5, -6);
   camera.rotateY(-Math.PI * 0.75);
@@ -115,7 +137,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   const panelEntity = world
     .createTransformEntity()
     .addComponent(PanelUI, {
-      config: "./ui/welcome.json",
+      config: "./ui/holodeck/statusPanel.json",
       maxHeight: 0.8,
       maxWidth: 1.6,
     })

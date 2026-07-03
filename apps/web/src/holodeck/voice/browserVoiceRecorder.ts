@@ -8,6 +8,7 @@ export class BrowserVoiceRecorder {
   private recorder: MediaRecorder | null = null;
   private chunks: Blob[] = [];
   private stopRequested = false;
+  private isStarting = false;
   private readonly mediaDevices: Pick<MediaDevices, "getUserMedia">;
   private readonly mediaRecorder: typeof MediaRecorder;
 
@@ -21,15 +22,20 @@ export class BrowserVoiceRecorder {
   }
 
   async start(): Promise<void> {
+    if (this.isStarting) {
+      throw new Error("Voice recording is already starting");
+    }
+
     if (this.isRecording) {
       throw new Error("Voice recording is already active");
     }
 
-    const stream = await this.mediaDevices.getUserMedia({ audio: true });
-    this.stream = stream;
-    this.chunks = [];
-
+    this.isStarting = true;
     try {
+      const stream = await this.mediaDevices.getUserMedia({ audio: true });
+      this.stream = stream;
+      this.chunks = [];
+
       const recorder = new this.mediaRecorder(stream);
       this.recorder = recorder;
 
@@ -52,6 +58,7 @@ export class BrowserVoiceRecorder {
       });
 
       recorder.start();
+      this.isStarting = false;
     } catch (error) {
       this.clearRecordingState({ clearChunks: true });
       throw error;
@@ -87,11 +94,28 @@ export class BrowserVoiceRecorder {
     return audio;
   }
 
+  async cancel(): Promise<void> {
+    if (!this.recorder || this.recorder.state !== "recording") {
+      return;
+    }
+
+    const recorder = this.recorder;
+    const stopped = new Promise<void>((resolve) => {
+      recorder.addEventListener("stop", () => resolve(), { once: true });
+    });
+
+    this.stopRequested = true;
+    recorder.stop();
+    await stopped;
+    this.clearRecordingState({ clearChunks: true });
+  }
+
   private clearRecordingState(options: { clearChunks: boolean }): void {
     this.stream?.getTracks().forEach((track) => track.stop());
     this.stream = null;
     this.recorder = null;
     this.stopRequested = false;
+    this.isStarting = false;
 
     if (options.clearChunks) {
       this.chunks = [];
