@@ -1,7 +1,9 @@
 import { SparkRenderer, SplatMesh } from "@sparkjsdev/spark";
 import type {
+  Box3,
   Object3D,
   Scene,
+  Vector3,
   WebGLRenderer
 } from "@iwsdk/core/dist/runtime/three.js";
 import type { WorldResult } from "../world/worldResult";
@@ -10,6 +12,7 @@ import type { WorldRenderer } from "./worldRenderer";
 interface SplatRendererOptions {
   SparkRendererCtor?: typeof SparkRenderer;
   SplatMeshCtor?: typeof SplatMesh;
+  onStatus?: (message: string) => void;
 }
 
 export class SplatRenderer implements WorldRenderer {
@@ -23,7 +26,7 @@ export class SplatRenderer implements WorldRenderer {
   constructor(
     private readonly scene: Scene,
     webGlRenderer: WebGLRenderer,
-    options: SplatRendererOptions = {}
+    private readonly options: SplatRendererOptions = {}
   ) {
     const SparkRendererCtor = options.SparkRendererCtor ?? SparkRenderer;
     this.SplatMeshCtor = options.SplatMeshCtor ?? SplatMesh;
@@ -49,11 +52,14 @@ export class SplatRenderer implements WorldRenderer {
     const sequence = ++this.loadSequence;
     const mesh = new this.SplatMeshCtor({
       url,
-      lod: "quality"
+      lod: true,
+      onProgress: (event: ProgressEvent) => {
+        this.options.onStatus?.(progressMessageForEvent(event));
+      }
     });
     mesh.name = `WorldSplat_${world.worldId}`;
     mesh.visible = false;
-    mesh.scale.y = -1;
+    mesh.scale.set(1, -1, 1);
 
     await mesh.initialized;
 
@@ -63,8 +69,10 @@ export class SplatRenderer implements WorldRenderer {
     }
 
     this.clearCurrentMesh();
+    frameSplatMesh(mesh);
     this.currentMesh = mesh;
     this.scene.add(mesh);
+    this.options.onStatus?.(loadedMessageForMesh(mesh));
   }
 
   show() {
@@ -116,4 +124,69 @@ export function selectSplatUrl(world: WorldResult) {
 function disposeObject(object: Object3D) {
   const disposable = object as Object3D & { dispose?: () => void };
   disposable.dispose?.();
+}
+
+function progressMessageForEvent(event: ProgressEvent) {
+  if (event.lengthComputable && event.total > 0) {
+    const percent = Math.min(100, Math.floor((event.loaded / event.total) * 100));
+    return `Loading local splat ${percent}%`;
+  }
+
+  return `Loading local splat ${formatBytes(event.loaded)}`;
+}
+
+function loadedMessageForMesh(mesh: SplatMesh) {
+  const splatCount = typeof mesh.numSplats === "number" ? mesh.numSplats : 0;
+  return splatCount > 0
+    ? `Local splat decoded: ${splatCount.toLocaleString()} splats`
+    : "Local splat decoded";
+}
+
+function frameSplatMesh(mesh: SplatMesh) {
+  const bounds = mesh.getBoundingBox(true);
+  if (!isUsableBounds(bounds)) {
+    return;
+  }
+
+  const center = bounds.getCenter(mesh.position as Vector3);
+  const size = bounds.getSize(mesh.scale as Vector3);
+  const maxDimension = Math.max(size.x, size.y, size.z);
+  if (!Number.isFinite(maxDimension) || maxDimension <= 0) {
+    return;
+  }
+
+  const scale = Math.min(1, 6 / maxDimension);
+  mesh.scale.set(scale, -scale, scale);
+  mesh.position.set(
+    -center.x * scale,
+    1.2 + center.y * scale,
+    -center.z * scale
+  );
+}
+
+function isUsableBounds(bounds: Box3) {
+  return (
+    Number.isFinite(bounds.min.x) &&
+    Number.isFinite(bounds.min.y) &&
+    Number.isFinite(bounds.min.z) &&
+    Number.isFinite(bounds.max.x) &&
+    Number.isFinite(bounds.max.y) &&
+    Number.isFinite(bounds.max.z)
+  );
+}
+
+function formatBytes(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return "0 B";
+  }
+
+  const units = ["B", "KB", "MB", "GB"];
+  let value = bytes;
+  let unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${value.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
 }

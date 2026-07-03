@@ -98,7 +98,9 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   const { scene } = world;
   const { camera } = world;
   const panoramaRenderer = new PanoramaRenderer(scene);
-  const splatRenderer = new SplatRenderer(scene, world.renderer);
+  const splatRenderer = new SplatRenderer(scene, world.renderer, {
+    onStatus: (message) => state.setStatusMessage(message)
+  });
   const worldRenderer = new PreferredWorldRenderer(
     splatRenderer,
     panoramaRenderer,

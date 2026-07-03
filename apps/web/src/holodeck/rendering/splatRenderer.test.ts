@@ -1,6 +1,8 @@
 import {
+  Box3,
   Object3D,
   Scene,
+  Vector3,
   WebGLRenderer
 } from "@iwsdk/core/dist/runtime/three.js";
 import { describe, expect, it, vi } from "vitest";
@@ -75,7 +77,16 @@ describe("SplatRenderer", () => {
     expect(scene.children[0].name).toBe("HolodeckSparkRenderer");
     expect(scene.children[1].name).toBe("WorldSplat_world-123");
     expect(scene.children[1].visible).toBe(false);
-    expect(scene.children[1].scale.y).toBe(-1);
+    expect(scene.children[1].scale).toMatchObject({
+      x: 0.6,
+      y: -0.6,
+      z: 0.6
+    });
+    expect(scene.children[1].position).toMatchObject({
+      x: -3,
+      y: 1.2,
+      z: -0
+    });
 
     renderer.show();
     expect(scene.children[1].visible).toBe(true);
@@ -124,11 +135,16 @@ function createSparkTestConstructors() {
   class FakeSplatMesh extends Object3D {
     initialized: Promise<FakeSplatMesh>;
     url: string;
+    numSplats = 12345;
 
     constructor(options: { url: string }) {
       super();
       this.url = options.url;
       this.initialized = Promise.resolve(this);
+    }
+
+    getBoundingBox() {
+      return new Box3(new Vector3(0, -2.5, -2), new Vector3(10, 2.5, 2));
     }
 
     dispose() {
