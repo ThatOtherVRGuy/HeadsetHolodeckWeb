@@ -23,6 +23,10 @@ import {
 import { PanoramaRenderer } from "./holodeck/rendering/panoramaRenderer";
 import { PreferredWorldRenderer } from "./holodeck/rendering/preferredWorldRenderer";
 import { loadHolodeckShell } from "./holodeck/shell/shellLoader";
+import {
+  applyUserStartPose,
+  HOLODECK_INITIAL_PLAYER_POSITION
+} from "./holodeck/shell/startPose";
 import { SplatRenderer } from "./holodeck/rendering/splatRenderer";
 import { HolodeckStateMachine } from "./holodeck/state/holodeckState";
 import { BrowserVoiceRecorder } from "./holodeck/voice/browserVoiceRecorder";
@@ -54,7 +58,10 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     features: { handTracking: true, layers: true },
   },
   features: {
-    locomotion: { useWorker: true },
+    locomotion: {
+      useWorker: true,
+      initialPlayerPosition: [...HOLODECK_INITIAL_PLAYER_POSITION],
+    },
     grabbing: true,
     physics: false,
     sceneUnderstanding: false,
@@ -149,8 +156,12 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   };
   console.log("[Holodeck] shell status", window.holodeck.shellStatus);
 
-  camera.position.copy(shell.placement.userStart.position);
-  camera.lookAt(shell.placement.generatedWorld.position);
+  applyUserStartPose({
+    player: world.player,
+    camera,
+    userStart: shell.placement.userStart,
+    generatedWorld: shell.placement.generatedWorld,
+  });
 
   const panelEntity = world
     .createTransformEntity()
@@ -161,7 +172,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     })
     .addComponent(Interactable);
   panelEntity.object3D!.position.copy(shell.placement.statusPanel.position);
-  panelEntity.object3D!.lookAt(camera.position);
+  panelEntity.object3D!.lookAt(camera.getWorldPosition(camera.position.clone()));
 
   world.registerSystem(PanelSystem);
 
