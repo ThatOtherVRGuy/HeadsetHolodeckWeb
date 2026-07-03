@@ -2,7 +2,7 @@ import {
   Material,
   Mesh,
   MeshBasicMaterial,
-  Scene,
+  Object3D,
   SphereGeometry,
   SRGBColorSpace,
   Texture,
@@ -23,7 +23,7 @@ export class PanoramaRenderer implements WorldRenderer {
   private readonly loadTexture: (url: string) => Promise<Texture>;
 
   constructor(
-    private readonly scene: Scene,
+    private readonly scene: Object3D,
     options: PanoramaRendererOptions = {}
   ) {
     this.loadTexture =

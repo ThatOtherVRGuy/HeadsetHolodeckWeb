@@ -2,7 +2,6 @@ import { SparkRenderer, SplatMesh } from "@sparkjsdev/spark";
 import type {
   Box3,
   Object3D,
-  Scene,
   Vector3,
   WebGLRenderer
 } from "@iwsdk/core/dist/runtime/three.js";
@@ -24,7 +23,7 @@ export class SplatRenderer implements WorldRenderer {
   private disposed = false;
 
   constructor(
-    private readonly scene: Scene,
+    private readonly scene: Object3D,
     webGlRenderer: WebGLRenderer,
     private readonly options: SplatRendererOptions = {}
   ) {
