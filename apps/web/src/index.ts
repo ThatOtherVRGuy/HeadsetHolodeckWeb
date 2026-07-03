@@ -30,6 +30,8 @@ import { RobotSystem } from "./robot.js";
 import { HolodeckApiClient } from "./holodeck/api/holodeckApiClient";
 import { VoiceToWorldCoordinator } from "./holodeck/coordinator/voiceToWorldCoordinator";
 import { PanoramaRenderer } from "./holodeck/rendering/panoramaRenderer";
+import { PreferredWorldRenderer } from "./holodeck/rendering/preferredWorldRenderer";
+import { SplatRenderer } from "./holodeck/rendering/splatRenderer";
 import { HolodeckStateMachine } from "./holodeck/state/holodeckState";
 import { BrowserVoiceRecorder } from "./holodeck/voice/browserVoiceRecorder";
 
@@ -83,16 +85,21 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   const { scene } = world;
   const { camera } = world;
   const panoramaRenderer = new PanoramaRenderer(scene);
+  const splatRenderer = new SplatRenderer(scene, world.renderer);
+  const worldRenderer = new PreferredWorldRenderer(
+    splatRenderer,
+    panoramaRenderer,
+  );
   const coordinator = new VoiceToWorldCoordinator({
     state,
     api,
-    renderer: panoramaRenderer,
+    renderer: worldRenderer,
   });
   configureHolodeckPanelControls({
     state,
     recorder,
     coordinator,
-    renderer: panoramaRenderer,
+    renderer: worldRenderer,
   });
 
   camera.position.set(-4, 1.5, -6);

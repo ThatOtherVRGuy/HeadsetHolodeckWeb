@@ -21,6 +21,15 @@ export class HolodeckApiClient implements HolodeckApi {
       throw new Error(`Voice-to-world failed: HTTP ${response.status} ${body}`);
     }
 
-    return response.json() as Promise<WorldResult>;
+    const world = (await response.json()) as WorldResult;
+
+    if (world.localSplat?.publicUrl) {
+      world.localSplat.publicUrl = new URL(
+        world.localSplat.publicUrl,
+        this.baseUrl
+      ).toString();
+    }
+
+    return world;
   }
 }

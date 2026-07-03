@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildServer } from "./app.js";
 import { readServerEnv } from "./config/env.js";
@@ -15,14 +16,22 @@ const generatedWorldsDir = fileURLToPath(
 );
 const env = readServerEnv(process.env);
 const app = await buildServer({
+  generatedWorldsDir,
   voiceToWorld: {
     transcriptionClient: new OpenAiTranscriptionClient(env.openAiApiKey),
     worldLabsClient: new WorldLabsClient(env.worldLabsApiKey),
-    splatDownloader: (world, options) =>
-      downloadSplat(world, {
+    splatDownloader: async (world, options) => {
+      const downloaded = await downloadSplat(world, {
         outputDir: generatedWorldsDir,
         signal: options.signal
-      })
+      });
+      return {
+        ...downloaded,
+        publicUrl: `/generated-worlds/${encodeURIComponent(
+          world.worldId
+        )}/${encodeURIComponent(basename(downloaded.filePath))}`
+      };
+    }
   }
 });
 

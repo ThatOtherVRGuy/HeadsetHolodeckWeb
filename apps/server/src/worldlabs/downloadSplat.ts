@@ -15,6 +15,7 @@ export interface DownloadedSplat {
   resolution: string;
   sourceUrl: string;
   filePath: string;
+  publicUrl?: string;
   byteLength: number;
 }
 
