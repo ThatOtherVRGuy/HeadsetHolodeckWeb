@@ -1,8 +1,16 @@
 import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
 import Fastify from "fastify";
+import {
+  registerVoiceToWorldRoute,
+  type VoiceToWorldRouteDeps
+} from "./routes/voiceToWorld.js";
 
-export async function buildServer() {
+interface BuildServerOptions {
+  voiceToWorld?: VoiceToWorldRouteDeps;
+}
+
+export async function buildServer(options: BuildServerOptions = {}) {
   const app = Fastify({ logger: true });
 
   await app.register(cors, {
@@ -14,6 +22,10 @@ export async function buildServer() {
     ok: true,
     service: "headset-holodeck-web-server"
   }));
+
+  if (options.voiceToWorld) {
+    await registerVoiceToWorldRoute(app, options.voiceToWorld);
+  }
 
   return app;
 }
