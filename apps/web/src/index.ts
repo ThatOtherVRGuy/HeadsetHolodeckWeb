@@ -125,6 +125,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       await worldRenderer.load(createLocalSplatWorld(renderUrl));
       worldRenderer.show();
       state.forceState("Ready");
+      state.setStatusMessage(`Local splat ready: ${url}`);
     },
     listLocalSplats: async () => {
       const response = await fetch(`${apiBaseUrl}/generated-worlds`);
@@ -137,14 +138,6 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       return response.json();
     }
   };
-  const startupSplatUrl = localSplatUrlFromSearch(window.location.search);
-  if (startupSplatUrl) {
-    window.holodeck.loadLocalSplat(startupSplatUrl).catch((error: unknown) => {
-      state.setError(
-        error instanceof Error ? error.message : "Local splat loading failed."
-      );
-    });
-  }
 
   camera.position.set(-4, 1.5, -6);
   camera.rotateY(-Math.PI * 0.75);
@@ -214,6 +207,17 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   logoBanner.rotateY(Math.PI);
 
   world.registerSystem(PanelSystem).registerSystem(RobotSystem);
+
+  const startupSplatUrl = localSplatUrlFromSearch(window.location.search);
+  if (startupSplatUrl) {
+    requestAnimationFrame(() => {
+      window.holodeck?.loadLocalSplat(startupSplatUrl).catch((error: unknown) => {
+        state.setError(
+          error instanceof Error ? error.message : "Local splat loading failed."
+        );
+      });
+    });
+  }
 });
 
 function statusMessageForVoiceToWorldJob(
