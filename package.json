@@ -1,0 +1,17 @@
+{
+  "name": "headset-holodeck-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/web",
+    "apps/server"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace apps/web",
+    "dev:web": "npm run dev --workspace apps/web",
+    "dev:server": "npm run dev --workspace apps/server",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}
