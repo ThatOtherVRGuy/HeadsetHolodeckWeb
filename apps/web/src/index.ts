@@ -41,6 +41,7 @@ import { SplatRenderer } from "./holodeck/rendering/splatRenderer";
 import { HolodeckStateMachine } from "./holodeck/state/holodeckState";
 import { BrowserVoiceRecorder } from "./holodeck/voice/browserVoiceRecorder";
 import { createLocalSplatWorld } from "./holodeck/world/localSplatWorld";
+import { localSplatUrlFromSearch } from "./holodeck/world/localSplatUrl";
 
 const apiBaseUrl = "http://localhost:4817";
 
@@ -132,6 +133,14 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       return response.json();
     }
   };
+  const startupSplatUrl = localSplatUrlFromSearch(window.location.search);
+  if (startupSplatUrl) {
+    window.holodeck.loadLocalSplat(startupSplatUrl).catch((error: unknown) => {
+      state.setError(
+        error instanceof Error ? error.message : "Local splat loading failed."
+      );
+    });
+  }
 
   camera.position.set(-4, 1.5, -6);
   camera.rotateY(-Math.PI * 0.75);
