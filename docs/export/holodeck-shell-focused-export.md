@@ -70,4 +70,4 @@ Record the actual export result here before committing the asset:
 - Scale/orientation issues: Blender import bounds were approximately 6.1m x 11.5m x 4.9m before GLB export; anchor placement is a first focused pass and should be visually tuned after runtime loading
 - Material issues: Blender reported Collada material warnings for negative IOR values and used defaults; focused shell materials exported, but visual parity with Unity is not yet verified
 - Static metadata survived in GLTF extras/userData: yes; exported mesh and anchor nodes include `holodeckTransformStatic`, with render/light static intent on mesh nodes
-- Runtime loader result: pending app integration and browser verification
+- Runtime loader result: loaded in the iwsdk dev browser at `https://localhost:8081/`; console reported `status: loaded` with no missing anchors

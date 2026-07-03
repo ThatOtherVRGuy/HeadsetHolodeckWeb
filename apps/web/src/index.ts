@@ -147,6 +147,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       return response.json();
     }
   };
+  console.log("[Holodeck] shell status", window.holodeck.shellStatus);
 
   camera.position.copy(shell.placement.userStart.position);
   camera.lookAt(shell.placement.generatedWorld.position);
