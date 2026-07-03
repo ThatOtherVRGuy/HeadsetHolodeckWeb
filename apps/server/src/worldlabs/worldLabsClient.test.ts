@@ -70,7 +70,7 @@ describe("WorldLabsClient", () => {
     });
     expect(fetch).toHaveBeenNthCalledWith(
       1,
-      "https://worldlabs.test/marble/v1/worlds",
+      "https://worldlabs.test/marble/v1/worlds:generate",
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({
@@ -85,7 +85,11 @@ describe("WorldLabsClient", () => {
           },
           display_name: "make a crystal cave",
           model: "marble-1.1",
-          permission: "private"
+          permission: {
+            allowed_readers: [],
+            allowed_writers: [],
+            public: false
+          }
         })
       })
     );
@@ -166,6 +170,55 @@ describe("WorldLabsClient", () => {
     await expect(client.generateWorldFromText("prompt")).rejects.toThrow(
       "World Labs operation op-123 failed: World generation failed"
     );
+  });
+
+  it("treats World Labs done=true operations as complete", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    fetch
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ operation_id: "op-123" }), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            done: true,
+            metadata: {
+              progress: {
+                status: "SUCCEEDED"
+              }
+            },
+            response: {
+              world_id: "world-123",
+              display_name: "Autumn Park",
+              assets: {
+                imagery: {
+                  pano_url: "https://example.test/park.png"
+                }
+              }
+            }
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          }
+        )
+      );
+    const client = new WorldLabsClient("worldlabs-key", {
+      baseUrl: "https://worldlabs.test",
+      fetch,
+      pollIntervalMs: 0,
+      timeoutMs: 100
+    });
+
+    await expect(client.generateWorldFromText("park")).resolves.toMatchObject({
+      worldId: "world-123",
+      displayName: "Autumn Park",
+      panoUrl: "https://example.test/park.png"
+    });
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it("throws when polling times out before the operation is done", async () => {

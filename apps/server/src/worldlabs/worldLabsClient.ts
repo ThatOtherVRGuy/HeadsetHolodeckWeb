@@ -15,6 +15,12 @@ interface WorldLabsRequestOptions {
 interface WorldLabsOperation {
   status?: unknown;
   operation_id?: unknown;
+  done?: unknown;
+  metadata?: {
+    progress?: {
+      status?: unknown;
+    };
+  };
   response?: unknown;
   error?: unknown;
 }
@@ -39,23 +45,30 @@ export class WorldLabsClient {
     transcript = prompt,
     options: WorldLabsRequestOptions = {}
   ): Promise<WorldResult> {
-    const createResponse = await this.fetch(`${this.baseUrl}/marble/v1/worlds`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "WLT-Api-Key": this.apiKey
-      },
-      signal: options.signal,
-      body: JSON.stringify({
-        world_prompt: {
-          type: "text",
-          text_prompt: prompt
+    const createResponse = await this.fetch(
+      `${this.baseUrl}/marble/v1/worlds:generate`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "WLT-Api-Key": this.apiKey
         },
-        display_name: buildDisplayName(prompt),
-        model: "marble-1.1",
-        permission: "private"
-      })
-    });
+        signal: options.signal,
+        body: JSON.stringify({
+          world_prompt: {
+            type: "text",
+            text_prompt: prompt
+          },
+          display_name: buildDisplayName(prompt),
+          model: "marble-1.1",
+          permission: {
+            allowed_readers: [],
+            allowed_writers: [],
+            public: false
+          }
+        })
+      }
+    );
 
     if (!createResponse.ok) {
       throw new Error(
@@ -112,10 +125,7 @@ export class WorldLabsClient {
       }
 
       const operation = (await response.json()) as WorldLabsOperation;
-      const status =
-        typeof operation.status === "string"
-          ? operation.status.toLowerCase()
-          : "";
+      const status = readOperationStatus(operation);
 
       if (operation.error || status === "error" || status === "failed") {
         throw new Error(
@@ -124,6 +134,7 @@ export class WorldLabsClient {
       }
 
       if (
+        operation.done === true ||
         status === "done" ||
         status === "completed" ||
         status === "complete" ||
@@ -140,6 +151,18 @@ export class WorldLabsClient {
       `World Labs operation ${operationId} timed out after ${this.timeoutMs}ms`
     );
   }
+}
+
+function readOperationStatus(operation: WorldLabsOperation): string {
+  if (typeof operation.status === "string") {
+    return operation.status.toLowerCase();
+  }
+
+  const progressStatus = operation.metadata?.progress?.status;
+
+  return typeof progressStatus === "string"
+    ? progressStatus.toLowerCase()
+    : "";
 }
 
 async function readResponseMessage(response: Response): Promise<string> {
