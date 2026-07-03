@@ -16,6 +16,7 @@ interface HolodeckPanelControls {
   recorder: BrowserVoiceRecorder;
   coordinator: VoiceToWorldCoordinator;
   renderer: WorldRenderer;
+  openLocalSplatFilePicker: () => void;
 }
 
 let holodeckControls: HolodeckPanelControls | null = null;
@@ -57,10 +58,19 @@ export class PanelSystem extends createSystem({
 
       const statusText = document.getElementById("statusText") as UIKit.Text;
       const recordButton = document.getElementById("recordButton") as UIKit.Text;
+      const loadSplatButton = document.getElementById(
+        "loadSplatButton"
+      ) as UIKit.Text;
       const resetButton = document.getElementById("resetButton") as UIKit.Text;
       const controls = holodeckControls;
 
-      if (!statusText || !recordButton || !resetButton || !controls) {
+      if (
+        !statusText ||
+        !recordButton ||
+        !loadSplatButton ||
+        !resetButton ||
+        !controls
+      ) {
         return;
       }
 
@@ -131,11 +141,23 @@ export class PanelSystem extends createSystem({
         controls.state.clearErrorAndReturnToIdle();
       };
 
+      const onLoadSplatClick = () => {
+        if (isGenerating) {
+          setStatus("Generation in progress.");
+          return;
+        }
+
+        setStatus("Choose a local SPZ file.");
+        controls.openLocalSplatFilePicker();
+      };
+
       recordButton.addEventListener("click", onRecordClick);
+      loadSplatButton.addEventListener("click", onLoadSplatClick);
       resetButton.addEventListener("click", onResetClick);
 
       panelCleanups.set(entity.index, () => {
         recordButton.removeEventListener("click", onRecordClick);
+        loadSplatButton.removeEventListener("click", onLoadSplatClick);
         resetButton.removeEventListener("click", onResetClick);
         unsubscribeState();
       });

@@ -46,11 +46,18 @@
     border-color: #b48cff;
     color: #050608;
   }
+
+  #loadSplatButton {
+    background-color: #f6efe5;
+    border-color: #ff9c2a;
+    color: #050608;
+  }
 </style>
 <div class="lcars-panel">
   <span id="statusText">Holodeck systems standing by.</span>
   <div class="control-row">
     <button id="recordButton" class="lcars-button">Record</button>
+    <button id="loadSplatButton" class="lcars-button">Load SPZ</button>
     <button id="resetButton" class="lcars-button">Reset</button>
   </div>
 </div>

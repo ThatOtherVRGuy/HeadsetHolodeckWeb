@@ -30,7 +30,10 @@ import {
 import { SplatRenderer } from "./holodeck/rendering/splatRenderer";
 import { HolodeckStateMachine } from "./holodeck/state/holodeckState";
 import { BrowserVoiceRecorder } from "./holodeck/voice/browserVoiceRecorder";
-import { createLocalSplatWorld } from "./holodeck/world/localSplatWorld";
+import {
+  createBrowserFileSplatWorld,
+  createLocalSplatWorld
+} from "./holodeck/world/localSplatWorld";
 import {
   localSplatRenderUrl,
   localSplatUrlFromSearch
@@ -49,6 +52,7 @@ const assets: AssetManifest = {
 const state = new HolodeckStateMachine();
 const recorder = new BrowserVoiceRecorder();
 const api = new HolodeckApiClient(apiBaseUrl);
+const localSplatFileInput = createLocalSplatFileInput(document);
 
 World.create(document.getElementById("scene-container") as HTMLDivElement, {
   assets,
@@ -90,6 +94,15 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     splatRenderer,
     panoramaRenderer,
   );
+  let activeBrowserSplatObjectUrl: string | null = null;
+  const revokeActiveBrowserSplatObjectUrl = () => {
+    if (!activeBrowserSplatObjectUrl) {
+      return;
+    }
+
+    URL.revokeObjectURL(activeBrowserSplatObjectUrl);
+    activeBrowserSplatObjectUrl = null;
+  };
   const coordinator = new VoiceToWorldCoordinator({
     state,
     api,
@@ -103,7 +116,22 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     recorder,
     coordinator,
     renderer: worldRenderer,
+    openLocalSplatFilePicker: () => localSplatFileInput.click()
   });
+  localSplatFileInput.addEventListener("change", () => {
+    const file = localSplatFileInput.files?.[0] ?? null;
+    localSplatFileInput.value = "";
+    if (!file) {
+      return;
+    }
+
+    window.holodeck?.loadLocalSplatFile(file).catch((error: unknown) => {
+      state.setError(
+        error instanceof Error ? error.message : "Local SPZ loading failed."
+      );
+    });
+  });
+  window.addEventListener("beforeunload", revokeActiveBrowserSplatObjectUrl);
   window.holodeck = {
     localSplatStatus: {
       state: "idle"
@@ -138,6 +166,51 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
           state: "error",
           url,
           renderUrl,
+          error: error instanceof Error ? error.message : String(error)
+        };
+        throw error;
+      }
+    },
+    loadLocalSplatFile: async (file: File) => {
+      if (!file.name.toLowerCase().endsWith(".spz")) {
+        throw new Error("Choose an .spz file.");
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      window.holodeck!.localSplatStatus = {
+        state: "loading",
+        url: file.name,
+        renderUrl: objectUrl
+      };
+      console.log("[Holodeck] loading browser splat file", {
+        fileName: file.name,
+        size: file.size
+      });
+      state.forceState("Generating");
+      state.setStatusMessage(`Loading local splat ${file.name}`);
+
+      try {
+        await worldRenderer.load(createBrowserFileSplatWorld(file, objectUrl));
+        worldRenderer.show();
+        revokeActiveBrowserSplatObjectUrl();
+        activeBrowserSplatObjectUrl = objectUrl;
+        state.forceState("Ready");
+        state.setStatusMessage(`Local splat ready: ${file.name}`);
+        window.holodeck!.localSplatStatus = {
+          state: "ready",
+          url: file.name,
+          renderUrl: objectUrl
+        };
+        console.log("[Holodeck] browser splat file ready", {
+          fileName: file.name,
+          size: file.size
+        });
+      } catch (error) {
+        URL.revokeObjectURL(objectUrl);
+        window.holodeck!.localSplatStatus = {
+          state: "error",
+          url: file.name,
+          renderUrl: objectUrl,
           error: error instanceof Error ? error.message : String(error)
         };
         throw error;
@@ -224,7 +297,18 @@ declare global {
         missingAnchors: string[];
       };
       loadLocalSplat(url: string): Promise<void>;
+      loadLocalSplatFile(file: File): Promise<void>;
       listLocalSplats(): Promise<unknown>;
     };
   }
+}
+
+function createLocalSplatFileInput(ownerDocument: Document): HTMLInputElement {
+  const input = ownerDocument.createElement("input");
+  input.type = "file";
+  input.accept = ".spz";
+  input.style.display = "none";
+  input.setAttribute("aria-hidden", "true");
+  ownerDocument.body.appendChild(input);
+  return input;
 }
