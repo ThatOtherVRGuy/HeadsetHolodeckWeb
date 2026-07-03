@@ -118,14 +118,39 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     renderer: worldRenderer,
   });
   window.holodeck = {
+    localSplatStatus: {
+      state: "idle"
+    },
     loadLocalSplat: async (url: string) => {
       const renderUrl = localSplatRenderUrl(url, apiBaseUrl);
+      window.holodeck!.localSplatStatus = {
+        state: "loading",
+        url,
+        renderUrl
+      };
+      console.log("[Holodeck] loading local splat", { url, renderUrl });
       state.forceState("Generating");
       state.setStatusMessage(`Loading local splat ${url}`);
-      await worldRenderer.load(createLocalSplatWorld(renderUrl));
-      worldRenderer.show();
-      state.forceState("Ready");
-      state.setStatusMessage(`Local splat ready: ${url}`);
+      try {
+        await worldRenderer.load(createLocalSplatWorld(renderUrl));
+        worldRenderer.show();
+        state.forceState("Ready");
+        state.setStatusMessage(`Local splat ready: ${url}`);
+        window.holodeck!.localSplatStatus = {
+          state: "ready",
+          url,
+          renderUrl
+        };
+        console.log("[Holodeck] local splat ready", { url, renderUrl });
+      } catch (error) {
+        window.holodeck!.localSplatStatus = {
+          state: "error",
+          url,
+          renderUrl,
+          error: error instanceof Error ? error.message : String(error)
+        };
+        throw error;
+      }
     },
     listLocalSplats: async () => {
       const response = await fetch(`${apiBaseUrl}/generated-worlds`);
@@ -209,6 +234,10 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   world.registerSystem(PanelSystem).registerSystem(RobotSystem);
 
   const startupSplatUrl = localSplatUrlFromSearch(window.location.search);
+  console.log("[Holodeck] startup local splat query", {
+    search: window.location.search,
+    startupSplatUrl
+  });
   if (startupSplatUrl) {
     requestAnimationFrame(() => {
       window.holodeck?.loadLocalSplat(startupSplatUrl).catch((error: unknown) => {
@@ -241,6 +270,12 @@ function statusMessageForVoiceToWorldJob(
 declare global {
   interface Window {
     holodeck?: {
+      localSplatStatus: {
+        state: "idle" | "loading" | "ready" | "error";
+        url?: string;
+        renderUrl?: string;
+        error?: string;
+      };
       loadLocalSplat(url: string): Promise<void>;
       listLocalSplats(): Promise<unknown>;
     };

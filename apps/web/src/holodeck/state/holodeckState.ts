@@ -65,6 +65,7 @@ export class HolodeckStateMachine {
 
   subscribe(listener: HolodeckStateListener): () => void {
     this.listeners.add(listener);
+    listener(this.snapshot());
     return () => {
       this.listeners.delete(listener);
     };

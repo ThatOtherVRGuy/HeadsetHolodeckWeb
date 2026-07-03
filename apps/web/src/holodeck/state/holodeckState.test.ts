@@ -49,16 +49,37 @@ describe("HolodeckStateMachine", () => {
     unsubscribe();
     stateMachine.clearErrorAndReturnToIdle();
 
-    expect(listener).toHaveBeenCalledTimes(2);
+    expect(listener).toHaveBeenCalledTimes(3);
     expect(listener).toHaveBeenNthCalledWith(1, {
-      current: "ListeningForCommand",
+      current: "Idle",
       errorMessage: "",
       statusMessage: ""
     });
     expect(listener).toHaveBeenNthCalledWith(2, {
+      current: "ListeningForCommand",
+      errorMessage: "",
+      statusMessage: ""
+    });
+    expect(listener).toHaveBeenNthCalledWith(3, {
       current: "Error",
       errorMessage: "Microphone permission denied",
       statusMessage: ""
+    });
+  });
+
+  it("immediately notifies new subscribers of the current snapshot", () => {
+    const stateMachine = new HolodeckStateMachine();
+    const listener = vi.fn();
+
+    stateMachine.forceState("Generating");
+    stateMachine.setStatusMessage("Loading local splat");
+    stateMachine.subscribe(listener);
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledWith({
+      current: "Generating",
+      errorMessage: "",
+      statusMessage: "Loading local splat"
     });
   });
 
@@ -74,7 +95,7 @@ describe("HolodeckStateMachine", () => {
       errorMessage: "",
       statusMessage: "Rendering splats"
     });
-    expect(listener).toHaveBeenCalledWith({
+    expect(listener).toHaveBeenLastCalledWith({
       current: "Idle",
       errorMessage: "",
       statusMessage: "Rendering splats"
