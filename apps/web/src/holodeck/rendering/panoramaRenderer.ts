@@ -1,5 +1,4 @@
 import {
-  BackSide,
   Material,
   Mesh,
   MeshBasicMaterial,
@@ -51,8 +50,7 @@ export class PanoramaRenderer implements WorldRenderer {
     geometry.scale(-1, 1, 1);
 
     const material = new MeshBasicMaterial({
-      map: texture,
-      side: BackSide
+      map: texture
     });
 
     if (sequence !== this.loadSequence) {

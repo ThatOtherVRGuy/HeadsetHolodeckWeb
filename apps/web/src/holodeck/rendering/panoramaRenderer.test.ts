@@ -1,4 +1,5 @@
 import {
+  FrontSide,
   Mesh,
   MeshBasicMaterial,
   Scene,
@@ -35,6 +36,7 @@ describe("PanoramaRenderer", () => {
     expect(mesh.name).toBe("WorldPanorama_world-123");
     expect(mesh.visible).toBe(false);
     expect(mesh.geometry).toBeInstanceOf(SphereGeometry);
+    expect(mesh.material.side).toBe(FrontSide);
     expect(mesh.material.map).toBe(texture);
   });
 
