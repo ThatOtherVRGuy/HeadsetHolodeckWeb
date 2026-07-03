@@ -4,7 +4,10 @@ import {
   Quaternion,
   Vector3
 } from "@iwsdk/core/dist/runtime/three.js";
-import { applyUserStartPose } from "./startPose.js";
+import {
+  applyUserStartPose,
+  HOLODECK_INITIAL_PLAYER_POSITION
+} from "./startPose.js";
 
 describe("applyUserStartPose", () => {
   it("uses the anchor as the XR player floor position and keeps camera height local", () => {
@@ -29,12 +32,13 @@ describe("applyUserStartPose", () => {
       }
     });
 
-    expect(player.position.toArray()).toEqual([2.55, 0, 1.25]);
+    expect(player.position.toArray()).toEqual([4.55, 0, 0.25]);
+    expect([...HOLODECK_INITIAL_PLAYER_POSITION]).toEqual([4.55, 0, 0.25]);
     expect(camera.position.toArray()).toEqual([0, 1.55, 0]);
 
     const cameraWorldPosition = new Vector3();
     camera.getWorldPosition(cameraWorldPosition);
-    expect(cameraWorldPosition.toArray()).toEqual([2.55, 1.55, 1.25]);
+    expect(cameraWorldPosition.toArray()).toEqual([4.55, 1.55, 0.25]);
   });
 
   it("rotates the XR player toward the generated world on the floor plane", () => {
@@ -57,7 +61,7 @@ describe("applyUserStartPose", () => {
       }
     });
 
-    expect(player.rotation.y).toBeCloseTo(-Math.PI / 2);
+    expect(Math.abs(player.rotation.y)).toBeCloseTo(Math.PI);
     expect(camera.quaternion.toArray()).toEqual([0, 0, 0, 1]);
   });
 });

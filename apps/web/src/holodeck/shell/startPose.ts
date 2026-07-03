@@ -4,7 +4,9 @@ import {
 } from "@iwsdk/core/dist/runtime/three.js";
 import type { PlacementTarget } from "./placement.js";
 
-export const HOLODECK_INITIAL_PLAYER_POSITION = [2.55, 0, 1.25] as const;
+const USER_START_OFFSET = new Vector3(2, 0, -1);
+
+export const HOLODECK_INITIAL_PLAYER_POSITION = [4.55, 0, 0.25] as const;
 
 export interface ApplyUserStartPoseOptions {
   player: Object3D;
@@ -16,7 +18,9 @@ export interface ApplyUserStartPoseOptions {
 export function playerFloorPositionFromUserStart(
   userStart: PlacementTarget
 ): Vector3 {
-  return new Vector3(userStart.position.x, 0, userStart.position.z);
+  return new Vector3(userStart.position.x, 0, userStart.position.z).add(
+    USER_START_OFFSET
+  );
 }
 
 export function cameraLocalPositionFromUserStart(
