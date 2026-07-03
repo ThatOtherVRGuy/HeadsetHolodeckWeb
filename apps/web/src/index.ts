@@ -27,8 +27,14 @@ import { configureHolodeckPanelControls, PanelSystem } from "./panel.js";
 import { Robot } from "./robot.js";
 
 import { RobotSystem } from "./robot.js";
-import { HolodeckApiClient } from "./holodeck/api/holodeckApiClient";
-import { VoiceToWorldCoordinator } from "./holodeck/coordinator/voiceToWorldCoordinator";
+import {
+  HolodeckApiClient,
+  type VoiceToWorldJob,
+} from "./holodeck/api/holodeckApiClient";
+import {
+  VoiceToWorldCoordinator,
+  type VoiceToWorldProgress,
+} from "./holodeck/coordinator/voiceToWorldCoordinator";
 import { PanoramaRenderer } from "./holodeck/rendering/panoramaRenderer";
 import { PreferredWorldRenderer } from "./holodeck/rendering/preferredWorldRenderer";
 import { SplatRenderer } from "./holodeck/rendering/splatRenderer";
@@ -94,10 +100,8 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     state,
     api,
     renderer: worldRenderer,
-    onProgress: (job) => {
-      state.setStatusMessage(
-        job.progress?.description ?? job.message ?? "Generating world."
-      );
+    onProgress: (job, progress) => {
+      state.setStatusMessage(statusMessageForVoiceToWorldJob(job, progress));
     },
   });
   configureHolodeckPanelControls({
@@ -176,3 +180,21 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
 
   world.registerSystem(PanelSystem).registerSystem(RobotSystem);
 });
+
+function statusMessageForVoiceToWorldJob(
+  job: VoiceToWorldJob,
+  progress: VoiceToWorldProgress,
+): string {
+  const message = job.progress?.description ?? job.message ?? "Generating world.";
+
+  if (
+    (job.status === "queued" || job.status === "running") &&
+    job.stage === "world-generation"
+  ) {
+    const dots = ".".repeat((progress.pollCount % 3) + 1);
+    const elapsedSeconds = Math.max(0, Math.floor(progress.elapsedMs / 1000));
+    return `${message}${dots} Poll ${progress.pollCount}, ${elapsedSeconds}s`;
+  }
+
+  return message;
+}

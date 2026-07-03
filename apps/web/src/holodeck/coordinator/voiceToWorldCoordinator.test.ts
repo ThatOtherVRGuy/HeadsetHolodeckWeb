@@ -52,6 +52,7 @@ describe("VoiceToWorldCoordinator", () => {
     const state = new HolodeckStateMachine();
     const world = createWorld();
     const progressMessages: string[] = [];
+    const pollCounts: number[] = [];
     const api: HolodeckApi = {
       voiceToWorld: vi.fn(),
       startVoiceToWorldJob: vi.fn().mockResolvedValue({
@@ -87,7 +88,10 @@ describe("VoiceToWorldCoordinator", () => {
       api,
       renderer,
       pollIntervalMs: 0,
-      onProgress: (job) => progressMessages.push(job.message)
+      onProgress: (job, progress) => {
+        progressMessages.push(job.message);
+        pollCounts.push(progress.pollCount);
+      }
     });
 
     await coordinator.generateFromAudio(new Blob(["fake audio"]));
@@ -100,6 +104,7 @@ describe("VoiceToWorldCoordinator", () => {
       "Rendering splats",
       "World ready."
     ]);
+    expect(pollCounts).toEqual([0, 1, 2]);
     expect(rendererCalls).toEqual(["world_123", "show"]);
   });
 

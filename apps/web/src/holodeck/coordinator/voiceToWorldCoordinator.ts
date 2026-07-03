@@ -10,7 +10,12 @@ interface VoiceToWorldCoordinatorDeps {
   api: HolodeckApi;
   renderer: WorldRenderer;
   pollIntervalMs?: number;
-  onProgress?: (job: VoiceToWorldJob) => void;
+  onProgress?: (job: VoiceToWorldJob, progress: VoiceToWorldProgress) => void;
+}
+
+export interface VoiceToWorldProgress {
+  pollCount: number;
+  elapsedMs: number;
 }
 
 export class VoiceToWorldCoordinator {
@@ -59,19 +64,28 @@ export class VoiceToWorldCoordinator {
 
   private async generateFromJob(audio: Blob) {
     const { api, state } = this.deps;
+    const startedAt = Date.now();
+    let pollCount = 0;
 
     if (!api.startVoiceToWorldJob || !api.getVoiceToWorldJob) {
       return this.generateFromBlockingRequest(audio);
     }
 
     let job = await api.startVoiceToWorldJob(audio);
-    this.reportJob(job);
+    this.reportJob(job, {
+      pollCount,
+      elapsedMs: Date.now() - startedAt
+    });
 
     while (job.status === "queued" || job.status === "running") {
       state.forceState(job.stage === "transcription" ? "Interpreting" : "Generating");
       await sleep(this.deps.pollIntervalMs ?? 2_000);
+      pollCount += 1;
       job = await api.getVoiceToWorldJob(job.jobId);
-      this.reportJob(job);
+      this.reportJob(job, {
+        pollCount,
+        elapsedMs: Date.now() - startedAt
+      });
     }
 
     if (job.status === "error") {
@@ -86,8 +100,8 @@ export class VoiceToWorldCoordinator {
     return job.world;
   }
 
-  private reportJob(job: VoiceToWorldJob) {
-    this.deps.onProgress?.(job);
+  private reportJob(job: VoiceToWorldJob, progress: VoiceToWorldProgress) {
+    this.deps.onProgress?.(job, progress);
   }
 }
 
