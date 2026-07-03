@@ -4,9 +4,9 @@ import {
 } from "@iwsdk/core/dist/runtime/three.js";
 import type { PlacementTarget } from "./placement.js";
 
-const USER_START_OFFSET = new Vector3(2, 0, -1);
+const USER_START_OFFSET = new Vector3(-0.5, 0, -6.25);
 
-export const HOLODECK_INITIAL_PLAYER_POSITION = [4.55, 0, 0.25] as const;
+export const HOLODECK_INITIAL_PLAYER_POSITION = [2.05, 0, -5] as const;
 
 export interface ApplyUserStartPoseOptions {
   player: Object3D;

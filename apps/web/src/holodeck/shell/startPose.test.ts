@@ -32,13 +32,21 @@ describe("applyUserStartPose", () => {
       }
     });
 
-    expect(player.position.toArray()).toEqual([4.55, 0, 0.25]);
-    expect([...HOLODECK_INITIAL_PLAYER_POSITION]).toEqual([4.55, 0, 0.25]);
+    expect(player.position.toArray()).toEqual([
+      expect.closeTo(2.05),
+      0,
+      -5
+    ]);
+    expect([...HOLODECK_INITIAL_PLAYER_POSITION]).toEqual([2.05, 0, -5]);
     expect(camera.position.toArray()).toEqual([0, 1.55, 0]);
 
     const cameraWorldPosition = new Vector3();
     camera.getWorldPosition(cameraWorldPosition);
-    expect(cameraWorldPosition.toArray()).toEqual([4.55, 1.55, 0.25]);
+    expect(cameraWorldPosition.toArray()).toEqual([
+      expect.closeTo(2.05),
+      1.55,
+      -5
+    ]);
   });
 
   it("rotates the XR player toward the generated world on the floor plane", () => {
@@ -56,7 +64,7 @@ describe("applyUserStartPose", () => {
       },
       generatedWorld: {
         object: null,
-        position: new Vector3(2, 1, 0),
+        position: new Vector3(-0.5, 1, 1),
         quaternion: new Quaternion()
       }
     });
