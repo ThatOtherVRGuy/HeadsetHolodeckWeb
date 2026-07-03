@@ -34,10 +34,16 @@ export interface HolodeckApi {
 }
 
 export class HolodeckApiClient implements HolodeckApi {
+  private readonly baseUrl: string;
+  private readonly fetchImpl: typeof globalThis.fetch;
+
   constructor(
-    private readonly baseUrl = "http://localhost:4817",
-    private readonly fetchImpl: typeof globalThis.fetch = globalThis.fetch
-  ) {}
+    baseUrl = "http://localhost:4817",
+    fetchImpl: typeof globalThis.fetch = globalThis.fetch
+  ) {
+    this.baseUrl = baseUrl;
+    this.fetchImpl = fetchImpl.bind(globalThis);
+  }
 
   async voiceToWorld(audio: Blob): Promise<WorldResult> {
     const formData = new FormData();

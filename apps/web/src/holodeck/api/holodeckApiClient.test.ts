@@ -2,6 +2,37 @@ import { describe, expect, it, vi } from "vitest";
 import { HolodeckApiClient } from "./holodeckApiClient.js";
 
 describe("HolodeckApiClient", () => {
+  it("calls injected fetch with the global receiver", async () => {
+    const fetch = vi.fn(function (
+      this: typeof globalThis,
+      _input: RequestInfo | URL,
+      _init?: RequestInit
+    ) {
+      if (this !== globalThis) {
+        throw new TypeError("Illegal invocation");
+      }
+
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            jobId: "job_123",
+            status: "running",
+            stage: "transcription",
+            message: "Transcribing voice prompt."
+          }),
+          { status: 202, headers: { "content-type": "application/json" } }
+        )
+      );
+    }) as unknown as typeof globalThis.fetch;
+    const client = new HolodeckApiClient("http://api.test", fetch);
+
+    await expect(
+      client.startVoiceToWorldJob(new Blob(["audio"]))
+    ).resolves.toMatchObject({
+      jobId: "job_123"
+    });
+  });
+
   it("starts and reads voice-to-world jobs", async () => {
     const fetch = vi
       .fn<typeof globalThis.fetch>()
