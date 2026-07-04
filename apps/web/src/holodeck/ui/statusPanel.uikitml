@@ -1,0 +1,21 @@
+<style>
+  .status-panel {
+    align-items: stretch;
+    padding: 0.8;
+    width: 38;
+    display: flex;
+    background-color: #050608;
+    border-color: #58b7ff;
+    border-width: 0.18;
+    border-radius: 1.4;
+  }
+
+  #statusText {
+    font-size: 1.8;
+    color: #f6efe5;
+    text-align: center;
+  }
+</style>
+<div class="status-panel">
+  <span id="statusText">Holodeck systems standing by.</span>
+</div>

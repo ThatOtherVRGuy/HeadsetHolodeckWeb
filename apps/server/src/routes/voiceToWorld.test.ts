@@ -1,0 +1,611 @@
+import { describe, expect, it, vi } from "vitest";
+import { buildServer } from "../app.js";
+import type { TranscriptionClient } from "../openai/transcriptionClient.js";
+import type { WorldLabsClient } from "../worldlabs/worldLabsClient.js";
+
+function multipartPayload(
+  parts: Array<{
+    name: string;
+    value: Buffer | string;
+    filename?: string;
+    contentType?: string;
+  }>
+) {
+  const boundary = "test-boundary";
+  const chunks: Buffer[] = [];
+
+  for (const part of parts) {
+    const headers = [
+      `--${boundary}`,
+      `Content-Disposition: form-data; name="${part.name}"${
+        part.filename ? `; filename="${part.filename}"` : ""
+      }`,
+      ...(part.contentType ? [`Content-Type: ${part.contentType}`] : []),
+      "",
+      ""
+    ].join("\r\n");
+
+    chunks.push(Buffer.from(headers));
+    chunks.push(
+      typeof part.value === "string" ? Buffer.from(part.value) : part.value
+    );
+    chunks.push(Buffer.from("\r\n"));
+  }
+
+  chunks.push(Buffer.from(`--${boundary}--\r\n`));
+
+  return {
+    headers: {
+      "content-type": `multipart/form-data; boundary=${boundary}`
+    },
+    payload: Buffer.concat(chunks)
+  };
+}
+
+describe("POST /api/voice-to-world", () => {
+  it("transcribes an uploaded audio file and returns the generated world", async () => {
+    const transcribe = vi.fn<TranscriptionClient["transcribe"]>();
+    transcribe.mockResolvedValue("A glass forest at sunrise");
+    const generateWorldFromText =
+      vi.fn<WorldLabsClient["generateWorldFromText"]>();
+    generateWorldFromText.mockResolvedValue({
+      worldId: "world-123",
+      displayName: "Glass Forest",
+      prompt: "A glass forest at sunrise",
+      transcript: "A glass forest at sunrise",
+      panoUrl: "https://example.test/pano.jpg",
+      spzUrls: {},
+      raw: { world_id: "world-123" }
+    });
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: { transcribe },
+        worldLabsClient: { generateWorldFromText }
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "prompt.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({
+        worldId: "world-123",
+        displayName: "Glass Forest",
+        prompt: "A glass forest at sunrise",
+        transcript: "A glass forest at sunrise",
+        panoUrl: "https://example.test/pano.jpg",
+        spzUrls: {},
+        raw: { world_id: "world-123" }
+      });
+      expect(transcribe).toHaveBeenCalledWith(
+        new Uint8Array([1, 2, 3]),
+        "prompt.webm",
+        "audio/webm",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal)
+        })
+      );
+      expect(generateWorldFromText).toHaveBeenCalledWith(
+        "A glass forest at sunrise",
+        "A glass forest at sunrise",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal)
+        })
+      );
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("downloads the generated world's splat when a downloader is configured", async () => {
+    const transcribe = vi.fn<TranscriptionClient["transcribe"]>();
+    transcribe.mockResolvedValue("A glass forest at sunrise");
+    const world = {
+      worldId: "world-123",
+      displayName: "Glass Forest",
+      prompt: "A glass forest at sunrise",
+      transcript: "A glass forest at sunrise",
+      panoUrl: "https://example.test/pano.jpg",
+      spzUrls: {
+        full_res: "https://example.test/full_res.spz"
+      },
+      raw: { world_id: "world-123" }
+    };
+    const generateWorldFromText =
+      vi.fn<WorldLabsClient["generateWorldFromText"]>();
+    generateWorldFromText.mockResolvedValue(world);
+    const splatDownloader = vi.fn().mockResolvedValue({
+      resolution: "full_res",
+      sourceUrl: "https://example.test/full_res.spz",
+      filePath: "/tmp/world-123/full_res.spz",
+      byteLength: 123
+    });
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: { transcribe },
+        worldLabsClient: { generateWorldFromText },
+        splatDownloader
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "prompt.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({
+        ...world,
+        localSplat: {
+          resolution: "full_res",
+          sourceUrl: "https://example.test/full_res.spz",
+          filePath: "/tmp/world-123/full_res.spz",
+          byteLength: 123
+        }
+      });
+      expect(splatDownloader).toHaveBeenCalledWith(
+        world,
+        expect.objectContaining({
+          signal: expect.any(AbortSignal)
+        })
+      );
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("still returns the generated world when local splat download fails", async () => {
+    const transcribe = vi.fn<TranscriptionClient["transcribe"]>();
+    transcribe.mockResolvedValue("A glass forest at sunrise");
+    const world = {
+      worldId: "world-123",
+      displayName: "Glass Forest",
+      prompt: "A glass forest at sunrise",
+      transcript: "A glass forest at sunrise",
+      panoUrl: "https://example.test/pano.jpg",
+      spzUrls: {
+        full_res: "https://example.test/full_res.spz"
+      },
+      raw: { world_id: "world-123" }
+    };
+    const generateWorldFromText =
+      vi.fn<WorldLabsClient["generateWorldFromText"]>();
+    generateWorldFromText.mockResolvedValue(world);
+    const splatDownloader = vi
+      .fn()
+      .mockRejectedValue(new Error("download failed"));
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: { transcribe },
+        worldLabsClient: { generateWorldFromText },
+        splatDownloader
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "prompt.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual(world);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns 400 when the multipart request does not include an audio file", async () => {
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: {
+          transcribe: vi.fn()
+        },
+        worldLabsClient: {
+          generateWorldFromText: vi.fn()
+        }
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "note",
+          value: "no audio here"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: "Audio file is required"
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns 400 when the uploaded audio file is empty", async () => {
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: {
+          transcribe: vi.fn()
+        },
+        worldLabsClient: {
+          generateWorldFromText: vi.fn()
+        }
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.alloc(0),
+          filename: "empty.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: "Audio file is empty"
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns 502 when transcription fails", async () => {
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: {
+          transcribe: vi
+            .fn<TranscriptionClient["transcribe"]>()
+            .mockRejectedValue(new Error("OpenAI rejected the audio"))
+        },
+        worldLabsClient: {
+          generateWorldFromText: vi.fn()
+        }
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "prompt.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(502);
+      expect(response.json()).toEqual({
+        error: "Transcription failed"
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns 502 when transcription times out", async () => {
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: {
+          transcribe: vi
+            .fn<TranscriptionClient["transcribe"]>()
+            .mockRejectedValue(new Error("OpenAI transcription timed out"))
+        },
+        worldLabsClient: {
+          generateWorldFromText: vi.fn()
+        }
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "prompt.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(502);
+      expect(response.json()).toEqual({
+        error: "Transcription failed"
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns 504 when world generation times out", async () => {
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: {
+          transcribe: vi
+            .fn<TranscriptionClient["transcribe"]>()
+            .mockResolvedValue("A glass forest at sunrise")
+        },
+        worldLabsClient: {
+          generateWorldFromText: vi
+            .fn<WorldLabsClient["generateWorldFromText"]>()
+            .mockRejectedValue(new Error("World Labs operation op-123 timed out after 1ms"))
+        }
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "prompt.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(504);
+      expect(response.json()).toEqual({
+        error: "World generation timed out"
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns 502 when world generation fails", async () => {
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: {
+          transcribe: vi
+            .fn<TranscriptionClient["transcribe"]>()
+            .mockResolvedValue("A glass forest at sunrise")
+        },
+        worldLabsClient: {
+          generateWorldFromText: vi
+            .fn<WorldLabsClient["generateWorldFromText"]>()
+            .mockRejectedValue(new Error("World generation failed"))
+        }
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "prompt.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(502);
+      expect(response.json()).toEqual({
+        error: "World generation failed"
+      });
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+describe("voice-to-world jobs", () => {
+  it("starts a background generation job and exposes progress until completion", async () => {
+    const transcription = deferred<string>();
+    const worldGeneration = deferred<{
+      worldId: string;
+      displayName: string;
+      prompt: string;
+      transcript: string;
+      panoUrl: string;
+      spzUrls: Record<string, string>;
+      raw: unknown;
+    }>();
+    const transcribe = vi
+      .fn<TranscriptionClient["transcribe"]>()
+      .mockReturnValue(transcription.promise);
+    const generateWorldFromText =
+      vi.fn<WorldLabsClient["generateWorldFromText"]>();
+    generateWorldFromText.mockImplementation(async (_prompt, _transcript, options) => {
+      options?.onProgress?.({
+        operationId: "op-123",
+        status: "running",
+        description: "Rendering splats"
+      });
+      return worldGeneration.promise;
+    });
+    const splatDownloader = vi.fn().mockResolvedValue({
+      resolution: "full_res",
+      sourceUrl: "https://example.test/full_res.spz",
+      filePath: "/tmp/world-123/full_res.spz",
+      publicUrl: "/generated-worlds/world-123/full_res.spz",
+      byteLength: 123
+    });
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: { transcribe },
+        worldLabsClient: { generateWorldFromText },
+        splatDownloader
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "prompt.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const started = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world/jobs",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(started.statusCode).toBe(202);
+      const { jobId } = started.json() as { jobId: string };
+      expect(jobId).toMatch(/^job_/);
+
+      const transcribing = await app.inject({
+        method: "GET",
+        url: `/api/voice-to-world/jobs/${jobId}`
+      });
+      expect(transcribing.statusCode).toBe(200);
+      expect(transcribing.json()).toMatchObject({
+        jobId,
+        status: "running",
+        stage: "transcription",
+        message: "Transcribing voice prompt."
+      });
+
+      transcription.resolve("A glass forest at sunrise");
+
+      await vi.waitFor(async () => {
+        const generating = await app.inject({
+          method: "GET",
+          url: `/api/voice-to-world/jobs/${jobId}`
+        });
+        expect(generating.json()).toMatchObject({
+          jobId,
+          status: "running",
+          stage: "world-generation",
+          operationId: "op-123",
+          progress: {
+            status: "running",
+            description: "Rendering splats"
+          }
+        });
+      });
+
+      worldGeneration.resolve({
+        worldId: "world-123",
+        displayName: "Glass Forest",
+        prompt: "A glass forest at sunrise",
+        transcript: "A glass forest at sunrise",
+        panoUrl: "https://example.test/pano.jpg",
+        spzUrls: {
+          full_res: "https://example.test/full_res.spz"
+        },
+        raw: { world_id: "world-123" }
+      });
+
+      await vi.waitFor(async () => {
+        const completed = await app.inject({
+          method: "GET",
+          url: `/api/voice-to-world/jobs/${jobId}`
+        });
+        expect(completed.statusCode).toBe(200);
+        expect(completed.json()).toMatchObject({
+          jobId,
+          status: "complete",
+          stage: "complete",
+          world: {
+            worldId: "world-123",
+            localSplat: {
+              publicUrl: "/generated-worlds/world-123/full_res.spz"
+            }
+          }
+        });
+      });
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
+}
