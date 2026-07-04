@@ -26,6 +26,7 @@ export function createLocalSplatWorld(url: string): WorldResult {
       resolution: "local",
       sourceUrl: trimmedUrl,
       filePath: trimmedUrl,
+      placement: "world",
       publicUrl: trimmedUrl,
       byteLength: 0
     },
@@ -57,6 +58,7 @@ export function createBrowserFileSplatWorld(
       resolution: "local",
       sourceUrl: objectUrl,
       filePath: fileName,
+      placement: "loose-object",
       publicUrl: objectUrl,
       byteLength: file.size
     },

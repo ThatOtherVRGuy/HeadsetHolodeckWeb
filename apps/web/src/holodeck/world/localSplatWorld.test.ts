@@ -14,6 +14,7 @@ describe("createLocalSplatWorld", () => {
       localSplat: {
         resolution: "local",
         sourceUrl: "/generated-worlds/world-123/full_res.spz",
+        placement: "world",
         publicUrl: "/generated-worlds/world-123/full_res.spz"
       }
     });
@@ -34,6 +35,7 @@ describe("createBrowserFileSplatWorld", () => {
         resolution: "local",
         sourceUrl: "blob:https://localhost:8081/file-123",
         filePath: "My Park.spz",
+        placement: "loose-object",
         publicUrl: "blob:https://localhost:8081/file-123",
         byteLength: 1234
       },

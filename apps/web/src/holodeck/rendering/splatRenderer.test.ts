@@ -110,12 +110,11 @@ describe("SplatRenderer", () => {
           resolution: "local",
           sourceUrl: "blob:https://localhost:8081/loose",
           filePath: "loose.spz",
+          placement: "loose-object",
           publicUrl: "blob:https://localhost:8081/loose",
           byteLength: 1234
         },
-        raw: {
-          source: "browser-file-spz"
-        }
+        raw: {}
       })
     );
 

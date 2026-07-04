@@ -10,9 +10,12 @@ export interface WorldResult {
     resolution: string;
     sourceUrl: string;
     filePath: string;
+    placement?: SplatPlacement;
     publicUrl?: string;
     byteLength: number;
   };
   meshUrl?: string;
   raw: unknown;
 }
+
+export type SplatPlacement = "world" | "loose-object";

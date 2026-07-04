@@ -5,7 +5,7 @@ import type {
   Vector3,
   WebGLRenderer
 } from "@iwsdk/core/dist/runtime/three.js";
-import type { WorldResult } from "../world/worldResult";
+import type { SplatPlacement, WorldResult } from "../world/worldResult";
 import type { WorldRenderer } from "./worldRenderer";
 
 interface SplatRendererOptions {
@@ -141,14 +141,16 @@ function loadedMessageForMesh(mesh: SplatMesh) {
     : "Local splat decoded";
 }
 
-type SplatPlacementPolicy = "world" | "loose-object";
+function placementPolicyForWorld(world: WorldResult): SplatPlacement {
+  if (world.localSplat?.placement) {
+    return world.localSplat.placement;
+  }
 
-function placementPolicyForWorld(world: WorldResult): SplatPlacementPolicy {
   const raw = world.raw as { source?: unknown } | null;
   return raw?.source === "browser-file-spz" ? "loose-object" : "world";
 }
 
-function frameSplatMesh(mesh: SplatMesh, policy: SplatPlacementPolicy) {
+function frameSplatMesh(mesh: SplatMesh, policy: SplatPlacement) {
   const bounds = mesh.getBoundingBox(true);
   if (!isUsableBounds(bounds)) {
     return;
