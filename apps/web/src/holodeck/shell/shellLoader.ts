@@ -1,4 +1,5 @@
 import type { Object3D } from "@iwsdk/core/dist/runtime/three.js";
+import { Vector3 } from "@iwsdk/core/dist/runtime/three.js";
 import type { ShellAnchorName } from "./anchorContract.js";
 import { resolveShellAnchors } from "./anchorResolver.js";
 import {
@@ -24,6 +25,8 @@ export interface ShellLoadResult {
   message: string;
 }
 
+const XR_ARCH_VIEW_SHELL_OFFSET = new Vector3(-1.8, 0, 3);
+
 export function loadHolodeckShell(options: ShellLoadOptions): ShellLoadResult {
   const root = options.getGltfScene(options.assetId);
   if (!root) {
@@ -37,6 +40,7 @@ export function loadHolodeckShell(options: ShellLoadOptions): ShellLoadResult {
   }
 
   root.name = root.name || "HolodeckShell";
+  root.position.copy(XR_ARCH_VIEW_SHELL_OFFSET);
   options.createTransformEntity(root);
 
   const resolution = resolveShellAnchors(root);

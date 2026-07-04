@@ -33,23 +33,23 @@ describe("applyUserStartPose", () => {
     });
 
     expect(player.position.toArray()).toEqual([
-      expect.closeTo(2.05),
+      expect.closeTo(4.35),
       0,
-      -5
+      expect.closeTo(-1.75)
     ]);
-    expect([...HOLODECK_INITIAL_PLAYER_POSITION]).toEqual([2.05, 0, -5]);
+    expect([...HOLODECK_INITIAL_PLAYER_POSITION]).toEqual([4.35, 0, -1.75]);
     expect(camera.position.toArray()).toEqual([0, 1.55, 0]);
 
     const cameraWorldPosition = new Vector3();
     camera.getWorldPosition(cameraWorldPosition);
     expect(cameraWorldPosition.toArray()).toEqual([
-      expect.closeTo(2.05),
+      expect.closeTo(4.35),
       1.55,
-      -5
+      expect.closeTo(-1.75)
     ]);
   });
 
-  it("rotates the XR player toward the generated world on the floor plane", () => {
+  it("rotates the XR player to face back toward the arch", () => {
     const player = new Object3D();
     const camera = new Object3D();
 
@@ -69,7 +69,7 @@ describe("applyUserStartPose", () => {
       }
     });
 
-    expect(Math.abs(player.rotation.y)).toBeCloseTo(Math.PI);
+    expect(player.rotation.y).toBeCloseTo(Math.PI);
     expect(camera.quaternion.toArray()).toEqual([0, 0, 0, 1]);
   });
 });

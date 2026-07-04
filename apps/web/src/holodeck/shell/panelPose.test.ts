@@ -37,17 +37,21 @@ describe("placePanelForShellComposition", () => {
     expect(panel.rotation.toArray()).toEqual([0, 0, 0, "XYZ"]);
   });
 
-  it("uses the exported shell panel anchor without inheriting anchor tilt", () => {
+  it("uses the exported shell panel anchor world transform", () => {
     const panel = new Object3D();
     const camera = new PerspectiveCamera();
+    const shellRoot = new Object3D();
     const panelAnchor = new Object3D();
     const statusAnchor = new Object3D();
 
+    shellRoot.position.set(-1.8, 0, 3);
     panelAnchor.name = "OpsPanelAnchor";
     panelAnchor.position.set(1, 1.4, -2);
-    panelAnchor.quaternion.setFromEuler(new Euler(0.4, 0.7, -0.3));
+    panelAnchor.quaternion.setFromEuler(new Euler(0, 0.7, 0));
     statusAnchor.name = "StatusPanelAnchor";
     statusAnchor.position.set(3, 1.8, -1);
+    shellRoot.add(panelAnchor);
+    shellRoot.add(statusAnchor);
 
     placePanelForShellComposition(panel, camera, {
       panel: {
@@ -67,10 +71,14 @@ describe("placePanelForShellComposition", () => {
       }
     });
 
-    expect(panel.parent).not.toBe(camera);
-    expect(panel.position.toArray()).toEqual([1, 1.4, -2]);
+    expect(panel.parent).toBeNull();
+    expect(panel.position.toArray()).toEqual([
+      expect.closeTo(-0.8),
+      1.4,
+      1
+    ]);
     expect(panel.rotation.x).toBeCloseTo(0);
-    expect(panel.rotation.y).toBeCloseTo(0);
+    expect(panel.rotation.y).toBeCloseTo(0.7);
     expect(panel.rotation.z).toBeCloseTo(0);
   });
 });
