@@ -68,7 +68,7 @@ export class SplatRenderer implements WorldRenderer {
     }
 
     this.clearCurrentMesh();
-    frameSplatMesh(mesh);
+    frameSplatMesh(mesh, placementPolicyForWorld(world));
     this.currentMesh = mesh;
     this.scene.add(mesh);
     this.options.onStatus?.(loadedMessageForMesh(mesh));
@@ -141,7 +141,14 @@ function loadedMessageForMesh(mesh: SplatMesh) {
     : "Local splat decoded";
 }
 
-function frameSplatMesh(mesh: SplatMesh) {
+type SplatPlacementPolicy = "world" | "loose-object";
+
+function placementPolicyForWorld(world: WorldResult): SplatPlacementPolicy {
+  const raw = world.raw as { source?: unknown } | null;
+  return raw?.source === "browser-file-spz" ? "loose-object" : "world";
+}
+
+function frameSplatMesh(mesh: SplatMesh, policy: SplatPlacementPolicy) {
   const bounds = mesh.getBoundingBox(true);
   if (!isUsableBounds(bounds)) {
     return;
@@ -154,13 +161,14 @@ function frameSplatMesh(mesh: SplatMesh) {
     return;
   }
 
-  const scale = Math.min(1, 6 / maxDimension);
+  const scale = Math.min(1, (policy === "loose-object" ? 2 : 6) / maxDimension);
   mesh.scale.set(scale, -scale, scale);
-  mesh.position.set(
-    -center.x * scale,
-    bounds.max.y * scale,
-    -center.z * scale
-  );
+  if (policy === "loose-object") {
+    mesh.position.set(-center.x * scale, 1.2 + center.y * scale, -center.z * scale);
+    return;
+  }
+
+  mesh.position.set(-center.x * scale, bounds.max.y * scale, -center.z * scale);
 }
 
 function isUsableBounds(bounds: Box3) {

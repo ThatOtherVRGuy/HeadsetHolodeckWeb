@@ -95,6 +95,42 @@ describe("SplatRenderer", () => {
     expect(scene.children[1].visible).toBe(false);
   });
 
+  it("uses smaller object-preview framing for browser-picked loose splats", async () => {
+    const scene = new Scene();
+    const renderer = new SplatRenderer(
+      scene,
+      {} as WebGLRenderer,
+      createSparkTestConstructors()
+    );
+
+    await renderer.load(
+      worldResult({
+        worldId: "loose",
+        localSplat: {
+          resolution: "local",
+          sourceUrl: "blob:https://localhost:8081/loose",
+          filePath: "loose.spz",
+          publicUrl: "blob:https://localhost:8081/loose",
+          byteLength: 1234
+        },
+        raw: {
+          source: "browser-file-spz"
+        }
+      })
+    );
+
+    expect(scene.children[1].scale).toMatchObject({
+      x: 0.2,
+      y: -0.2,
+      z: 0.2
+    });
+    expect(scene.children[1].position).toMatchObject({
+      x: -1,
+      y: 1.2,
+      z: -0
+    });
+  });
+
   it("disposes stale splats when overlapping loads resolve out of order", async () => {
     const scene = new Scene();
     const constructors = createSparkTestConstructors();
