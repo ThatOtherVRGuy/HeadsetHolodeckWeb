@@ -8,6 +8,7 @@ const PANEL_DISTANCE = -0.75;
 const PANEL_HEIGHT_OFFSET = -0.2;
 
 export interface PanelCompositionTargets {
+  panel: PlacementTarget;
   statusPanel: PlacementTarget;
   generatedWorld: PlacementTarget;
 }
@@ -17,12 +18,12 @@ export function placePanelForShellComposition(
   camera: Object3D,
   targets: PanelCompositionTargets
 ): void {
-  if (targets.statusPanel.object) {
+  if (targets.panel.object) {
     if (panel.parent) {
       panel.parent.remove(panel);
     }
 
-    panel.position.copy(targets.statusPanel.position);
+    panel.position.copy(targets.panel.position);
     panel.rotation.set(
       0,
       yawToward(panel.position, targets.generatedWorld.position),

@@ -1,0 +1,22 @@
+<style>
+  .info-panel {
+    align-items: stretch;
+    padding: 1.1;
+    width: 31;
+    display: flex;
+    flex-direction: column;
+    background-color: #050608;
+    border-color: #b48cff;
+    border-width: 0.18;
+    border-radius: 1.4;
+  }
+
+  #infoText {
+    font-size: 1.7;
+    color: #f6efe5;
+    text-align: left;
+  }
+</style>
+<div class="info-panel">
+  <span id="infoText">World details will appear here.</span>
+</div>

@@ -34,8 +34,9 @@ describe("resolveShellAnchors", () => {
 
     expect(result.anchors.WorldRoot?.name).toBe("WorldRoot");
     expect(result.missing).toEqual([
-      "MainStatusPanelAnchor",
-      "RecordControlAnchor",
+      "OpsPanelAnchor",
+      "InfoPanelAnchor",
+      "StatusPanelAnchor",
       "UserStartPose"
     ]);
   });
@@ -50,5 +51,20 @@ describe("resolveShellAnchors", () => {
     const result = resolveShellAnchors(root);
 
     expect(result.anchors.MainStatusPanelAnchor).toBe(panelAnchor);
+  });
+
+  it("resolves legacy panel anchors without requiring them", () => {
+    const root = namedObject("HolodeckShell");
+    const legacyStatus = namedObject("MainStatusPanelAnchor");
+    const legacyRecord = namedObject("RecordControlAnchor");
+    root.add(legacyStatus);
+    root.add(legacyRecord);
+
+    const result = resolveShellAnchors(root);
+
+    expect(result.anchors.MainStatusPanelAnchor).toBe(legacyStatus);
+    expect(result.anchors.RecordControlAnchor).toBe(legacyRecord);
+    expect(result.missing).toContain("OpsPanelAnchor");
+    expect(result.missing).not.toContain("MainStatusPanelAnchor");
   });
 });

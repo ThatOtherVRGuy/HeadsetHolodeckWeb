@@ -15,6 +15,11 @@ describe("placePanelForShellComposition", () => {
 
     camera.position.set(2.05, 1.55, -5);
     placePanelForShellComposition(panel, camera, {
+      panel: {
+        object: null,
+        position: new Vector3(0, 1.55, -1.9),
+        quaternion: new Quaternion()
+      },
       statusPanel: {
         object: null,
         position: new Vector3(0, 1.29, -1.9),
@@ -36,16 +41,24 @@ describe("placePanelForShellComposition", () => {
     const panel = new Object3D();
     const camera = new PerspectiveCamera();
     const panelAnchor = new Object3D();
+    const statusAnchor = new Object3D();
 
-    panelAnchor.name = "MainStatusPanelAnchor";
+    panelAnchor.name = "OpsPanelAnchor";
     panelAnchor.position.set(1, 1.4, -2);
     panelAnchor.quaternion.setFromEuler(new Euler(0.4, 0.7, -0.3));
+    statusAnchor.name = "StatusPanelAnchor";
+    statusAnchor.position.set(3, 1.8, -1);
 
     placePanelForShellComposition(panel, camera, {
-      statusPanel: {
+      panel: {
         object: panelAnchor,
         position: panelAnchor.position.clone(),
         quaternion: panelAnchor.quaternion.clone()
+      },
+      statusPanel: {
+        object: statusAnchor,
+        position: statusAnchor.position.clone(),
+        quaternion: statusAnchor.quaternion.clone()
       },
       generatedWorld: {
         object: null,

@@ -237,21 +237,44 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     generatedWorld: shell.placement.generatedWorld,
   });
 
-  const panelEntity = world
-    .createTransformEntity()
-    .addComponent(PanelUI, {
-      config: "./ui/holodeck/statusPanel.json",
-      maxHeight: 0.42,
-      maxWidth: 1.05,
-    })
-    .addComponent(Interactable);
-  placePanelForShellComposition(
-    panelEntity.object3D!,
-    camera,
-    {
+  const createSpatialPanel = (
+    config: string,
+    panel: typeof shell.placement.statusPanel,
+    maxWidth: number,
+    maxHeight: number
+  ) => {
+    const entity = world
+      .createTransformEntity()
+      .addComponent(PanelUI, {
+        config,
+        maxHeight,
+        maxWidth,
+      })
+      .addComponent(Interactable);
+    placePanelForShellComposition(entity.object3D!, camera, {
+      panel,
       statusPanel: shell.placement.statusPanel,
       generatedWorld: shell.placement.generatedWorld
-    }
+    });
+  };
+
+  createSpatialPanel(
+    "./ui/holodeck/opsPanel.json",
+    shell.placement.opsPanel,
+    0.68,
+    0.62
+  );
+  createSpatialPanel(
+    "./ui/holodeck/infoPanel.json",
+    shell.placement.infoPanel,
+    0.78,
+    0.5
+  );
+  createSpatialPanel(
+    "./ui/holodeck/statusPanel.json",
+    shell.placement.statusPanel,
+    1.05,
+    0.26
   );
 
   world.registerSystem(PanelSystem);

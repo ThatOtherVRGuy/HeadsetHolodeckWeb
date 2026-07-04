@@ -12,6 +12,8 @@ export interface PlacementTarget {
 }
 
 export interface ShellPlacement {
+  opsPanel: PlacementTarget;
+  infoPanel: PlacementTarget;
   statusPanel: PlacementTarget;
   recordControl: PlacementTarget;
   generatedWorld: PlacementTarget;
@@ -19,8 +21,11 @@ export interface ShellPlacement {
 }
 
 const DEBUG_POSITIONS = {
-  MainStatusPanelAnchor: new Vector3(0, 1.29, -1.9),
-  RecordControlAnchor: new Vector3(0.55, 1.08, -1.85),
+  OpsPanelAnchor: new Vector3(-0.72, 1.12, -1.85),
+  InfoPanelAnchor: new Vector3(0.72, 1.12, -1.85),
+  StatusPanelAnchor: new Vector3(0, 1.55, -1.9),
+  MainStatusPanelAnchor: new Vector3(0, 1.55, -1.9),
+  RecordControlAnchor: new Vector3(-0.72, 1.08, -1.85),
   GeneratedWorldRoot: new Vector3(0, 1.2, 0),
   UserStartPose: new Vector3(-4, 1.5, -6)
 } satisfies Record<Exclude<ShellAnchorName, "WorldRoot">, Vector3>;
@@ -30,15 +35,22 @@ export function createDebugShellPlacement(): ShellPlacement {
 }
 
 export function createShellPlacement(anchors: ShellAnchorMap): ShellPlacement {
+  const opsPanel = targetFromAnchor(
+    anchors.OpsPanelAnchor ?? anchors.RecordControlAnchor ?? null,
+    DEBUG_POSITIONS.OpsPanelAnchor
+  );
+
   return {
+    opsPanel,
+    infoPanel: targetFromAnchor(
+      anchors.InfoPanelAnchor ?? null,
+      DEBUG_POSITIONS.InfoPanelAnchor
+    ),
     statusPanel: targetFromAnchor(
-      anchors.MainStatusPanelAnchor ?? null,
-      DEBUG_POSITIONS.MainStatusPanelAnchor
+      anchors.StatusPanelAnchor ?? anchors.MainStatusPanelAnchor ?? null,
+      DEBUG_POSITIONS.StatusPanelAnchor
     ),
-    recordControl: targetFromAnchor(
-      anchors.RecordControlAnchor ?? null,
-      DEBUG_POSITIONS.RecordControlAnchor
-    ),
+    recordControl: opsPanel,
     generatedWorld: targetFromAnchor(
       anchors.GeneratedWorldRoot ?? null,
       DEBUG_POSITIONS.GeneratedWorldRoot

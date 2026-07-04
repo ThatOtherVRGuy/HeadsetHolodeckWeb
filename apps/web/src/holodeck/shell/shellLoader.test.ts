@@ -8,8 +8,9 @@ function shellWithRequiredAnchors() {
   for (const name of [
     "WorldRoot",
     "GeneratedWorldRoot",
-    "MainStatusPanelAnchor",
-    "RecordControlAnchor",
+    "OpsPanelAnchor",
+    "InfoPanelAnchor",
+    "StatusPanelAnchor",
     "UserStartPose"
   ]) {
     const anchor = new Object3D();
@@ -33,9 +34,9 @@ describe("loadHolodeckShell", () => {
     expect(result.status).toBe("loaded");
     expect(result.missingAnchors).toEqual([]);
     expect(result.root).toBe(shell);
-    expect(result.placement.statusPanel.object?.name).toBe(
-      "MainStatusPanelAnchor"
-    );
+    expect(result.placement.opsPanel.object?.name).toBe("OpsPanelAnchor");
+    expect(result.placement.infoPanel.object?.name).toBe("InfoPanelAnchor");
+    expect(result.placement.statusPanel.object?.name).toBe("StatusPanelAnchor");
     expect(createTransformEntity).toHaveBeenCalledWith(shell);
     expect(shell.matrixAutoUpdate).toBe(false);
   });
@@ -71,8 +72,9 @@ describe("loadHolodeckShell", () => {
     expect(result.status).toBe("missing-anchors");
     expect(result.missingAnchors).toEqual([
       "GeneratedWorldRoot",
-      "MainStatusPanelAnchor",
-      "RecordControlAnchor",
+      "OpsPanelAnchor",
+      "InfoPanelAnchor",
+      "StatusPanelAnchor",
       "UserStartPose"
     ]);
     expect(result.message).toContain("Missing holodeck shell anchors");
