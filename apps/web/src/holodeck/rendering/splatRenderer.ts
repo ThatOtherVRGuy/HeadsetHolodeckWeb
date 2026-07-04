@@ -158,7 +158,7 @@ function frameSplatMesh(mesh: SplatMesh) {
   mesh.scale.set(scale, -scale, scale);
   mesh.position.set(
     -center.x * scale,
-    1.2 + center.y * scale,
+    bounds.max.y * scale,
     -center.z * scale
   );
 }

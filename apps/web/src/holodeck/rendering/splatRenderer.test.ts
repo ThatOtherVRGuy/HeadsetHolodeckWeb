@@ -84,7 +84,7 @@ describe("SplatRenderer", () => {
     });
     expect(scene.children[1].position).toMatchObject({
       x: -3,
-      y: 1.2,
+      y: 1.5,
       z: -0
     });
 
