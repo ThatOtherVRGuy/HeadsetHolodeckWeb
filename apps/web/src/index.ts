@@ -23,7 +23,7 @@ import {
 import { PanoramaRenderer } from "./holodeck/rendering/panoramaRenderer";
 import { PreferredWorldRenderer } from "./holodeck/rendering/preferredWorldRenderer";
 import { loadHolodeckShell } from "./holodeck/shell/shellLoader";
-import { placePanelInFrontOfCamera } from "./holodeck/shell/panelPose";
+import { placePanelForShellComposition } from "./holodeck/shell/panelPose";
 import {
   applyUserStartPose,
   HOLODECK_INITIAL_PLAYER_POSITION
@@ -245,10 +245,13 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       maxWidth: 1.05,
     })
     .addComponent(Interactable);
-  placePanelInFrontOfCamera(
+  placePanelForShellComposition(
     panelEntity.object3D!,
     camera,
-    shell.placement.generatedWorld
+    {
+      statusPanel: shell.placement.statusPanel,
+      generatedWorld: shell.placement.generatedWorld
+    }
   );
 
   world.registerSystem(PanelSystem);
