@@ -163,11 +163,11 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       state.setStatusMessage(`Loading local splat ${url}`);
       try {
         await worldRenderer.load(createLocalSplatWorld(renderUrl));
-        worldRenderer.show();
         if (!isActiveLocalSplatLoad(loadId)) {
           return;
         }
 
+        worldRenderer.show();
         setLoadedWorldPanelInfo({
           title: url,
           source: "LOCAL SPZ",
@@ -182,16 +182,17 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
         };
         console.log("[Holodeck] local splat ready", { url, renderUrl });
       } catch (error) {
-        if (isActiveLocalSplatLoad(loadId)) {
-          window.holodeck!.localSplatStatus = {
-            state: "error",
-            url,
-            renderUrl,
-            error: error instanceof Error ? error.message : String(error)
-          };
-          setLoadedWorldPanelInfo(null);
+        if (!isActiveLocalSplatLoad(loadId)) {
+          return;
         }
 
+        window.holodeck!.localSplatStatus = {
+          state: "error",
+          url,
+          renderUrl,
+          error: error instanceof Error ? error.message : String(error)
+        };
+        setLoadedWorldPanelInfo(null);
         throw error;
       } finally {
         if (isActiveLocalSplatLoad(loadId)) {
@@ -221,12 +222,12 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
 
       try {
         await worldRenderer.load(createBrowserFileSplatWorld(file, objectUrl));
-        worldRenderer.show();
         if (!isActiveLocalSplatLoad(loadId)) {
           URL.revokeObjectURL(objectUrl);
           return;
         }
 
+        worldRenderer.show();
         setLoadedWorldPanelInfo({
           title: file.name,
           source: "LOCAL SPZ",
@@ -247,16 +248,17 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
         });
       } catch (error) {
         URL.revokeObjectURL(objectUrl);
-        if (isActiveLocalSplatLoad(loadId)) {
-          window.holodeck!.localSplatStatus = {
-            state: "error",
-            url: file.name,
-            renderUrl: objectUrl,
-            error: error instanceof Error ? error.message : String(error)
-          };
-          setLoadedWorldPanelInfo(null);
+        if (!isActiveLocalSplatLoad(loadId)) {
+          return;
         }
 
+        window.holodeck!.localSplatStatus = {
+          state: "error",
+          url: file.name,
+          renderUrl: objectUrl,
+          error: error instanceof Error ? error.message : String(error)
+        };
+        setLoadedWorldPanelInfo(null);
         throw error;
       } finally {
         if (isActiveLocalSplatLoad(loadId)) {
