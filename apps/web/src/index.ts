@@ -99,6 +99,10 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   const isActiveLocalSplatLoad = (loadId: number) =>
     loadId === activeLocalSplatLoadId;
   const shouldAcceptRendererStatus = (statusWorld: WorldResult) => {
+    if (!isManualLocalSplatWorld(statusWorld)) {
+      return true;
+    }
+
     const statusLocalUrl = statusWorld.localSplat?.publicUrl;
     if (!statusLocalUrl) {
       return true;
@@ -377,6 +381,11 @@ function statusMessageForVoiceToWorldJob(
   }
 
   return message;
+}
+
+function isManualLocalSplatWorld(world: { raw: unknown }): boolean {
+  const raw = world.raw as { source?: unknown } | null;
+  return raw?.source === "local-spz" || raw?.source === "browser-file-spz";
 }
 
 declare global {

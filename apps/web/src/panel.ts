@@ -73,6 +73,16 @@ export function setPanelWorldLoadInProgress(isGenerating: boolean): void {
   panelSession.isGenerating = isGenerating;
 }
 
+export function hasSplatSource(world: {
+  localSplat?: unknown;
+  spzUrls: Record<string, string>;
+}): boolean {
+  return (
+    Boolean(world.localSplat) ||
+    Object.values(world.spzUrls).some((url) => url.trim().length > 0)
+  );
+}
+
 function startPanelClock(update: () => void): () => void {
   const interval = window.setInterval(update, 1000);
   update();
@@ -243,7 +253,9 @@ export class PanelSystem extends createSystem({
           }
 
           panelSession.transcript = world.transcript;
-          panelSession.rendererLabel = world.localSplat ? "Splat" : "Panorama";
+          panelSession.rendererLabel = hasSplatSource(world)
+            ? "Splat"
+            : "Panorama";
           panelSession.loadedWorld = {
             title: world.displayName || world.transcript || "WORLD LABS WORLD",
             source: "WORLD LABS",
