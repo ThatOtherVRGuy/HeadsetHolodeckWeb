@@ -30,6 +30,12 @@
     color: #58b7ff;
     text-align: left;
   }
+
+  .compat-line {
+    font-size: 0.75;
+    color: #58b7ff;
+    text-align: left;
+  }
 </style>
 <div class="info-panel">
   <span id="worldTitleText" class="info-title">NO WORLD LOADED</span>
@@ -38,4 +44,5 @@
   <span id="rendererText" class="info-line">RENDERER None</span>
   <span id="assetText" class="info-line">ASSET --</span>
   <span id="infoDetailText" class="info-detail">Holodeck systems standing by.</span>
+  <span id="infoText" class="compat-line">Holodeck systems standing by.</span>
 </div>

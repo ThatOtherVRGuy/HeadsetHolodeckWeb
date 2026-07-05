@@ -90,6 +90,7 @@
     },
     "__id__statusText": {
       "content": {
+        "width": "33",
         "fontSize": "1.05",
         "color": "#f6efe5",
         "textAlign": "left"
@@ -146,61 +147,61 @@
     },
     "__id__healthText": {
       "start": {
-        "line": 38,
+        "line": 39,
         "column": 2
       },
       "end": {
-        "line": 38,
+        "line": 39,
         "column": 13
       }
     },
     "uid-1": {
       "start": {
-        "line": 44,
+        "line": 45,
         "column": 0
       },
       "end": {
-        "line": 50,
+        "line": 51,
         "column": 6
       }
     },
     "uid-2": {
       "start": {
-        "line": 45,
+        "line": 46,
         "column": 2
       },
       "end": {
-        "line": 48,
+        "line": 49,
         "column": 8
       }
     },
     "uid-3": {
       "start": {
-        "line": 46,
+        "line": 47,
         "column": 4
       },
       "end": {
-        "line": 46,
+        "line": 47,
         "column": 60
       }
     },
     "uid-4": {
       "start": {
-        "line": 47,
+        "line": 48,
         "column": 4
       },
       "end": {
-        "line": 47,
+        "line": 48,
         "column": 62
       }
     },
     "uid-5": {
       "start": {
-        "line": 49,
+        "line": 50,
         "column": 2
       },
       "end": {
-        "line": 49,
+        "line": 50,
         "column": 68
       }
     }
