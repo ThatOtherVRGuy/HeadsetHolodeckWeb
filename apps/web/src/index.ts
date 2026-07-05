@@ -10,7 +10,11 @@ import {
 
 import { EnvironmentType, LocomotionEnvironment } from "@iwsdk/core";
 
-import { configureHolodeckPanelControls, PanelSystem } from "./panel.js";
+import {
+  configureHolodeckPanelControls,
+  PanelSystem,
+  setLoadedWorldPanelInfo
+} from "./panel.js";
 
 import {
   HolodeckApiClient,
@@ -154,6 +158,11 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       try {
         await worldRenderer.load(createLocalSplatWorld(renderUrl));
         worldRenderer.show();
+        setLoadedWorldPanelInfo({
+          title: url,
+          source: "LOCAL SPZ",
+          assetLabel: url
+        });
         state.forceState("Ready");
         state.setStatusMessage(`Local splat ready: ${url}`);
         window.holodeck!.localSplatStatus = {
@@ -169,6 +178,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
           renderUrl,
           error: error instanceof Error ? error.message : String(error)
         };
+        setLoadedWorldPanelInfo(null);
         throw error;
       }
     },
@@ -193,6 +203,11 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       try {
         await worldRenderer.load(createBrowserFileSplatWorld(file, objectUrl));
         worldRenderer.show();
+        setLoadedWorldPanelInfo({
+          title: file.name,
+          source: "LOCAL SPZ",
+          assetLabel: file.name
+        });
         revokeActiveBrowserSplatObjectUrl();
         activeBrowserSplatObjectUrl = objectUrl;
         state.forceState("Ready");
@@ -214,6 +229,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
           renderUrl: objectUrl,
           error: error instanceof Error ? error.message : String(error)
         };
+        setLoadedWorldPanelInfo(null);
         throw error;
       }
     },
