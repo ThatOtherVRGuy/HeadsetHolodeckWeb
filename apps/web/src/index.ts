@@ -101,6 +101,9 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     panoramaRenderer,
   );
   let activeBrowserSplatObjectUrl: string | null = null;
+  let activeLocalSplatLoadId = 0;
+  const isActiveLocalSplatLoad = (loadId: number) =>
+    loadId === activeLocalSplatLoadId;
   const revokeActiveBrowserSplatObjectUrl = () => {
     if (!activeBrowserSplatObjectUrl) {
       return;
@@ -147,6 +150,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       missingAnchors: shell.missingAnchors
     },
     loadLocalSplat: async (url: string) => {
+      const loadId = ++activeLocalSplatLoadId;
       const renderUrl = localSplatRenderUrl(url, apiBaseUrl);
       setPanelWorldLoadInProgress(true);
       window.holodeck!.localSplatStatus = {
@@ -160,6 +164,10 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       try {
         await worldRenderer.load(createLocalSplatWorld(renderUrl));
         worldRenderer.show();
+        if (!isActiveLocalSplatLoad(loadId)) {
+          return;
+        }
+
         setLoadedWorldPanelInfo({
           title: url,
           source: "LOCAL SPZ",
@@ -174,16 +182,21 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
         };
         console.log("[Holodeck] local splat ready", { url, renderUrl });
       } catch (error) {
-        window.holodeck!.localSplatStatus = {
-          state: "error",
-          url,
-          renderUrl,
-          error: error instanceof Error ? error.message : String(error)
-        };
-        setLoadedWorldPanelInfo(null);
+        if (isActiveLocalSplatLoad(loadId)) {
+          window.holodeck!.localSplatStatus = {
+            state: "error",
+            url,
+            renderUrl,
+            error: error instanceof Error ? error.message : String(error)
+          };
+          setLoadedWorldPanelInfo(null);
+        }
+
         throw error;
       } finally {
-        setPanelWorldLoadInProgress(false);
+        if (isActiveLocalSplatLoad(loadId)) {
+          setPanelWorldLoadInProgress(false);
+        }
       }
     },
     loadLocalSplatFile: async (file: File) => {
@@ -191,6 +204,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
         throw new Error("Choose an .spz file.");
       }
 
+      const loadId = ++activeLocalSplatLoadId;
       const objectUrl = URL.createObjectURL(file);
       setPanelWorldLoadInProgress(true);
       window.holodeck!.localSplatStatus = {
@@ -208,6 +222,11 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       try {
         await worldRenderer.load(createBrowserFileSplatWorld(file, objectUrl));
         worldRenderer.show();
+        if (!isActiveLocalSplatLoad(loadId)) {
+          URL.revokeObjectURL(objectUrl);
+          return;
+        }
+
         setLoadedWorldPanelInfo({
           title: file.name,
           source: "LOCAL SPZ",
@@ -228,16 +247,21 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
         });
       } catch (error) {
         URL.revokeObjectURL(objectUrl);
-        window.holodeck!.localSplatStatus = {
-          state: "error",
-          url: file.name,
-          renderUrl: objectUrl,
-          error: error instanceof Error ? error.message : String(error)
-        };
-        setLoadedWorldPanelInfo(null);
+        if (isActiveLocalSplatLoad(loadId)) {
+          window.holodeck!.localSplatStatus = {
+            state: "error",
+            url: file.name,
+            renderUrl: objectUrl,
+            error: error instanceof Error ? error.message : String(error)
+          };
+          setLoadedWorldPanelInfo(null);
+        }
+
         throw error;
       } finally {
-        setPanelWorldLoadInProgress(false);
+        if (isActiveLocalSplatLoad(loadId)) {
+          setPanelWorldLoadInProgress(false);
+        }
       }
     },
     listLocalSplats: async () => {
