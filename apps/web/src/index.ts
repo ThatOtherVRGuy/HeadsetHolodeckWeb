@@ -13,7 +13,8 @@ import { EnvironmentType, LocomotionEnvironment } from "@iwsdk/core";
 import {
   configureHolodeckPanelControls,
   PanelSystem,
-  setLoadedWorldPanelInfo
+  setLoadedWorldPanelInfo,
+  setPanelWorldLoadInProgress
 } from "./panel.js";
 
 import {
@@ -147,6 +148,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     },
     loadLocalSplat: async (url: string) => {
       const renderUrl = localSplatRenderUrl(url, apiBaseUrl);
+      setPanelWorldLoadInProgress(true);
       window.holodeck!.localSplatStatus = {
         state: "loading",
         url,
@@ -180,6 +182,8 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
         };
         setLoadedWorldPanelInfo(null);
         throw error;
+      } finally {
+        setPanelWorldLoadInProgress(false);
       }
     },
     loadLocalSplatFile: async (file: File) => {
@@ -188,6 +192,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       }
 
       const objectUrl = URL.createObjectURL(file);
+      setPanelWorldLoadInProgress(true);
       window.holodeck!.localSplatStatus = {
         state: "loading",
         url: file.name,
@@ -231,6 +236,8 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
         };
         setLoadedWorldPanelInfo(null);
         throw error;
+      } finally {
+        setPanelWorldLoadInProgress(false);
       }
     },
     listLocalSplats: async () => {

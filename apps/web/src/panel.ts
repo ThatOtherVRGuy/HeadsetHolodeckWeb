@@ -63,9 +63,14 @@ function currentPanelView(controls: HolodeckPanelControls): PanelViewModel {
 }
 
 export function setLoadedWorldPanelInfo(info: LoadedWorldPanelInfo | null): void {
+  panelSession.transcript = "";
   panelSession.loadedWorld = info;
   panelSession.rendererLabel = info ? "Splat" : "None";
   panelSession.worldReadyAt = info ? Date.now() : null;
+}
+
+export function setPanelWorldLoadInProgress(isGenerating: boolean): void {
+  panelSession.isGenerating = isGenerating;
 }
 
 function startPanelClock(update: () => void): () => void {
