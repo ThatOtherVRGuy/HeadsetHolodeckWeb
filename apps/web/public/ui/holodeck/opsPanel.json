@@ -1,0 +1,406 @@
+{
+  "element": {
+    "type": "container",
+    "sourceTag": "div",
+    "children": [
+      {
+        "type": "container",
+        "sourceTag": "div",
+        "children": [
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
+              "IDLE"
+            ],
+            "properties": {
+              "id": "opsModeText",
+              "class": "mode-pill"
+            },
+            "dataUid": "uid-3"
+          },
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
+              "Model: Marble 1.1"
+            ],
+            "properties": {
+              "id": "modelText",
+              "class": "model-label"
+            },
+            "dataUid": "uid-4"
+          }
+        ],
+        "properties": {
+          "class": "ops-header"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "button",
+        "type": "custom",
+        "children": [
+          "Record"
+        ],
+        "properties": {
+          "id": "recordButton",
+          "class": "ops-button"
+        },
+        "dataUid": "uid-5"
+      },
+      {
+        "type": "container",
+        "sourceTag": "div",
+        "children": [
+          {
+            "sourceTag": "button",
+            "type": "custom",
+            "children": [
+              "Load SPZ"
+            ],
+            "properties": {
+              "id": "loadSplatButton",
+              "class": "secondary-button"
+            },
+            "dataUid": "uid-7"
+          },
+          {
+            "sourceTag": "button",
+            "type": "custom",
+            "children": [
+              "Reset"
+            ],
+            "properties": {
+              "id": "resetButton",
+              "class": "secondary-button"
+            },
+            "dataUid": "uid-8"
+          }
+        ],
+        "properties": {
+          "class": "secondary-row"
+        },
+        "dataUid": "uid-6"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "Holodeck systems standing by."
+        ],
+        "properties": {
+          "id": "opsDetailText"
+        },
+        "dataUid": "uid-9"
+      }
+    ],
+    "properties": {
+      "class": "ops-panel"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {
+    "ops-panel": {
+      "content": {
+        "alignItems": "stretch",
+        "padding": "0.9",
+        "width": "30",
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "0.45",
+        "backgroundColor": "#050608",
+        "borderColor": "#ff9c2a",
+        "borderWidth": "0.18",
+        "borderRadius": 0.8
+      }
+    },
+    "ops-header": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "0.45",
+        "alignItems": "center"
+      }
+    },
+    "mode-pill": {
+      "content": {
+        "padding": "0.35",
+        "width": "8",
+        "backgroundColor": "#ff9c2a",
+        "color": "#050608",
+        "fontSize": "1.25",
+        "fontWeight": "bold",
+        "textAlign": "center",
+        "borderRadius": 0.45
+      }
+    },
+    "model-label": {
+      "content": {
+        "color": "#f6efe5",
+        "fontSize": "1.05",
+        "textAlign": "left"
+      }
+    },
+    "ops-button": {
+      "content": {
+        "padding": "0.7",
+        "borderRadius": 0.7,
+        "borderWidth": "0.1",
+        "fontSize": "1.45",
+        "fontWeight": "medium",
+        "textAlign": "center",
+        "cursor": "pointer"
+      }
+    },
+    "secondary-row": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "0.45"
+      }
+    },
+    "secondary-button": {
+      "content": {
+        "width": "14",
+        "padding": "0.55",
+        "borderRadius": 0.65,
+        "borderWidth": "0.1",
+        "fontSize": "1.05",
+        "fontWeight": "medium",
+        "textAlign": "center",
+        "cursor": "pointer"
+      }
+    },
+    "__id__recordButton": {
+      "content": {
+        "backgroundColor": "#ff9c2a",
+        "borderColor": "#ff6a2a",
+        "color": "#050608"
+      }
+    },
+    "__id__loadSplatButton": {
+      "content": {
+        "backgroundColor": "#f6efe5",
+        "borderColor": "#ff9c2a",
+        "color": "#050608"
+      }
+    },
+    "__id__resetButton": {
+      "content": {
+        "backgroundColor": "#58b7ff",
+        "borderColor": "#b48cff",
+        "color": "#050608"
+      }
+    },
+    "__id__opsDetailText": {
+      "content": {
+        "color": "#f6efe5",
+        "fontSize": "0.95",
+        "textAlign": "left"
+      }
+    }
+  },
+  "ranges": {
+    "ops-panel": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 12
+      }
+    },
+    "ops-header": {
+      "start": {
+        "line": 14,
+        "column": 2
+      },
+      "end": {
+        "line": 14,
+        "column": 13
+      }
+    },
+    "mode-pill": {
+      "start": {
+        "line": 21,
+        "column": 2
+      },
+      "end": {
+        "line": 21,
+        "column": 12
+      }
+    },
+    "model-label": {
+      "start": {
+        "line": 32,
+        "column": 2
+      },
+      "end": {
+        "line": 32,
+        "column": 14
+      }
+    },
+    "ops-button": {
+      "start": {
+        "line": 38,
+        "column": 2
+      },
+      "end": {
+        "line": 38,
+        "column": 13
+      }
+    },
+    "secondary-row": {
+      "start": {
+        "line": 48,
+        "column": 2
+      },
+      "end": {
+        "line": 48,
+        "column": 16
+      }
+    },
+    "secondary-button": {
+      "start": {
+        "line": 54,
+        "column": 2
+      },
+      "end": {
+        "line": 54,
+        "column": 19
+      }
+    },
+    "__id__recordButton": {
+      "start": {
+        "line": 65,
+        "column": 2
+      },
+      "end": {
+        "line": 65,
+        "column": 15
+      }
+    },
+    "__id__loadSplatButton": {
+      "start": {
+        "line": 71,
+        "column": 2
+      },
+      "end": {
+        "line": 71,
+        "column": 18
+      }
+    },
+    "__id__resetButton": {
+      "start": {
+        "line": 77,
+        "column": 2
+      },
+      "end": {
+        "line": 77,
+        "column": 14
+      }
+    },
+    "__id__opsDetailText": {
+      "start": {
+        "line": 83,
+        "column": 2
+      },
+      "end": {
+        "line": 83,
+        "column": 16
+      }
+    },
+    "uid-1": {
+      "start": {
+        "line": 89,
+        "column": 0
+      },
+      "end": {
+        "line": 100,
+        "column": 6
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 90,
+        "column": 2
+      },
+      "end": {
+        "line": 93,
+        "column": 8
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 91,
+        "column": 4
+      },
+      "end": {
+        "line": 91,
+        "column": 56
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 92,
+        "column": 4
+      },
+      "end": {
+        "line": 92,
+        "column": 69
+      }
+    },
+    "uid-5": {
+      "start": {
+        "line": 94,
+        "column": 2
+      },
+      "end": {
+        "line": 94,
+        "column": 62
+      }
+    },
+    "uid-6": {
+      "start": {
+        "line": 95,
+        "column": 2
+      },
+      "end": {
+        "line": 98,
+        "column": 8
+      }
+    },
+    "uid-7": {
+      "start": {
+        "line": 96,
+        "column": 4
+      },
+      "end": {
+        "line": 96,
+        "column": 75
+      }
+    },
+    "uid-8": {
+      "start": {
+        "line": 97,
+        "column": 4
+      },
+      "end": {
+        "line": 97,
+        "column": 68
+      }
+    },
+    "uid-9": {
+      "start": {
+        "line": 99,
+        "column": 2
+      },
+      "end": {
+        "line": 99,
+        "column": 63
+      }
+    }
+  }
+}

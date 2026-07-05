@@ -1,0 +1,208 @@
+{
+  "element": {
+    "type": "container",
+    "sourceTag": "div",
+    "children": [
+      {
+        "type": "container",
+        "sourceTag": "div",
+        "children": [
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
+              "READY"
+            ],
+            "properties": {
+              "id": "statusModeText",
+              "class": "mode-pill"
+            },
+            "dataUid": "uid-3"
+          },
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
+              "Holodeck systems standing by."
+            ],
+            "properties": {
+              "id": "statusText"
+            },
+            "dataUid": "uid-4"
+          }
+        ],
+        "properties": {
+          "class": "status-row"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "--:--:--  RUN 0:00:00  WORLD --:--:--"
+        ],
+        "properties": {
+          "id": "healthText"
+        },
+        "dataUid": "uid-5"
+      }
+    ],
+    "properties": {
+      "class": "status-panel"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {
+    "status-panel": {
+      "content": {
+        "alignItems": "stretch",
+        "padding": "0.55",
+        "width": "42",
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "0.25",
+        "backgroundColor": "#050608",
+        "borderColor": "#58b7ff",
+        "borderWidth": "0.18",
+        "borderRadius": 0.7
+      }
+    },
+    "status-row": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "0.45",
+        "alignItems": "center"
+      }
+    },
+    "mode-pill": {
+      "content": {
+        "padding": "0.25",
+        "width": "7",
+        "backgroundColor": "#ffcb1f",
+        "color": "#050608",
+        "fontSize": "1",
+        "fontWeight": "bold",
+        "textAlign": "center",
+        "borderRadius": 0.4
+      }
+    },
+    "__id__statusText": {
+      "content": {
+        "fontSize": "1.05",
+        "color": "#f6efe5",
+        "textAlign": "left"
+      }
+    },
+    "__id__healthText": {
+      "content": {
+        "fontSize": "0.75",
+        "color": "#58b7ff",
+        "textAlign": "center"
+      }
+    }
+  },
+  "ranges": {
+    "status-panel": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 15
+      }
+    },
+    "status-row": {
+      "start": {
+        "line": 14,
+        "column": 2
+      },
+      "end": {
+        "line": 14,
+        "column": 13
+      }
+    },
+    "mode-pill": {
+      "start": {
+        "line": 21,
+        "column": 2
+      },
+      "end": {
+        "line": 21,
+        "column": 12
+      }
+    },
+    "__id__statusText": {
+      "start": {
+        "line": 32,
+        "column": 2
+      },
+      "end": {
+        "line": 32,
+        "column": 13
+      }
+    },
+    "__id__healthText": {
+      "start": {
+        "line": 38,
+        "column": 2
+      },
+      "end": {
+        "line": 38,
+        "column": 13
+      }
+    },
+    "uid-1": {
+      "start": {
+        "line": 44,
+        "column": 0
+      },
+      "end": {
+        "line": 50,
+        "column": 6
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 45,
+        "column": 2
+      },
+      "end": {
+        "line": 48,
+        "column": 8
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 46,
+        "column": 4
+      },
+      "end": {
+        "line": 46,
+        "column": 60
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 47,
+        "column": 4
+      },
+      "end": {
+        "line": 47,
+        "column": 62
+      }
+    },
+    "uid-5": {
+      "start": {
+        "line": 49,
+        "column": 2
+      },
+      "end": {
+        "line": 49,
+        "column": 68
+      }
+    }
+  }
+}
