@@ -4,6 +4,7 @@ import type {
 } from "../api/holodeckApiClient";
 import type { WorldRenderer } from "../rendering/worldRenderer";
 import type { HolodeckStateMachine } from "../state/holodeckState";
+import type { WorldResult } from "../world/worldResult";
 
 interface VoiceToWorldCoordinatorDeps {
   state: HolodeckStateMachine;
@@ -23,17 +24,17 @@ export class VoiceToWorldCoordinator {
 
   constructor(private readonly deps: VoiceToWorldCoordinatorDeps) {}
 
-  async generateFromAudio(audio: Blob): Promise<void> {
+  async generateFromAudio(audio: Blob): Promise<WorldResult | null> {
     const { state, api, renderer } = this.deps;
 
     if (this.isGenerating) {
       state.setError("World generation is already running.");
-      return;
+      return null;
     }
 
     if (audio.size === 0) {
       state.setError("No audio was captured.");
-      return;
+      return null;
     }
 
     this.isGenerating = true;
@@ -50,8 +51,11 @@ export class VoiceToWorldCoordinator {
       if (!state.tryTransitionTo("Ready")) {
         state.forceState("Ready");
       }
+
+      return world;
     } catch (error) {
       state.setError(error instanceof Error ? error.message : "Voice-to-world failed.");
+      return null;
     } finally {
       this.isGenerating = false;
     }

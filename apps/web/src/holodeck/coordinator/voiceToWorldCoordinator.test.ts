@@ -42,8 +42,9 @@ describe("VoiceToWorldCoordinator", () => {
     const renderer = createRenderer(rendererCalls);
     const coordinator = new VoiceToWorldCoordinator({ state, api, renderer });
 
-    await coordinator.generateFromAudio(new Blob(["fake audio"]));
+    const result = await coordinator.generateFromAudio(new Blob(["fake audio"]));
 
+    expect(result).toBe(world);
     expect(state.current).toBe("Ready");
     expect(rendererCalls).toEqual(["world_123", "show"]);
   });
