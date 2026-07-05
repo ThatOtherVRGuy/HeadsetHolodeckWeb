@@ -130,6 +130,37 @@ describe("SplatRenderer", () => {
     });
   });
 
+  it("passes the associated world to progress and loaded status callbacks", async () => {
+    const scene = new Scene();
+    const onStatus = vi.fn();
+    const renderer = new SplatRenderer(
+      scene,
+      {} as WebGLRenderer,
+      {
+        ...createSparkTestConstructors(),
+        onStatus
+      }
+    );
+    const world = worldResult({
+      worldId: "local-world",
+      localSplat: {
+        resolution: "full_res",
+        sourceUrl: "https://example.test/full_res.spz",
+        filePath: "/tmp/full_res.spz",
+        publicUrl: "http://localhost:4817/generated-worlds/local/full_res.spz",
+        byteLength: 100
+      }
+    });
+
+    await renderer.load(world);
+
+    expect(onStatus).toHaveBeenCalledWith("Loading local splat 50%", world);
+    expect(onStatus).toHaveBeenCalledWith(
+      "Local splat decoded: 12,345 splats",
+      world
+    );
+  });
+
   it("disposes stale splats when overlapping loads resolve out of order", async () => {
     const scene = new Scene();
     const constructors = createSparkTestConstructors();
@@ -172,9 +203,14 @@ function createSparkTestConstructors() {
     url: string;
     numSplats = 12345;
 
-    constructor(options: { url: string }) {
+    constructor(options: { url: string; onProgress?: (event: ProgressEvent) => void }) {
       super();
       this.url = options.url;
+      options.onProgress?.({
+        lengthComputable: true,
+        loaded: 50,
+        total: 100
+      } as ProgressEvent);
       this.initialized = Promise.resolve(this);
     }
 

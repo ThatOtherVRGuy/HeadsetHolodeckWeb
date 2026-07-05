@@ -40,6 +40,7 @@ import {
   createBrowserFileSplatWorld,
   createLocalSplatWorld
 } from "./holodeck/world/localSplatWorld";
+import type { WorldResult } from "./holodeck/world/worldResult";
 import {
   localSplatRenderUrl,
   localSplatUrlFromSearch
@@ -93,17 +94,33 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
 
   const generatedWorldRoot = shell.placement.generatedWorld.object ?? scene;
   const panoramaRenderer = new PanoramaRenderer(generatedWorldRoot);
+  let activeBrowserSplatObjectUrl: string | null = null;
+  let activeLocalSplatLoadId = 0;
+  const isActiveLocalSplatLoad = (loadId: number) =>
+    loadId === activeLocalSplatLoadId;
+  const shouldAcceptRendererStatus = (statusWorld: WorldResult) => {
+    const statusLocalUrl = statusWorld.localSplat?.publicUrl;
+    if (!statusLocalUrl) {
+      return true;
+    }
+
+    const activeRenderUrl = window.holodeck?.localSplatStatus.renderUrl ?? null;
+    return (
+      statusLocalUrl === activeRenderUrl ||
+      statusLocalUrl === activeBrowserSplatObjectUrl
+    );
+  };
   const splatRenderer = new SplatRenderer(generatedWorldRoot, world.renderer, {
-    onStatus: (message) => state.setStatusMessage(message)
+    onStatus: (message, statusWorld) => {
+      if (shouldAcceptRendererStatus(statusWorld)) {
+        state.setStatusMessage(message);
+      }
+    }
   });
   const worldRenderer = new PreferredWorldRenderer(
     splatRenderer,
     panoramaRenderer,
   );
-  let activeBrowserSplatObjectUrl: string | null = null;
-  let activeLocalSplatLoadId = 0;
-  const isActiveLocalSplatLoad = (loadId: number) =>
-    loadId === activeLocalSplatLoadId;
   const revokeActiveBrowserSplatObjectUrl = () => {
     if (!activeBrowserSplatObjectUrl) {
       return;

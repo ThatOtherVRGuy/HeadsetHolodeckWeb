@@ -11,7 +11,7 @@ import type { WorldRenderer } from "./worldRenderer";
 interface SplatRendererOptions {
   SparkRendererCtor?: typeof SparkRenderer;
   SplatMeshCtor?: typeof SplatMesh;
-  onStatus?: (message: string) => void;
+  onStatus?: (message: string, world: WorldResult) => void;
 }
 
 export class SplatRenderer implements WorldRenderer {
@@ -53,7 +53,7 @@ export class SplatRenderer implements WorldRenderer {
       url,
       lod: true,
       onProgress: (event: ProgressEvent) => {
-        this.options.onStatus?.(progressMessageForEvent(event));
+        this.options.onStatus?.(progressMessageForEvent(event), world);
       }
     });
     mesh.name = `WorldSplat_${world.worldId}`;
@@ -71,7 +71,7 @@ export class SplatRenderer implements WorldRenderer {
     frameSplatMesh(mesh, placementPolicyForWorld(world));
     this.currentMesh = mesh;
     this.scene.add(mesh);
-    this.options.onStatus?.(loadedMessageForMesh(mesh));
+    this.options.onStatus?.(loadedMessageForMesh(mesh), world);
   }
 
   show() {
