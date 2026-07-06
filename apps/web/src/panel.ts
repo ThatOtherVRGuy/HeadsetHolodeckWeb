@@ -6,13 +6,15 @@ import {
   UIKitDocument,
   UIKit,
 } from "@iwsdk/core";
-import type {
-  HolodeckStateMachine,
-  HolodeckStateSnapshot
-} from "./holodeck/state/holodeckState";
+import type { HolodeckStateMachine } from "./holodeck/state/holodeckState";
 import type { BrowserVoiceRecorder } from "./holodeck/voice/browserVoiceRecorder";
 import type { VoiceToWorldCoordinator } from "./holodeck/coordinator/voiceToWorldCoordinator";
 import type { WorldRenderer } from "./holodeck/rendering/worldRenderer";
+import {
+  buildPanelViewModel,
+  type LoadedWorldPanelInfo,
+  type PanelViewModel
+} from "./holodeck/ui/panelViewModel";
 
 interface HolodeckPanelControls {
   state: HolodeckStateMachine;
@@ -26,6 +28,99 @@ let holodeckControls: HolodeckPanelControls | null = null;
 const STATUS_PANEL_CONFIG = "./ui/holodeck/statusPanel.json";
 const OPS_PANEL_CONFIG = "./ui/holodeck/opsPanel.json";
 const INFO_PANEL_CONFIG = "./ui/holodeck/infoPanel.json";
+const SELECTED_MODEL_LABEL = "Marble 1.1";
+const APP_STARTED_AT = Date.now();
+
+interface PanelSessionState {
+  isGenerating: boolean;
+  transcript: string;
+  rendererLabel: string;
+  loadedWorld: LoadedWorldPanelInfo | null;
+  worldReadyAt: number | null;
+}
+
+const panelSession: PanelSessionState = {
+  isGenerating: false,
+  transcript: "",
+  rendererLabel: "None",
+  loadedWorld: null,
+  worldReadyAt: null
+};
+
+function currentPanelView(controls: HolodeckPanelControls): PanelViewModel {
+  return buildPanelViewModel({
+    state: controls.state.snapshot(),
+    isRecording: controls.recorder.isRecording,
+    isGenerating: panelSession.isGenerating,
+    selectedModelLabel: SELECTED_MODEL_LABEL,
+    transcript: panelSession.transcript,
+    rendererLabel: panelSession.rendererLabel,
+    loadedWorld: panelSession.loadedWorld,
+    appElapsedMs: Date.now() - APP_STARTED_AT,
+    worldElapsedMs:
+      panelSession.worldReadyAt === null ? null : Date.now() - panelSession.worldReadyAt
+  });
+}
+
+export function setLoadedWorldPanelInfo(info: LoadedWorldPanelInfo | null): void {
+  panelSession.transcript = "";
+  panelSession.loadedWorld = info;
+  panelSession.rendererLabel = info ? "Splat" : "None";
+  panelSession.worldReadyAt = info ? Date.now() : null;
+}
+
+export function setPanelWorldLoadInProgress(isGenerating: boolean): void {
+  panelSession.isGenerating = isGenerating;
+}
+
+export function hasSplatSource(world: {
+  localSplat?: unknown;
+  spzUrls: Record<string, string>;
+}): boolean {
+  return (
+    Boolean(world.localSplat) ||
+    Object.values(world.spzUrls).some((url) => url.trim().length > 0)
+  );
+}
+
+function startPanelClock(update: () => void): () => void {
+  const interval = window.setInterval(update, 1000);
+  update();
+
+  return () => window.clearInterval(interval);
+}
+
+function setText(
+  document: UIKitDocument,
+  id: string,
+  text: string
+): void {
+  const element = document.getElementById(id) as UIKit.Text | null;
+  element?.setProperties({ text });
+}
+
+function applyOpsView(document: UIKitDocument, view: PanelViewModel): void {
+  setText(document, "opsModeText", view.ops.mode);
+  setText(document, "recordButton", view.ops.primaryActionLabel);
+  setText(document, "modelText", view.ops.modelLabel);
+  setText(document, "opsDetailText", view.ops.detail);
+}
+
+function applyInfoView(document: UIKitDocument, view: PanelViewModel): void {
+  setText(document, "worldTitleText", view.info.title);
+  setText(document, "worldSourceText", view.info.source);
+  setText(document, "transcriptText", view.info.transcript);
+  setText(document, "rendererText", view.info.renderer);
+  setText(document, "assetText", view.info.asset);
+  setText(document, "infoDetailText", view.info.detail);
+  setText(document, "infoText", view.info.detail);
+}
+
+function applyStatusView(document: UIKitDocument, view: PanelViewModel): void {
+  setText(document, "statusModeText", view.status.mode);
+  setText(document, "statusText", view.status.message);
+  setText(document, "healthText", view.status.health);
+}
 
 export function configureHolodeckPanelControls(
   controls: HolodeckPanelControls
@@ -71,16 +166,18 @@ export class PanelSystem extends createSystem({
         entity.index
       ] as UIKitDocument;
       const controls = holodeckControls;
-      const statusText = document?.getElementById("statusText") as UIKit.Text;
-      if (!document || !controls || !statusText) {
+      if (!document || !controls) {
         return;
       }
 
-      const unsubscribeState = controls.state.subscribe((snapshot) => {
-        statusText.setProperties({ text: summaryStatusMessage(snapshot) });
-      });
+      const update = () => applyStatusView(document, currentPanelView(controls));
+      const unsubscribeState = controls.state.subscribe(update);
+      const stopClock = startPanelClock(update);
 
-      panelCleanups.set(entity.index, unsubscribeState);
+      panelCleanups.set(entity.index, () => {
+        unsubscribeState();
+        stopClock();
+      });
     });
 
     this.queries.infoPanel.subscribe("qualify", (entity) => {
@@ -90,16 +187,18 @@ export class PanelSystem extends createSystem({
         entity.index
       ] as UIKitDocument;
       const controls = holodeckControls;
-      const infoText = document?.getElementById("infoText") as UIKit.Text;
-      if (!document || !controls || !infoText) {
+      if (!document || !controls) {
         return;
       }
 
-      const unsubscribeState = controls.state.subscribe((snapshot) => {
-        infoText.setProperties({ text: detailStatusMessage(snapshot) });
-      });
+      const update = () => applyInfoView(document, currentPanelView(controls));
+      const unsubscribeState = controls.state.subscribe(update);
+      const stopClock = startPanelClock(update);
 
-      panelCleanups.set(entity.index, unsubscribeState);
+      panelCleanups.set(entity.index, () => {
+        unsubscribeState();
+        stopClock();
+      });
     });
 
     this.queries.opsPanel.subscribe("qualify", (entity) => {
@@ -123,21 +222,14 @@ export class PanelSystem extends createSystem({
         return;
       }
 
-      const setRecordLabel = (message: string) => {
-        recordButton.setProperties({ text: message });
-      };
-      let isGenerating = false;
-
-      const unsubscribeState = controls.state.subscribe((snapshot) => {
-        if (snapshot.errorMessage) {
-          setRecordLabel("Record");
-          return;
-        }
-      });
+      const update = () => applyOpsView(document, currentPanelView(controls));
+      const unsubscribeState = controls.state.subscribe(update);
+      const stopClock = startPanelClock(update);
 
       const onRecordClick = async () => {
-        if (isGenerating) {
+        if (panelSession.isGenerating) {
           controls.state.setStatusMessage("Generation in progress.");
+          update();
           return;
         }
 
@@ -146,27 +238,45 @@ export class PanelSystem extends createSystem({
             await controls.recorder.start();
             controls.state.forceState("ListeningForCommand");
             controls.state.setStatusMessage("Listening for world prompt.");
-            setRecordLabel("Generate");
+            update();
             return;
           }
 
-          setRecordLabel("Record");
           controls.state.setStatusMessage("Preparing world generation.");
           const audio = await controls.recorder.stop();
-          isGenerating = true;
-          await controls.coordinator.generateFromAudio(audio);
+          panelSession.isGenerating = true;
+          update();
+          const world = await controls.coordinator.generateFromAudio(audio);
+
+          if (world === null) {
+            return;
+          }
+
+          panelSession.transcript = world.transcript;
+          panelSession.rendererLabel = hasSplatSource(world)
+            ? "Splat"
+            : "Panorama";
+          panelSession.loadedWorld = {
+            title: world.displayName || world.transcript || "WORLD LABS WORLD",
+            source: "WORLD LABS",
+            assetLabel: world.localSplat?.publicUrl,
+            worldId: world.worldId
+          };
+          panelSession.worldReadyAt = Date.now();
         } catch (error) {
           controls.state.setError(
             error instanceof Error ? error.message : "Voice recording failed."
           );
         } finally {
-          isGenerating = false;
+          panelSession.isGenerating = false;
+          update();
         }
       };
 
       const onResetClick = async () => {
-        if (isGenerating) {
+        if (panelSession.isGenerating) {
           controls.state.setStatusMessage("Generation in progress.");
+          update();
           return;
         }
 
@@ -176,21 +286,28 @@ export class PanelSystem extends createSystem({
           controls.state.setError(
             error instanceof Error ? error.message : "Voice recording failed."
           );
+          update();
           return;
         }
 
-        setRecordLabel("Record");
+        panelSession.transcript = "";
+        panelSession.rendererLabel = "None";
+        panelSession.loadedWorld = null;
+        panelSession.worldReadyAt = null;
         controls.renderer.hide();
         controls.state.clearErrorAndReturnToIdle();
+        update();
       };
 
       const onLoadSplatClick = () => {
-        if (isGenerating) {
+        if (panelSession.isGenerating) {
           controls.state.setStatusMessage("Generation in progress.");
+          update();
           return;
         }
 
         controls.state.setStatusMessage("Choose a local SPZ file.");
+        update();
         controls.openLocalSplatFilePicker();
       };
 
@@ -203,55 +320,8 @@ export class PanelSystem extends createSystem({
         loadSplatButton.removeEventListener("click", onLoadSplatClick);
         resetButton.removeEventListener("click", onResetClick);
         unsubscribeState();
+        stopClock();
       });
     });
-  }
-}
-
-function summaryStatusMessage(snapshot: HolodeckStateSnapshot): string {
-  if (snapshot.errorMessage) {
-    return snapshot.errorMessage;
-  }
-
-  return snapshot.statusMessage || statusMessageFor(snapshot.current);
-}
-
-function detailStatusMessage(snapshot: HolodeckStateSnapshot): string {
-  if (snapshot.errorMessage) {
-    return `Error: ${snapshot.errorMessage}`;
-  }
-
-  switch (snapshot.current) {
-    case "Idle":
-      return "Awaiting voice prompt or local SPZ.";
-    case "ListeningForCommand":
-      return "Listening for the world prompt.";
-    case "Interpreting":
-      return "Transcribing captured audio.";
-    case "Generating":
-      return snapshot.statusMessage || "Generating world.";
-    case "Ready":
-      return snapshot.statusMessage || "World ready.";
-    default:
-      return snapshot.statusMessage || statusMessageFor(snapshot.current);
-  }
-}
-
-function statusMessageFor(state: string): string {
-  switch (state) {
-    case "Idle":
-      return "Holodeck systems standing by.";
-    case "ListeningForCommand":
-      return "Listening for world prompt.";
-    case "Interpreting":
-      return "Interpreting voice command.";
-    case "Generating":
-      return "Generating world.";
-    case "Ready":
-      return "World ready.";
-    case "Error":
-      return "Holodeck error.";
-    default:
-      return "Holodeck systems standing by.";
   }
 }

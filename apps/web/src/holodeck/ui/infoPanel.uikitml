@@ -1,22 +1,48 @@
 <style>
   .info-panel {
     align-items: stretch;
-    padding: 1.1;
-    width: 31;
+    padding: 0.9;
+    width: 34;
     display: flex;
     flex-direction: column;
+    gap: 0.35;
     background-color: #050608;
     border-color: #b48cff;
     border-width: 0.18;
-    border-radius: 1.4;
+    border-radius: 0.8;
   }
 
-  #infoText {
-    font-size: 1.7;
+  .info-title {
+    font-size: 1.45;
+    color: #ff9c2a;
+    font-weight: bold;
+    text-align: left;
+  }
+
+  .info-line {
+    font-size: 0.95;
     color: #f6efe5;
+    text-align: left;
+  }
+
+  .info-detail {
+    font-size: 0.95;
+    color: #58b7ff;
+    text-align: left;
+  }
+
+  .compat-line {
+    font-size: 0.75;
+    color: #58b7ff;
     text-align: left;
   }
 </style>
 <div class="info-panel">
-  <span id="infoText">World details will appear here.</span>
+  <span id="worldTitleText" class="info-title">NO WORLD LOADED</span>
+  <span id="worldSourceText" class="info-line">SOURCE STATIC SHELL</span>
+  <span id="transcriptText" class="info-line">PROMPT --</span>
+  <span id="rendererText" class="info-line">RENDERER None</span>
+  <span id="assetText" class="info-line">ASSET --</span>
+  <span id="infoDetailText" class="info-detail">Holodeck systems standing by.</span>
+  <span id="infoText" class="compat-line">Holodeck systems standing by.</span>
 </div>

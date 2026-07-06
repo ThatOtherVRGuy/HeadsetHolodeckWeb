@@ -1,22 +1,63 @@
 <style>
   .ops-panel {
     align-items: stretch;
-    padding: 1.1;
-    width: 27;
+    padding: 0.9;
+    width: 30;
     display: flex;
     flex-direction: column;
-    gap: 0.7;
+    gap: 0.45;
     background-color: #050608;
     border-color: #ff9c2a;
     border-width: 0.18;
-    border-radius: 1.4;
+    border-radius: 0.8;
+  }
+
+  .ops-header {
+    display: flex;
+    flex-direction: row;
+    gap: 0.45;
+    align-items: center;
+  }
+
+  .mode-pill {
+    padding: 0.35;
+    width: 8;
+    background-color: #ff9c2a;
+    color: #050608;
+    font-size: 1.25;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 0.45;
+  }
+
+  .model-label {
+    color: #f6efe5;
+    font-size: 1.05;
+    text-align: left;
   }
 
   .ops-button {
-    padding: 1;
-    border-radius: 1.1;
+    padding: 0.7;
+    border-radius: 0.7;
     border-width: 0.1;
-    font-size: 1.85;
+    font-size: 1.45;
+    font-weight: medium;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .secondary-row {
+    display: flex;
+    flex-direction: row;
+    gap: 0.45;
+  }
+
+  .secondary-button {
+    width: 14;
+    padding: 0.55;
+    border-radius: 0.65;
+    border-width: 0.1;
+    font-size: 1.05;
     font-weight: medium;
     text-align: center;
     cursor: pointer;
@@ -39,9 +80,22 @@
     border-color: #b48cff;
     color: #050608;
   }
+
+  #opsDetailText {
+    color: #f6efe5;
+    font-size: 0.95;
+    text-align: left;
+  }
 </style>
 <div class="ops-panel">
+  <div class="ops-header">
+    <span id="opsModeText" class="mode-pill">IDLE</span>
+    <span id="modelText" class="model-label">Model: Marble 1.1</span>
+  </div>
   <button id="recordButton" class="ops-button">Record</button>
-  <button id="loadSplatButton" class="ops-button">Load SPZ</button>
-  <button id="resetButton" class="ops-button">Reset</button>
+  <div class="secondary-row">
+    <button id="loadSplatButton" class="secondary-button">Load SPZ</button>
+    <button id="resetButton" class="secondary-button">Reset</button>
+  </div>
+  <span id="opsDetailText">Holodeck systems standing by.</span>
 </div>

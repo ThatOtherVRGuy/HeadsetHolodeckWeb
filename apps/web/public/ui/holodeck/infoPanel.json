@@ -1,0 +1,273 @@
+{
+  "element": {
+    "type": "container",
+    "sourceTag": "div",
+    "children": [
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "NO WORLD LOADED"
+        ],
+        "properties": {
+          "id": "worldTitleText",
+          "class": "info-title"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "SOURCE STATIC SHELL"
+        ],
+        "properties": {
+          "id": "worldSourceText",
+          "class": "info-line"
+        },
+        "dataUid": "uid-3"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "PROMPT --"
+        ],
+        "properties": {
+          "id": "transcriptText",
+          "class": "info-line"
+        },
+        "dataUid": "uid-4"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "RENDERER None"
+        ],
+        "properties": {
+          "id": "rendererText",
+          "class": "info-line"
+        },
+        "dataUid": "uid-5"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "ASSET --"
+        ],
+        "properties": {
+          "id": "assetText",
+          "class": "info-line"
+        },
+        "dataUid": "uid-6"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "Holodeck systems standing by."
+        ],
+        "properties": {
+          "id": "infoDetailText",
+          "class": "info-detail"
+        },
+        "dataUid": "uid-7"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "Holodeck systems standing by."
+        ],
+        "properties": {
+          "id": "infoText",
+          "class": "compat-line"
+        },
+        "dataUid": "uid-8"
+      }
+    ],
+    "properties": {
+      "class": "info-panel"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {
+    "info-panel": {
+      "content": {
+        "alignItems": "stretch",
+        "padding": "0.9",
+        "width": "34",
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "0.35",
+        "backgroundColor": "#050608",
+        "borderColor": "#b48cff",
+        "borderWidth": "0.18",
+        "borderRadius": 0.8
+      }
+    },
+    "info-title": {
+      "content": {
+        "fontSize": "1.45",
+        "color": "#ff9c2a",
+        "fontWeight": "bold",
+        "textAlign": "left"
+      }
+    },
+    "info-line": {
+      "content": {
+        "fontSize": "0.95",
+        "color": "#f6efe5",
+        "textAlign": "left"
+      }
+    },
+    "info-detail": {
+      "content": {
+        "fontSize": "0.95",
+        "color": "#58b7ff",
+        "textAlign": "left"
+      }
+    },
+    "compat-line": {
+      "content": {
+        "fontSize": "0.75",
+        "color": "#58b7ff",
+        "textAlign": "left"
+      }
+    }
+  },
+  "ranges": {
+    "info-panel": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 13
+      }
+    },
+    "info-title": {
+      "start": {
+        "line": 14,
+        "column": 2
+      },
+      "end": {
+        "line": 14,
+        "column": 13
+      }
+    },
+    "info-line": {
+      "start": {
+        "line": 21,
+        "column": 2
+      },
+      "end": {
+        "line": 21,
+        "column": 12
+      }
+    },
+    "info-detail": {
+      "start": {
+        "line": 27,
+        "column": 2
+      },
+      "end": {
+        "line": 27,
+        "column": 14
+      }
+    },
+    "compat-line": {
+      "start": {
+        "line": 33,
+        "column": 2
+      },
+      "end": {
+        "line": 33,
+        "column": 14
+      }
+    },
+    "uid-1": {
+      "start": {
+        "line": 39,
+        "column": 0
+      },
+      "end": {
+        "line": 47,
+        "column": 6
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 40,
+        "column": 2
+      },
+      "end": {
+        "line": 40,
+        "column": 69
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 41,
+        "column": 2
+      },
+      "end": {
+        "line": 41,
+        "column": 73
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 42,
+        "column": 2
+      },
+      "end": {
+        "line": 42,
+        "column": 62
+      }
+    },
+    "uid-5": {
+      "start": {
+        "line": 43,
+        "column": 2
+      },
+      "end": {
+        "line": 43,
+        "column": 64
+      }
+    },
+    "uid-6": {
+      "start": {
+        "line": 44,
+        "column": 2
+      },
+      "end": {
+        "line": 44,
+        "column": 56
+      }
+    },
+    "uid-7": {
+      "start": {
+        "line": 45,
+        "column": 2
+      },
+      "end": {
+        "line": 45,
+        "column": 84
+      }
+    },
+    "uid-8": {
+      "start": {
+        "line": 46,
+        "column": 2
+      },
+      "end": {
+        "line": 46,
+        "column": 78
+      }
+    }
+  }
+}
