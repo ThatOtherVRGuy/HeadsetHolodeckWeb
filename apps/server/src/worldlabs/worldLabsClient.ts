@@ -153,7 +153,7 @@ export class WorldLabsClient {
       );
     }
 
-    const payload = (await response.json()) as {
+    const payload = (await readJsonResponse(response, "World Labs list worlds")) as {
       worlds?: unknown;
       next_page_token?: unknown;
     };
@@ -193,7 +193,7 @@ export class WorldLabsClient {
       );
     }
 
-    const world = (await response.json()) as Record<string, unknown>;
+    const world = (await readJsonResponse(response, "World Labs get world")) as Record<string, unknown>;
     const prompt = readString(
       (world as { world_prompt?: { text_prompt?: unknown } }).world_prompt
         ?.text_prompt
@@ -227,13 +227,17 @@ export class WorldLabsClient {
       );
     }
 
-    const payload = (await response.json()) as {
+    const payload = (await readJsonResponse(
+      response,
+      "World Labs delete world",
+      { allowEmptyBody: true }
+    )) as {
       deleted?: unknown;
-    };
+    } | undefined;
 
     return {
       worldId: trimmedWorldId,
-      deleted: payload.deleted === true
+      deleted: payload?.deleted === true || payload === undefined
     };
   }
 
@@ -349,6 +353,29 @@ async function readResponseMessage(response: Response): Promise<string> {
       : body;
   } catch {
     return body;
+  }
+}
+
+async function readJsonResponse(
+  response: Response,
+  context: string,
+  options: { allowEmptyBody?: boolean } = {}
+): Promise<unknown> {
+  const body = await response.text();
+  const trimmedBody = body.trim();
+
+  if (!trimmedBody) {
+    if (options.allowEmptyBody) {
+      return undefined;
+    }
+
+    throw new Error(`${context} returned invalid JSON: No response body`);
+  }
+
+  try {
+    return JSON.parse(trimmedBody) as unknown;
+  } catch {
+    throw new Error(`${context} returned invalid JSON: ${trimmedBody}`);
   }
 }
 

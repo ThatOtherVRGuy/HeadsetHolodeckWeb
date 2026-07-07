@@ -484,4 +484,56 @@ describe("WorldLabsClient", () => {
       "World Labs world listing failed with 403 Forbidden: nope"
     );
   });
+
+  it("rejects malformed JSON when listing account worlds", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      new Response("not-json", {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      })
+    );
+    const client = new WorldLabsClient("worldlabs-key", {
+      baseUrl: "https://worldlabs.test",
+      fetch
+    });
+
+    await expect(client.listWorlds()).rejects.toThrow(
+      "World Labs list worlds returned invalid JSON"
+    );
+  });
+
+  it("treats 204 delete responses as successful deletions", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      new Response(null, {
+        status: 204
+      })
+    );
+    const client = new WorldLabsClient("worldlabs-key", {
+      baseUrl: "https://worldlabs.test",
+      fetch
+    });
+
+    await expect(client.deleteWorld("world-123")).resolves.toEqual({
+      worldId: "world-123",
+      deleted: true
+    });
+  });
+
+  it("treats empty-body ok delete responses as successful deletions", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      new Response("", {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      })
+    );
+    const client = new WorldLabsClient("worldlabs-key", {
+      baseUrl: "https://worldlabs.test",
+      fetch
+    });
+
+    await expect(client.deleteWorld("world-123")).resolves.toEqual({
+      worldId: "world-123",
+      deleted: true
+    });
+  });
 });
