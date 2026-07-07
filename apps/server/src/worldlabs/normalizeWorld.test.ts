@@ -185,6 +185,23 @@ it("filters malformed page worlds and trims the echoed request page token", () =
   });
 });
 
+it("treats non-array page worlds as an empty list", () => {
+  expect(
+    normalizeWorldPage(
+      {
+        worlds: "oops" as unknown as never,
+        next_page_token: " next-token "
+      },
+      { pageSize: 10, pageToken: " request-token " }
+    )
+  ).toEqual({
+    worlds: [],
+    nextPageToken: "next-token",
+    pageSize: 10,
+    pageToken: "request-token"
+  });
+});
+
 it("keeps incomplete worlds visible but not renderable", () => {
   expect(
     normalizeWorldSummary({

@@ -39,9 +39,10 @@ export function normalizeWorldPage(
 ): WorldLabsWorldPage {
   const nextPageToken = readString(response.next_page_token);
   const pageToken = readString(request.pageToken);
+  const worlds = Array.isArray(response.worlds) ? response.worlds : [];
 
   return {
-    worlds: (response.worlds ?? [])
+    worlds: worlds
       .map((world) => normalizeWorldSummary(world))
       .filter((world): world is WorldLabsWorldSummary => world !== null),
     ...(nextPageToken ? { nextPageToken } : {}),
