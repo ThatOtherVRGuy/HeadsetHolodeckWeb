@@ -10,3 +10,4 @@ apps/web/dist/
 apps/server/dist/
 assets/test-worlds/cache/
 assets/generated-worlds/
+.worktrees/
