@@ -48,6 +48,11 @@ export interface WorldLabsWorldPage {
   pageToken?: string;
 }
 
+export interface WorldLabsDeleteResult {
+  worldId: string;
+  deleted: boolean;
+}
+
 export interface WorldResult {
   worldId: string;
   displayName: string;
