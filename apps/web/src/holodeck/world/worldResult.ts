@@ -25,7 +25,7 @@ export interface WorldLabsWorldSummary {
   status: string;
   createdAt: string;
   updatedAt: string;
-  thumbnailUrl?: string;
+  thumbnailUrl: string;
   prompt: string;
   hasPanorama: boolean;
   hasSplat: boolean;
