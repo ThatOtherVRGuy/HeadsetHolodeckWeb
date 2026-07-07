@@ -136,6 +136,55 @@ it("normalizes a WorldLabs page and filters invalid world ids", () => {
   });
 });
 
+it("filters malformed page worlds and trims the echoed request page token", () => {
+  expect(
+    normalizeWorldPage(
+      {
+        worlds: [
+          null,
+          undefined,
+          "not-an-object" as unknown as never,
+          { world_id: "   " },
+          { world_id: "world-123", display_name: "Valid World" },
+          { world_id: "world-456", display_name: "Second Valid" }
+        ],
+        next_page_token: " token-2 "
+      },
+      { pageSize: 20, pageToken: " token-1 " }
+    )
+  ).toEqual({
+    worlds: [
+      {
+        worldId: "world-123",
+        displayName: "Valid World",
+        model: "",
+        status: "",
+        createdAt: "",
+        updatedAt: "",
+        thumbnailUrl: "",
+        prompt: "",
+        hasPanorama: false,
+        hasSplat: false
+      },
+      {
+        worldId: "world-456",
+        displayName: "Second Valid",
+        model: "",
+        status: "",
+        createdAt: "",
+        updatedAt: "",
+        thumbnailUrl: "",
+        prompt: "",
+        hasPanorama: false,
+        hasSplat: false
+      }
+    ],
+    nextPageToken: "token-2",
+    pageSize: 20,
+    pageToken: "token-1"
+  });
+});
+
 it("keeps incomplete worlds visible but not renderable", () => {
   expect(
     normalizeWorldSummary({

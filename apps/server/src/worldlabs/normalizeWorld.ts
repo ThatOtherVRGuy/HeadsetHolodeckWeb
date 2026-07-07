@@ -9,6 +9,10 @@ import type {
 export function normalizeWorldSummary(
   world: WorldLabsWorld
 ): WorldLabsWorldSummary | null {
+  if (!isObject(world)) {
+    return null;
+  }
+
   const worldId = readString(world.world_id);
   if (!worldId) {
     return null;
@@ -33,15 +37,16 @@ export function normalizeWorldPage(
   response: WorldLabsListResponse,
   request: { pageSize: number; pageToken?: string }
 ): WorldLabsWorldPage {
+  const nextPageToken = readString(response.next_page_token);
+  const pageToken = readString(request.pageToken);
+
   return {
     worlds: (response.worlds ?? [])
       .map((world) => normalizeWorldSummary(world))
       .filter((world): world is WorldLabsWorldSummary => world !== null),
-    ...(readString(response.next_page_token)
-      ? { nextPageToken: readString(response.next_page_token) }
-      : {}),
+    ...(nextPageToken ? { nextPageToken } : {}),
     pageSize: request.pageSize,
-    ...(request.pageToken ? { pageToken: request.pageToken } : {})
+    ...(pageToken ? { pageToken } : {})
   };
 }
 
@@ -74,4 +79,8 @@ export function normalizeWorld(
 
 function readString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
