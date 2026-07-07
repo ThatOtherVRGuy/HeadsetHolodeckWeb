@@ -1,4 +1,8 @@
-import type { WorldResult } from "../world/worldResult";
+import type {
+  WorldLabsDeleteResult,
+  WorldLabsWorldPage,
+  WorldResult,
+} from "../world/worldResult";
 
 export type VoiceToWorldJobStage =
   | "queued"
@@ -31,6 +35,12 @@ export interface HolodeckApi {
   voiceToWorld(audio: Blob): Promise<WorldResult>;
   startVoiceToWorldJob?(audio: Blob): Promise<VoiceToWorldJob>;
   getVoiceToWorldJob?(jobId: string): Promise<VoiceToWorldJob>;
+  listWorldLabsWorlds?(options?: {
+    pageSize?: number;
+    pageToken?: string;
+  }): Promise<WorldLabsWorldPage>;
+  getWorldLabsWorld?(worldId: string): Promise<WorldResult>;
+  deleteWorldLabsWorld?(worldId: string): Promise<WorldLabsDeleteResult>;
 }
 
 export class HolodeckApiClient implements HolodeckApi {
@@ -97,6 +107,65 @@ export class HolodeckApiClient implements HolodeckApi {
     }
 
     return this.normalizeJob((await response.json()) as VoiceToWorldJob);
+  }
+
+  async listWorldLabsWorlds(options?: {
+    pageSize?: number;
+    pageToken?: string;
+  }): Promise<WorldLabsWorldPage> {
+    const url = new URL(`${this.baseUrl}/api/worldlabs/worlds`);
+
+    if (options?.pageSize !== undefined) {
+      url.searchParams.set("pageSize", String(options.pageSize));
+    }
+
+    if (options?.pageToken !== undefined) {
+      url.searchParams.set("pageToken", options.pageToken);
+    }
+
+    const response = await this.fetchImpl(url.toString());
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(
+        `World Labs world list failed: HTTP ${response.status} ${body}`
+      );
+    }
+
+    return (await response.json()) as WorldLabsWorldPage;
+  }
+
+  async getWorldLabsWorld(worldId: string): Promise<WorldResult> {
+    const response = await this.fetchImpl(
+      `${this.baseUrl}/api/worldlabs/worlds/${encodeURIComponent(worldId)}`
+    );
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(
+        `World Labs world fetch failed: HTTP ${response.status} ${body}`
+      );
+    }
+
+    return this.normalizeWorld((await response.json()) as WorldResult);
+  }
+
+  async deleteWorldLabsWorld(worldId: string): Promise<WorldLabsDeleteResult> {
+    const response = await this.fetchImpl(
+      `${this.baseUrl}/api/worldlabs/worlds/${encodeURIComponent(worldId)}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(
+        `World Labs world delete failed: HTTP ${response.status} ${body}`
+      );
+    }
+
+    return (await response.json()) as WorldLabsDeleteResult;
   }
 
   private normalizeJob(job: VoiceToWorldJob) {

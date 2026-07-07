@@ -95,4 +95,77 @@ describe("HolodeckApiClient", () => {
       "http://api.test/generated-worlds/world-123/full_res.spz"
     );
   });
+
+  it("lists World Labs worlds with the requested query string", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          worlds: [],
+          pageSize: 10,
+          pageToken: "token-1"
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+    const client = new HolodeckApiClient("http://api.test", fetch);
+
+    await client.listWorldLabsWorlds({
+      pageSize: 10,
+      pageToken: "token-1"
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      "http://api.test/api/worldlabs/worlds?pageSize=10&pageToken=token-1"
+    );
+  });
+
+  it("normalizes returned World Labs world local splat URLs", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          worldId: "world-123",
+          displayName: "Glass Forest",
+          prompt: "Glass forest",
+          transcript: "Glass forest",
+          panoUrl: "https://example.test/pano.jpg",
+          spzUrls: {},
+          localSplat: {
+            resolution: "full_res",
+            sourceUrl: "https://example.test/full_res.spz",
+            filePath: "/tmp/full_res.spz",
+            publicUrl: "/generated-worlds/world-123/full_res.spz",
+            byteLength: 123
+          },
+          raw: {}
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+    const client = new HolodeckApiClient("http://api.test", fetch);
+
+    const world = await client.getWorldLabsWorld("world-123");
+
+    expect(world.localSplat?.publicUrl).toBe(
+      "http://api.test/generated-worlds/world-123/full_res.spz"
+    );
+  });
+
+  it("deletes a World Labs world with an encoded world ID", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ worldId: "world/123", deleted: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      })
+    );
+    const client = new HolodeckApiClient("http://api.test", fetch);
+
+    await client.deleteWorldLabsWorld("world/123");
+
+    expect(fetch).toHaveBeenCalledWith(
+      "http://api.test/api/worldlabs/worlds/world%2F123",
+      expect.objectContaining({
+        method: "DELETE"
+      })
+    );
+  });
 });
