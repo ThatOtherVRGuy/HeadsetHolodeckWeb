@@ -1,5 +1,9 @@
-import { normalizeWorld } from "./normalizeWorld.js";
-import type { WorldResult } from "./worldTypes.js";
+import { normalizeWorld, normalizeWorldPage } from "./normalizeWorld.js";
+import type {
+  WorldLabsDeleteResult,
+  WorldLabsWorldPage,
+  WorldResult
+} from "./worldTypes.js";
 
 interface WorldLabsClientOptions {
   baseUrl?: string;
@@ -117,6 +121,120 @@ export class WorldLabsClient {
     }
 
     return normalizeWorld(operation.response, { prompt, transcript });
+  }
+
+  async listWorlds(options: {
+    pageSize?: number;
+    pageToken?: string;
+    signal?: AbortSignal;
+  } = {}): Promise<WorldLabsWorldPage> {
+    const pageSize = clampPageSize(options.pageSize);
+    const pageToken = normalizeOptionalString(options.pageToken);
+    const response = await this.fetch(
+      `${this.baseUrl}/marble/v1/worlds:list`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "WLT-Api-Key": this.apiKey
+        },
+        signal: options.signal,
+        body: JSON.stringify({
+          page_size: pageSize,
+          ...(pageToken ? { page_token: pageToken } : {}),
+          sort_by: "created_at"
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `World Labs world listing failed with ${response.status} ${response.statusText}: ${await readResponseMessage(response)}`
+      );
+    }
+
+    const payload = (await response.json()) as {
+      worlds?: unknown;
+      next_page_token?: unknown;
+    };
+
+    return normalizeWorldPage(
+      {
+        worlds: Array.isArray(payload.worlds) ? payload.worlds : [],
+        next_page_token:
+          typeof payload.next_page_token === "string" ||
+          payload.next_page_token === null
+            ? payload.next_page_token
+            : undefined
+      },
+      { pageSize, ...(pageToken ? { pageToken } : {}) }
+    );
+  }
+
+  async getWorld(
+    worldId: string,
+    signal?: AbortSignal
+  ): Promise<WorldResult> {
+    const trimmedWorldId = normalizeRequiredWorldId(worldId);
+    const response = await this.fetch(
+      `${this.baseUrl}/marble/v1/worlds/${encodeURIComponent(trimmedWorldId)}`,
+      {
+        method: "GET",
+        headers: {
+          "WLT-Api-Key": this.apiKey
+        },
+        signal
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `World Labs world fetch failed with ${response.status} ${response.statusText}: ${await readResponseMessage(response)}`
+      );
+    }
+
+    const world = (await response.json()) as Record<string, unknown>;
+    const prompt = readString(
+      (world as { world_prompt?: { text_prompt?: unknown } }).world_prompt
+        ?.text_prompt
+    );
+
+    return normalizeWorld(world, {
+      prompt,
+      transcript: prompt
+    });
+  }
+
+  async deleteWorld(
+    worldId: string,
+    signal?: AbortSignal
+  ): Promise<WorldLabsDeleteResult> {
+    const trimmedWorldId = normalizeRequiredWorldId(worldId);
+    const response = await this.fetch(
+      `${this.baseUrl}/marble/v1/worlds/${encodeURIComponent(trimmedWorldId)}`,
+      {
+        method: "DELETE",
+        headers: {
+          "WLT-Api-Key": this.apiKey
+        },
+        signal
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `World Labs world deletion failed with ${response.status} ${response.statusText}: ${await readResponseMessage(response)}`
+      );
+    }
+
+    const payload = (await response.json()) as {
+      deleted?: unknown;
+    };
+
+    return {
+      worldId: trimmedWorldId,
+      deleted: payload.deleted === true
+    };
   }
 
   private async waitForOperation(
@@ -279,6 +397,32 @@ function buildDisplayName(prompt: string): string {
     prompt.trim().replace(/\s+/g, " ").slice(0, 60) ||
     "Headset Holodeck World"
   );
+}
+
+function clampPageSize(pageSize?: number): number {
+  if (typeof pageSize !== "number" || !Number.isFinite(pageSize)) {
+    return 20;
+  }
+
+  return Math.min(100, Math.max(1, Math.trunc(pageSize)));
+}
+
+function normalizeOptionalString(value?: string): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeRequiredWorldId(worldId: string): string {
+  const trimmedWorldId = normalizeOptionalString(worldId);
+
+  if (!trimmedWorldId) {
+    throw new Error("World ID must be a non-empty string");
+  }
+
+  return trimmedWorldId;
+}
+
+function readString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function throwIfAborted(signal?: AbortSignal): void {
