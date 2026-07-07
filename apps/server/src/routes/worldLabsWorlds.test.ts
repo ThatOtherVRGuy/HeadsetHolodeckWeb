@@ -112,6 +112,56 @@ describe("WorldLabs world browser routes", () => {
     }
   });
 
+  it("accepts opaque safe world ids for get and delete", async () => {
+    const worldId = "world:plus+at@example";
+    const getWorld = vi.fn<WorldLabsClient["getWorld"]>().mockResolvedValue({
+      worldId,
+      displayName: "Park",
+      prompt: "a park",
+      transcript: "a park",
+      panoUrl: "https://example.test/pano.jpg",
+      spzUrls: {},
+      raw: { world_id: worldId }
+    });
+    const deleteWorld = vi.fn<WorldLabsClient["deleteWorld"]>().mockResolvedValue(
+      {
+        worldId,
+        deleted: true
+      }
+    );
+    const app = await buildServer({
+      worldLabsWorlds: {
+        worldLabsClient: {
+          listWorlds: vi.fn(),
+          getWorld,
+          deleteWorld
+        }
+      }
+    } as any);
+
+    try {
+      const encodedWorldId = encodeURIComponent(worldId);
+      const getResponse = await app.inject({
+        method: "GET",
+        url: `/api/worldlabs/worlds/${encodedWorldId}`
+      });
+      const deleteResponse = await app.inject({
+        method: "DELETE",
+        url: `/api/worldlabs/worlds/${encodedWorldId}`
+      });
+
+      expect(getResponse.statusCode).toBe(200);
+      expect(deleteResponse.statusCode).toBe(200);
+      expect(getWorld).toHaveBeenCalledWith(worldId, expect.any(AbortSignal));
+      expect(deleteWorld).toHaveBeenCalledWith(
+        worldId,
+        expect.any(AbortSignal)
+      );
+    } finally {
+      await app.close();
+    }
+  });
+
   it("rejects unsafe world ids for delete", async () => {
     const app = await buildServer({
       worldLabsWorlds: {

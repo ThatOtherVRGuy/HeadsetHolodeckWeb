@@ -128,5 +128,9 @@ function readQueryValue(value: unknown): string {
 function normalizeWorldId(worldId: unknown): string {
   const trimmedWorldId = readQueryValue(worldId);
 
-  return /^[A-Za-z0-9._-]+$/.test(trimmedWorldId) ? trimmedWorldId : "";
+  if (!trimmedWorldId.includes("/") && !trimmedWorldId.includes("\\")) {
+    return trimmedWorldId;
+  }
+
+  return "";
 }
