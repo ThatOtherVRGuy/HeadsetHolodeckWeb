@@ -15,11 +15,15 @@ const generatedWorldsDir = fileURLToPath(
   new URL("../../../assets/generated-worlds/", import.meta.url)
 );
 const env = readServerEnv(process.env);
+const worldLabsClient = new WorldLabsClient(env.worldLabsApiKey);
 const app = await buildServer({
   generatedWorldsDir,
+  worldLabsWorlds: {
+    worldLabsClient
+  },
   voiceToWorld: {
     transcriptionClient: new OpenAiTranscriptionClient(env.openAiApiKey),
-    worldLabsClient: new WorldLabsClient(env.worldLabsApiKey),
+    worldLabsClient,
     splatDownloader: async (world, options) => {
       const downloaded = await downloadSplat(world, {
         outputDir: generatedWorldsDir,

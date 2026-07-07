@@ -5,12 +5,17 @@ import { createReadStream } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import {
+  registerWorldLabsWorldRoutes,
+  type WorldLabsWorldRouteDeps
+} from "./routes/worldLabsWorlds.js";
+import {
   registerVoiceToWorldRoute,
   type VoiceToWorldRouteDeps
 } from "./routes/voiceToWorld.js";
 
 interface BuildServerOptions {
   voiceToWorld?: VoiceToWorldRouteDeps;
+  worldLabsWorlds?: WorldLabsWorldRouteDeps;
   generatedWorldsDir?: string;
 }
 
@@ -115,6 +120,10 @@ export async function buildServer(options: BuildServerOptions = {}) {
 
   if (options.voiceToWorld) {
     await registerVoiceToWorldRoute(app, options.voiceToWorld);
+  }
+
+  if (options.worldLabsWorlds) {
+    await registerWorldLabsWorldRoutes(app, options.worldLabsWorlds);
   }
 
   return app;
