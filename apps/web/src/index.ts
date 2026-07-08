@@ -6,6 +6,7 @@ import {
   World,
   Interactable,
   PanelUI,
+  LocomotionSystem,
 } from "@iwsdk/core";
 
 import { EnvironmentType, LocomotionEnvironment } from "@iwsdk/core";
@@ -47,6 +48,7 @@ import {
 } from "./holodeck/world/localSplatUrl";
 
 const apiBaseUrl = "http://localhost:4817";
+const XR_SLIDING_SPEED_METERS_PER_SECOND = 1.1;
 
 const assets: AssetManifest = {
   holodeckShell: {
@@ -81,6 +83,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
 }).then((world) => {
   const { scene } = world;
   const { camera } = world;
+  tuneXrLocomotion(world);
 
   const shell = loadHolodeckShell({
     assetId: "holodeckShell",
@@ -365,6 +368,11 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     });
   }
 });
+
+function tuneXrLocomotion(world: World): void {
+  const locomotionSystem = world.getSystem(LocomotionSystem);
+  locomotionSystem.config.slidingSpeed.value = XR_SLIDING_SPEED_METERS_PER_SECOND;
+}
 
 function statusMessageForVoiceToWorldJob(
   job: VoiceToWorldJob,
