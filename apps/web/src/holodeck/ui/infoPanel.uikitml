@@ -36,6 +36,58 @@
     color: #58b7ff;
     text-align: left;
   }
+
+  .world-browser-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25;
+  }
+
+  .world-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.08;
+    padding: 0.28;
+    background-color: #050608;
+    border-color: #ff9c2a;
+    border-width: 0.08;
+    border-radius: 0.35;
+    cursor: pointer;
+  }
+
+  .world-card-title {
+    color: #ff9c2a;
+    font-size: 0.78;
+    font-weight: bold;
+    text-align: left;
+  }
+
+  .world-card-meta {
+    color: #58b7ff;
+    font-size: 0.58;
+    text-align: left;
+  }
+
+  .world-card-prompt {
+    color: #f6efe5;
+    font-size: 0.55;
+    text-align: left;
+  }
+
+  .delete-confirm {
+    padding: 0.35;
+    background-color: #050608;
+    border-color: #ff6a2a;
+    border-width: 0.1;
+    border-radius: 0.35;
+  }
+
+  #worldDeleteConfirmText {
+    color: #ff9c2a;
+    font-size: 0.78;
+    font-weight: bold;
+    text-align: left;
+  }
 </style>
 <div class="info-panel">
   <span id="worldTitleText" class="info-title">NO WORLD LOADED</span>
@@ -44,5 +96,30 @@
   <span id="rendererText" class="info-line">RENDERER None</span>
   <span id="assetText" class="info-line">ASSET --</span>
   <span id="infoDetailText" class="info-detail">Holodeck systems standing by.</span>
+  <div id="worldBrowserList" class="world-browser-list">
+    <div id="worldCard0" class="world-card">
+      <span id="worldCard0Title" class="world-card-title">WORLD SLOT 0</span>
+      <span id="worldCard0Meta" class="world-card-meta">WORLDLABS --</span>
+      <span id="worldCard0Prompt" class="world-card-prompt">PROMPT --</span>
+    </div>
+    <div id="worldCard1" class="world-card">
+      <span id="worldCard1Title" class="world-card-title">WORLD SLOT 1</span>
+      <span id="worldCard1Meta" class="world-card-meta">WORLDLABS --</span>
+      <span id="worldCard1Prompt" class="world-card-prompt">PROMPT --</span>
+    </div>
+    <div id="worldCard2" class="world-card">
+      <span id="worldCard2Title" class="world-card-title">WORLD SLOT 2</span>
+      <span id="worldCard2Meta" class="world-card-meta">WORLDLABS --</span>
+      <span id="worldCard2Prompt" class="world-card-prompt">PROMPT --</span>
+    </div>
+    <div id="worldCard3" class="world-card">
+      <span id="worldCard3Title" class="world-card-title">WORLD SLOT 3</span>
+      <span id="worldCard3Meta" class="world-card-meta">WORLDLABS --</span>
+      <span id="worldCard3Prompt" class="world-card-prompt">PROMPT --</span>
+    </div>
+  </div>
+  <div id="worldDeleteConfirm" class="delete-confirm">
+    <span id="worldDeleteConfirmText">CONFIRM DELETE</span>
+  </div>
   <span id="infoText" class="compat-line">Holodeck systems standing by.</span>
 </div>

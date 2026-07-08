@@ -42,11 +42,18 @@
     color: #58b7ff;
     text-align: center;
   }
+
+  #browserStatusText {
+    font-size: 0.72;
+    color: #ffcb1f;
+    text-align: center;
+  }
 </style>
 <div class="status-panel">
   <div class="status-row">
     <span id="statusModeText" class="mode-pill">READY</span>
     <span id="statusText">Holodeck systems standing by.</span>
   </div>
+  <span id="browserStatusText">BROWSER --</span>
   <span id="healthText">--:--:--  RUN 0:00:00  WORLD --:--:--</span>
 </div>

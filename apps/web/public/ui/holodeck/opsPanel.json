@@ -84,6 +84,112 @@
         "dataUid": "uid-6"
       },
       {
+        "type": "container",
+        "sourceTag": "div",
+        "children": [
+          {
+            "sourceTag": "button",
+            "type": "custom",
+            "children": [
+              "BROWSE"
+            ],
+            "properties": {
+              "id": "browseWorldsButton",
+              "class": "browser-button"
+            },
+            "dataUid": "uid-10"
+          },
+          {
+            "sourceTag": "button",
+            "type": "custom",
+            "children": [
+              "REFRESH"
+            ],
+            "properties": {
+              "id": "refreshWorldsButton",
+              "class": "browser-button"
+            },
+            "dataUid": "uid-11"
+          },
+          {
+            "sourceTag": "button",
+            "type": "custom",
+            "children": [
+              "PREV"
+            ],
+            "properties": {
+              "id": "prevWorldsButton",
+              "class": "browser-button"
+            },
+            "dataUid": "uid-12"
+          },
+          {
+            "sourceTag": "button",
+            "type": "custom",
+            "children": [
+              "NEXT"
+            ],
+            "properties": {
+              "id": "nextWorldsButton",
+              "class": "browser-button"
+            },
+            "dataUid": "uid-13"
+          },
+          {
+            "sourceTag": "button",
+            "type": "custom",
+            "children": [
+              "LOAD"
+            ],
+            "properties": {
+              "id": "loadWorldButton",
+              "class": "browser-button"
+            },
+            "dataUid": "uid-14"
+          },
+          {
+            "sourceTag": "button",
+            "type": "custom",
+            "children": [
+              "DELETE"
+            ],
+            "properties": {
+              "id": "deleteWorldButton",
+              "class": "browser-button"
+            },
+            "dataUid": "uid-15"
+          },
+          {
+            "sourceTag": "button",
+            "type": "custom",
+            "children": [
+              "CONFIRM"
+            ],
+            "properties": {
+              "id": "confirmDeleteButton",
+              "class": "browser-button"
+            },
+            "dataUid": "uid-16"
+          },
+          {
+            "sourceTag": "button",
+            "type": "custom",
+            "children": [
+              "BACK"
+            ],
+            "properties": {
+              "id": "cancelBrowserButton",
+              "class": "browser-button"
+            },
+            "dataUid": "uid-17"
+          }
+        ],
+        "properties": {
+          "class": "browser-grid"
+        },
+        "dataUid": "uid-9"
+      },
+      {
         "sourceTag": "span",
         "type": "custom",
         "children": [
@@ -92,7 +198,7 @@
         "properties": {
           "id": "opsDetailText"
         },
-        "dataUid": "uid-9"
+        "dataUid": "uid-18"
       }
     ],
     "properties": {
@@ -172,6 +278,26 @@
         "cursor": "pointer"
       }
     },
+    "browser-grid": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "row",
+        "flexWrap": "wrap",
+        "gap": "0.35"
+      }
+    },
+    "browser-button": {
+      "content": {
+        "width": "9.6",
+        "padding": "0.42",
+        "borderRadius": 0.45,
+        "borderWidth": "0.1",
+        "fontSize": "0.82",
+        "fontWeight": "bold",
+        "textAlign": "center",
+        "cursor": "pointer"
+      }
+    },
     "__id__recordButton": {
       "content": {
         "backgroundColor": "#ff9c2a",
@@ -190,6 +316,34 @@
       "content": {
         "backgroundColor": "#58b7ff",
         "borderColor": "#b48cff",
+        "color": "#050608"
+      }
+    },
+    "__id__loadWorldButton": {
+      "content": {
+        "backgroundColor": "#050608",
+        "borderColor": "#58b7ff",
+        "color": "#58b7ff"
+      }
+    },
+    "__id__deleteWorldButton": {
+      "content": {
+        "backgroundColor": "#050608",
+        "borderColor": "#ff6a2a",
+        "color": "#ff9c2a"
+      }
+    },
+    "__id__confirmDeleteButton": {
+      "content": {
+        "backgroundColor": "#ff9c2a",
+        "borderColor": "#ff6a2a",
+        "color": "#050608"
+      }
+    },
+    "__id__cancelBrowserButton": {
+      "content": {
+        "backgroundColor": "#f6efe5",
+        "borderColor": "#58b7ff",
         "color": "#050608"
       }
     },
@@ -272,7 +426,7 @@
         "column": 19
       }
     },
-    "__id__recordButton": {
+    "browser-grid": {
       "start": {
         "line": 65,
         "column": 2
@@ -282,123 +436,273 @@
         "column": 15
       }
     },
-    "__id__loadSplatButton": {
+    "browser-button": {
       "start": {
-        "line": 71,
+        "line": 72,
         "column": 2
       },
       "end": {
-        "line": 71,
+        "line": 72,
+        "column": 17
+      }
+    },
+    "__id__recordButton": {
+      "start": {
+        "line": 83,
+        "column": 2
+      },
+      "end": {
+        "line": 83,
+        "column": 15
+      }
+    },
+    "__id__loadSplatButton": {
+      "start": {
+        "line": 89,
+        "column": 2
+      },
+      "end": {
+        "line": 89,
         "column": 18
       }
     },
     "__id__resetButton": {
       "start": {
-        "line": 77,
+        "line": 95,
         "column": 2
       },
       "end": {
-        "line": 77,
+        "line": 95,
         "column": 14
+      }
+    },
+    "__id__loadWorldButton": {
+      "start": {
+        "line": 105,
+        "column": 2
+      },
+      "end": {
+        "line": 105,
+        "column": 18
+      }
+    },
+    "__id__deleteWorldButton": {
+      "start": {
+        "line": 111,
+        "column": 2
+      },
+      "end": {
+        "line": 111,
+        "column": 20
+      }
+    },
+    "__id__confirmDeleteButton": {
+      "start": {
+        "line": 117,
+        "column": 2
+      },
+      "end": {
+        "line": 117,
+        "column": 22
+      }
+    },
+    "__id__cancelBrowserButton": {
+      "start": {
+        "line": 123,
+        "column": 2
+      },
+      "end": {
+        "line": 123,
+        "column": 22
       }
     },
     "__id__opsDetailText": {
       "start": {
-        "line": 83,
+        "line": 129,
         "column": 2
       },
       "end": {
-        "line": 83,
+        "line": 129,
         "column": 16
       }
     },
     "uid-1": {
       "start": {
-        "line": 89,
+        "line": 135,
         "column": 0
       },
       "end": {
-        "line": 100,
+        "line": 156,
         "column": 6
       }
     },
     "uid-2": {
       "start": {
-        "line": 90,
+        "line": 136,
         "column": 2
       },
       "end": {
-        "line": 93,
+        "line": 139,
         "column": 8
       }
     },
     "uid-3": {
       "start": {
-        "line": 91,
+        "line": 137,
         "column": 4
       },
       "end": {
-        "line": 91,
+        "line": 137,
         "column": 56
       }
     },
     "uid-4": {
       "start": {
-        "line": 92,
+        "line": 138,
         "column": 4
       },
       "end": {
-        "line": 92,
+        "line": 138,
         "column": 69
       }
     },
     "uid-5": {
       "start": {
-        "line": 94,
+        "line": 140,
         "column": 2
       },
       "end": {
-        "line": 94,
+        "line": 140,
         "column": 62
       }
     },
     "uid-6": {
       "start": {
-        "line": 95,
+        "line": 141,
         "column": 2
       },
       "end": {
-        "line": 98,
+        "line": 144,
         "column": 8
       }
     },
     "uid-7": {
       "start": {
-        "line": 96,
+        "line": 142,
         "column": 4
       },
       "end": {
-        "line": 96,
+        "line": 142,
         "column": 75
       }
     },
     "uid-8": {
       "start": {
-        "line": 97,
+        "line": 143,
         "column": 4
       },
       "end": {
-        "line": 97,
+        "line": 143,
         "column": 68
       }
     },
     "uid-9": {
       "start": {
-        "line": 99,
+        "line": 145,
         "column": 2
       },
       "end": {
-        "line": 99,
+        "line": 154,
+        "column": 8
+      }
+    },
+    "uid-10": {
+      "start": {
+        "line": 146,
+        "column": 4
+      },
+      "end": {
+        "line": 146,
+        "column": 74
+      }
+    },
+    "uid-11": {
+      "start": {
+        "line": 147,
+        "column": 4
+      },
+      "end": {
+        "line": 147,
+        "column": 76
+      }
+    },
+    "uid-12": {
+      "start": {
+        "line": 148,
+        "column": 4
+      },
+      "end": {
+        "line": 148,
+        "column": 70
+      }
+    },
+    "uid-13": {
+      "start": {
+        "line": 149,
+        "column": 4
+      },
+      "end": {
+        "line": 149,
+        "column": 70
+      }
+    },
+    "uid-14": {
+      "start": {
+        "line": 150,
+        "column": 4
+      },
+      "end": {
+        "line": 150,
+        "column": 69
+      }
+    },
+    "uid-15": {
+      "start": {
+        "line": 151,
+        "column": 4
+      },
+      "end": {
+        "line": 151,
+        "column": 73
+      }
+    },
+    "uid-16": {
+      "start": {
+        "line": 152,
+        "column": 4
+      },
+      "end": {
+        "line": 152,
+        "column": 76
+      }
+    },
+    "uid-17": {
+      "start": {
+        "line": 153,
+        "column": 4
+      },
+      "end": {
+        "line": 153,
+        "column": 73
+      }
+    },
+    "uid-18": {
+      "start": {
+        "line": 155,
+        "column": 2
+      },
+      "end": {
+        "line": 155,
         "column": 63
       }
     }

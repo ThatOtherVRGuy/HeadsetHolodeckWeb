@@ -1,4 +1,9 @@
 import type { HolodeckStateSnapshot } from "../state/holodeckState";
+import type {
+  WorldLabsBrowserState,
+  WorldLabsBrowserMode
+} from "../world/worldLabsBrowserState";
+import type { WorldLabsWorldSummary } from "../world/worldResult";
 
 export type PanelStatusLevel = "info" | "success" | "warning" | "error";
 
@@ -17,6 +22,7 @@ export interface PanelViewModelInput {
   rendererLabel: string;
   transcript?: string;
   loadedWorld?: LoadedWorldPanelInfo | null;
+  browser?: WorldLabsBrowserState;
   appElapsedMs: number;
   worldElapsedMs: number | null;
 }
@@ -26,6 +32,14 @@ export interface OpsPanelView {
   primaryActionLabel: string;
   modelLabel: string;
   detail: string;
+  browseActionLabel: string;
+  refreshActionLabel: string;
+  previousActionLabel: string;
+  nextActionLabel: string;
+  loadActionLabel: string;
+  deleteActionLabel: string;
+  confirmActionLabel: string;
+  cancelActionLabel: string;
 }
 
 export interface InfoPanelView {
@@ -35,6 +49,8 @@ export interface InfoPanelView {
   renderer: string;
   asset: string;
   detail: string;
+  browserCards: BrowserWorldCardView[];
+  deleteConfirmText: string;
 }
 
 export interface StatusPanelView {
@@ -42,6 +58,18 @@ export interface StatusPanelView {
   message: string;
   health: string;
   level: PanelStatusLevel;
+  browser: string;
+}
+
+export interface BrowserWorldCardView {
+  worldId: string;
+  title: string;
+  meta: string;
+  asset: string;
+  prompt: string;
+  thumbnailUrl: string;
+  isSelected: boolean;
+  canLoad: boolean;
 }
 
 export interface PanelViewModel {
@@ -51,6 +79,10 @@ export interface PanelViewModel {
 }
 
 export function buildPanelViewModel(input: PanelViewModelInput): PanelViewModel {
+  if (isBrowserMode(input.browser?.mode)) {
+    return buildBrowserPanelView(input, input.browser);
+  }
+
   const message =
     input.state.errorMessage || input.state.statusMessage || defaultMessageFor(input);
   const mode = modeFor(input);
@@ -61,7 +93,8 @@ export function buildPanelViewModel(input: PanelViewModelInput): PanelViewModel 
       mode,
       primaryActionLabel: primaryActionLabelFor(input),
       modelLabel: `Model: ${input.selectedModelLabel}`,
-      detail: message
+      detail: message,
+      ...defaultBrowserActions()
     },
     info: {
       title: infoTitleFor(input, loadedWorld),
@@ -69,13 +102,16 @@ export function buildPanelViewModel(input: PanelViewModelInput): PanelViewModel 
       transcript: input.transcript ? `PROMPT ${input.transcript}` : "PROMPT --",
       renderer: `RENDERER ${input.rendererLabel}`,
       asset: assetLineFor(loadedWorld),
-      detail: input.state.errorMessage ? `ERROR: ${input.state.errorMessage}` : message
+      detail: input.state.errorMessage ? `ERROR: ${input.state.errorMessage}` : message,
+      browserCards: [],
+      deleteConfirmText: ""
     },
     status: {
       mode: statusModeFor(input, mode),
       message,
       health: healthLineFor(input.appElapsedMs, input.worldElapsedMs),
-      level: levelFor(input)
+      level: levelFor(input),
+      browser: "BROWSER --"
     }
   };
 }
@@ -194,4 +230,154 @@ function healthLineFor(appElapsedMs: number, worldElapsedMs: number | null): str
     worldElapsedMs === null ? "--:--:--" : formatPanelDuration(worldElapsedMs);
 
   return `${realtime}  RUN ${formatPanelDuration(appElapsedMs)}  WORLD ${worldTime}`;
+}
+
+function buildBrowserPanelView(
+  input: PanelViewModelInput,
+  browser: WorldLabsBrowserState
+): PanelViewModel {
+  const selected = browser.selectedWorld;
+  const message = browserStatusMessage(browser);
+  const isConfirming = browser.mode === "confirm-delete";
+
+  return {
+    ops: {
+      mode: isConfirming ? "ALERT" : "BROWSE",
+      primaryActionLabel: "Browse",
+      modelLabel: `Model: ${input.selectedModelLabel}`,
+      detail: message,
+      browseActionLabel: "BROWSE",
+      refreshActionLabel: isConfirming ? "CONFIRM" : "REFRESH",
+      previousActionLabel: "PREV",
+      nextActionLabel: "NEXT",
+      loadActionLabel: "LOAD",
+      deleteActionLabel: "DELETE",
+      confirmActionLabel: "CONFIRM",
+      cancelActionLabel: isConfirming ? "CANCEL" : "BACK"
+    },
+    info: {
+      title: isConfirming ? "CONFIRM DELETE" : "WORLDLABS BROWSER",
+      source: selected
+        ? `WORLDLABS ${selected.displayName}`
+        : "WORLDLABS SERVER",
+      transcript: selected ? `PROMPT ${selected.prompt || "--"}` : "PROMPT --",
+      renderer: `RENDERER ${selected ? browserAssetLabel(selected) : "Browser"}`,
+      asset: selected
+        ? `ASSET ${browserAssetLabel(selected).toUpperCase()}`
+        : "ASSET NONE",
+      detail: isConfirming
+        ? `${selected?.displayName ?? "Selected world"} will be permanently deleted.`
+        : browserDetail(browser),
+      browserCards: browser.worlds.slice(0, 4).map((world) =>
+        buildBrowserCard(world, browser.selectedWorldId)
+      ),
+      deleteConfirmText: isConfirming
+        ? `CONFIRM DELETE ${selected?.displayName ?? browser.pendingDeleteWorldId ?? ""}`
+        : ""
+    },
+    status: {
+      mode: isConfirming ? "ALERT" : "BROWSE",
+      message,
+      health: healthLineFor(input.appElapsedMs, input.worldElapsedMs),
+      level: browser.errorMessage ? "error" : isConfirming ? "warning" : "info",
+      browser: browserStatusLine(browser)
+    }
+  };
+}
+
+function isBrowserMode(mode: WorldLabsBrowserMode | undefined): boolean {
+  return mode === "browse" || mode === "confirm-delete";
+}
+
+function defaultBrowserActions() {
+  return {
+    browseActionLabel: "BROWSE",
+    refreshActionLabel: "REFRESH",
+    previousActionLabel: "PREV",
+    nextActionLabel: "NEXT",
+    loadActionLabel: "LOAD",
+    deleteActionLabel: "DELETE",
+    confirmActionLabel: "CONFIRM",
+    cancelActionLabel: "BACK"
+  };
+}
+
+function buildBrowserCard(
+  world: WorldLabsWorldSummary,
+  selectedWorldId: string | null
+): BrowserWorldCardView {
+  return {
+    worldId: world.worldId,
+    title: world.displayName || world.worldId,
+    meta: [world.model, world.status].filter(Boolean).join(" / ") || "WORLDLABS",
+    asset: browserAssetLabel(world).toUpperCase(),
+    prompt: world.prompt || "--",
+    thumbnailUrl: world.thumbnailUrl,
+    isSelected: world.worldId === selectedWorldId,
+    canLoad: world.hasPanorama || world.hasSplat
+  };
+}
+
+function browserAssetLabel(world: WorldLabsWorldSummary): string {
+  if (world.hasSplat) {
+    return "SPZ";
+  }
+
+  if (world.hasPanorama) {
+    return "PANO";
+  }
+
+  return "PENDING";
+}
+
+function browserDetail(browser: WorldLabsBrowserState): string {
+  if (browser.errorMessage) {
+    return `ERROR: ${browser.errorMessage}`;
+  }
+
+  if (browser.isLoading) {
+    return "Loading WorldLabs worlds.";
+  }
+
+  if (browser.selectedWorld) {
+    return browser.selectedWorld.prompt || browser.selectedWorld.displayName;
+  }
+
+  if (browser.worlds.length === 0) {
+    return "No WorldLabs worlds found.";
+  }
+
+  return `${browser.worlds.length.toString()} WorldLabs worlds on this page.`;
+}
+
+function browserStatusMessage(browser: WorldLabsBrowserState): string {
+  if (browser.errorMessage) {
+    return browser.errorMessage;
+  }
+
+  if (browser.mode === "confirm-delete") {
+    return "Confirm WorldLabs delete.";
+  }
+
+  if (browser.isLoading) {
+    return "Loading WorldLabs worlds.";
+  }
+
+  if (browser.selectedWorld) {
+    return `Selected ${browser.selectedWorld.displayName || browser.selectedWorld.worldId}.`;
+  }
+
+  if (browser.worlds.length === 0) {
+    return "No WorldLabs worlds found.";
+  }
+
+  return "WorldLabs worlds loaded.";
+}
+
+function browserStatusLine(browser: WorldLabsBrowserState): string {
+  const page = browser.pageToken ? `PAGE ${browser.pageToken}` : "PAGE START";
+  const next = browser.nextPageToken ? "NEXT READY" : "END";
+  const selected = browser.selectedWorldId ? "SELECTED" : "NO SELECT";
+
+  return `${page}  ${next}  ${selected}`;
 }

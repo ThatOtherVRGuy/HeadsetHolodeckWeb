@@ -63,6 +63,24 @@
     cursor: pointer;
   }
 
+  .browser-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.35;
+  }
+
+  .browser-button {
+    width: 9.6;
+    padding: 0.42;
+    border-radius: 0.45;
+    border-width: 0.1;
+    font-size: 0.82;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+  }
+
   #recordButton {
     background-color: #ff9c2a;
     border-color: #ff6a2a;
@@ -81,6 +99,34 @@
     color: #050608;
   }
 
+  #browseWorldsButton,
+  #refreshWorldsButton,
+  #prevWorldsButton,
+  #nextWorldsButton,
+  #loadWorldButton {
+    background-color: #050608;
+    border-color: #58b7ff;
+    color: #58b7ff;
+  }
+
+  #deleteWorldButton {
+    background-color: #050608;
+    border-color: #ff6a2a;
+    color: #ff9c2a;
+  }
+
+  #confirmDeleteButton {
+    background-color: #ff9c2a;
+    border-color: #ff6a2a;
+    color: #050608;
+  }
+
+  #cancelBrowserButton {
+    background-color: #f6efe5;
+    border-color: #58b7ff;
+    color: #050608;
+  }
+
   #opsDetailText {
     color: #f6efe5;
     font-size: 0.95;
@@ -96,6 +142,16 @@
   <div class="secondary-row">
     <button id="loadSplatButton" class="secondary-button">Load SPZ</button>
     <button id="resetButton" class="secondary-button">Reset</button>
+  </div>
+  <div class="browser-grid">
+    <button id="browseWorldsButton" class="browser-button">BROWSE</button>
+    <button id="refreshWorldsButton" class="browser-button">REFRESH</button>
+    <button id="prevWorldsButton" class="browser-button">PREV</button>
+    <button id="nextWorldsButton" class="browser-button">NEXT</button>
+    <button id="loadWorldButton" class="browser-button">LOAD</button>
+    <button id="deleteWorldButton" class="browser-button">DELETE</button>
+    <button id="confirmDeleteButton" class="browser-button">CONFIRM</button>
+    <button id="cancelBrowserButton" class="browser-button">BACK</button>
   </div>
   <span id="opsDetailText">Holodeck systems standing by.</span>
 </div>
