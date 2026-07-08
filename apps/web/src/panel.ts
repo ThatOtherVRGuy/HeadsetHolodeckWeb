@@ -10,11 +10,22 @@ import type { HolodeckStateMachine } from "./holodeck/state/holodeckState";
 import type { BrowserVoiceRecorder } from "./holodeck/voice/browserVoiceRecorder";
 import type { VoiceToWorldCoordinator } from "./holodeck/coordinator/voiceToWorldCoordinator";
 import type { WorldRenderer } from "./holodeck/rendering/worldRenderer";
+import type { HolodeckApi } from "./holodeck/api/holodeckApiClient";
 import {
   buildPanelViewModel,
   type LoadedWorldPanelInfo,
   type PanelViewModel
 } from "./holodeck/ui/panelViewModel";
+import {
+  confirmWorldDelete,
+  createWorldLabsBrowserState,
+  failWorldLabsBrowser,
+  loadWorldLabsPage,
+  markWorldDeleted,
+  openWorldLabsBrowser,
+  selectWorldLabsWorld
+} from "./holodeck/world/worldLabsBrowserState";
+import type { WorldLabsWorldSummary } from "./holodeck/world/worldResult";
 
 interface HolodeckPanelControls {
   state: HolodeckStateMachine;
@@ -22,9 +33,11 @@ interface HolodeckPanelControls {
   coordinator: VoiceToWorldCoordinator;
   renderer: WorldRenderer;
   openLocalSplatFilePicker: () => void;
+  api: HolodeckApi;
 }
 
 let holodeckControls: HolodeckPanelControls | null = null;
+let browserState = createWorldLabsBrowserState();
 const STATUS_PANEL_CONFIG = "./ui/holodeck/statusPanel.json";
 const OPS_PANEL_CONFIG = "./ui/holodeck/opsPanel.json";
 const INFO_PANEL_CONFIG = "./ui/holodeck/infoPanel.json";
@@ -56,6 +69,7 @@ function currentPanelView(controls: HolodeckPanelControls): PanelViewModel {
     transcript: panelSession.transcript,
     rendererLabel: panelSession.rendererLabel,
     loadedWorld: panelSession.loadedWorld,
+    browser: browserState,
     appElapsedMs: Date.now() - APP_STARTED_AT,
     worldElapsedMs:
       panelSession.worldReadyAt === null ? null : Date.now() - panelSession.worldReadyAt
@@ -83,6 +97,34 @@ export function hasSplatSource(world: {
   );
 }
 
+export function isWorldLabsSummaryLoadable(
+  world: Pick<WorldLabsWorldSummary, "hasPanorama" | "hasSplat">
+): boolean {
+  return world.hasPanorama || world.hasSplat;
+}
+
+export function filterHiddenWorldLabsWorlds<T extends { worldId: string }>(
+  page: {
+    worlds: readonly T[];
+    pageSize: number;
+    nextPageToken?: string;
+    pageToken?: string;
+  },
+  hiddenWorldIds: readonly string[]
+): {
+  worlds: T[];
+  pageSize: number;
+  nextPageToken?: string;
+  pageToken?: string;
+} {
+  const hidden = new Set(hiddenWorldIds);
+
+  return {
+    ...page,
+    worlds: page.worlds.filter((world) => !hidden.has(world.worldId))
+  };
+}
+
 function startPanelClock(update: () => void): () => void {
   const interval = window.setInterval(update, 1000);
   update();
@@ -104,6 +146,14 @@ function applyOpsView(document: UIKitDocument, view: PanelViewModel): void {
   setText(document, "recordButton", view.ops.primaryActionLabel);
   setText(document, "modelText", view.ops.modelLabel);
   setText(document, "opsDetailText", view.ops.detail);
+  setText(document, "browseWorldsButton", view.ops.browseActionLabel);
+  setText(document, "refreshWorldsButton", view.ops.refreshActionLabel);
+  setText(document, "prevWorldsButton", view.ops.previousActionLabel);
+  setText(document, "nextWorldsButton", view.ops.nextActionLabel);
+  setText(document, "loadWorldButton", view.ops.loadActionLabel);
+  setText(document, "deleteWorldButton", view.ops.deleteActionLabel);
+  setText(document, "confirmDeleteButton", view.ops.confirmActionLabel);
+  setText(document, "cancelBrowserButton", view.ops.cancelActionLabel);
 }
 
 function applyInfoView(document: UIKitDocument, view: PanelViewModel): void {
@@ -114,11 +164,19 @@ function applyInfoView(document: UIKitDocument, view: PanelViewModel): void {
   setText(document, "assetText", view.info.asset);
   setText(document, "infoDetailText", view.info.detail);
   setText(document, "infoText", view.info.detail);
+  for (let index = 0; index < 4; index += 1) {
+    const card = view.info.browserCards[index];
+    setText(document, `worldCard${index}Title`, card?.title ?? `WORLD SLOT ${index}`);
+    setText(document, `worldCard${index}Meta`, card?.meta ?? "WORLDLABS --");
+    setText(document, `worldCard${index}Prompt`, card?.prompt ?? "PROMPT --");
+  }
+  setText(document, "worldDeleteConfirmText", view.info.deleteConfirmText);
 }
 
 function applyStatusView(document: UIKitDocument, view: PanelViewModel): void {
   setText(document, "statusModeText", view.status.mode);
   setText(document, "statusText", view.status.message);
+  setText(document, "browserStatusText", view.status.browser);
   setText(document, "healthText", view.status.health);
 }
 
@@ -126,6 +184,189 @@ export function configureHolodeckPanelControls(
   controls: HolodeckPanelControls
 ): void {
   holodeckControls = controls;
+}
+
+function signalBrowserUpdate(
+  controls: HolodeckPanelControls,
+  message = "WorldLabs browser updated."
+): void {
+  controls.state.setStatusMessage(message);
+}
+
+function setBrowserLoading(
+  controls: HolodeckPanelControls,
+  message: string
+): void {
+  browserState = {
+    ...openWorldLabsBrowser(browserState),
+    isLoading: true,
+    errorMessage: ""
+  };
+  signalBrowserUpdate(controls, message);
+}
+
+async function refreshWorldLabsWorlds(
+  controls: HolodeckPanelControls,
+  options: { append?: boolean } = {}
+): Promise<void> {
+  if (!controls.api.listWorldLabsWorlds) {
+    browserState = failWorldLabsBrowser(
+      openWorldLabsBrowser(browserState),
+      "WorldLabs browser API unavailable."
+    );
+    signalBrowserUpdate(controls, browserState.errorMessage);
+    return;
+  }
+
+  const pageToken =
+    options.append && browserState.nextPageToken
+      ? browserState.nextPageToken
+      : undefined;
+
+  setBrowserLoading(
+    controls,
+    pageToken ? "Loading next WorldLabs page." : "Loading WorldLabs worlds."
+  );
+
+  try {
+    const page = await controls.api.listWorldLabsWorlds({
+      pageSize: browserState.pageSize,
+      ...(pageToken ? { pageToken } : {})
+    });
+    browserState = loadWorldLabsPage(
+      browserState,
+      filterHiddenWorldLabsWorlds(page, browserState.hiddenDeletedWorldIds),
+      { append: options.append === true }
+    );
+    signalBrowserUpdate(controls, "WorldLabs worlds loaded.");
+  } catch (error) {
+    browserState = failWorldLabsBrowser(
+      browserState,
+      error instanceof Error ? error.message : "WorldLabs list unavailable."
+    );
+    signalBrowserUpdate(controls, browserState.errorMessage);
+  }
+}
+
+async function loadSelectedWorldLabsWorld(
+  controls: HolodeckPanelControls
+): Promise<void> {
+  if (!browserState.selectedWorldId || !browserState.canLoadSelectedWorld) {
+    signalBrowserUpdate(controls, "Select a renderable WorldLabs world.");
+    return;
+  }
+
+  if (!controls.api.getWorldLabsWorld) {
+    browserState = failWorldLabsBrowser(
+      browserState,
+      "WorldLabs load API unavailable."
+    );
+    signalBrowserUpdate(controls, browserState.errorMessage);
+    return;
+  }
+
+  panelSession.isGenerating = true;
+  controls.state.forceState("Generating");
+  signalBrowserUpdate(controls, "Loading selected WorldLabs world.");
+
+  try {
+    const world = await controls.api.getWorldLabsWorld(browserState.selectedWorldId);
+    await controls.renderer.load(world);
+    controls.renderer.show();
+    panelSession.transcript = world.prompt || world.transcript;
+    panelSession.rendererLabel = hasSplatSource(world) ? "Splat" : "Panorama";
+    panelSession.loadedWorld = {
+      title: world.displayName || world.worldId,
+      source: "WORLD LABS",
+      assetLabel: hasSplatSource(world) ? "SPZ" : "PANO",
+      worldId: world.worldId
+    };
+    panelSession.worldReadyAt = Date.now();
+    controls.state.forceState("Ready");
+    signalBrowserUpdate(
+      controls,
+      `WorldLabs world ready: ${world.displayName || world.worldId}`
+    );
+  } catch (error) {
+    browserState = failWorldLabsBrowser(
+      browserState,
+      error instanceof Error ? error.message : "WorldLabs world unavailable."
+    );
+    controls.state.setError(browserState.errorMessage);
+  } finally {
+    panelSession.isGenerating = false;
+  }
+}
+
+async function deletePendingWorldLabsWorld(
+  controls: HolodeckPanelControls
+): Promise<void> {
+  if (!browserState.pendingDeleteWorldId) {
+    signalBrowserUpdate(controls, "Select a WorldLabs world to delete.");
+    return;
+  }
+
+  if (!controls.api.deleteWorldLabsWorld) {
+    browserState = failWorldLabsBrowser(
+      browserState,
+      "WorldLabs delete API unavailable."
+    );
+    signalBrowserUpdate(controls, browserState.errorMessage);
+    return;
+  }
+
+  const pendingWorldId = browserState.pendingDeleteWorldId;
+  signalBrowserUpdate(controls, "Deleting WorldLabs world.");
+
+  try {
+    const result = await controls.api.deleteWorldLabsWorld(pendingWorldId);
+    if (result.deleted) {
+      browserState = markWorldDeleted(browserState, result.worldId);
+      signalBrowserUpdate(controls, "WorldLabs world deleted.");
+      return;
+    }
+
+    browserState = failWorldLabsBrowser(
+      browserState,
+      "WorldLabs delete did not complete."
+    );
+    signalBrowserUpdate(controls, browserState.errorMessage);
+  } catch (error) {
+    browserState = failWorldLabsBrowser(
+      browserState,
+      error instanceof Error ? error.message : "WorldLabs delete failed."
+    );
+    signalBrowserUpdate(controls, browserState.errorMessage);
+  }
+}
+
+function cancelWorldLabsBrowser(controls: HolodeckPanelControls): void {
+  browserState = createWorldLabsBrowserState({ pageSize: browserState.pageSize });
+  signalBrowserUpdate(controls, "WorldLabs browser closed.");
+}
+
+function bindClick(
+  document: UIKitDocument,
+  id: string,
+  onClick: () => void | Promise<void>
+): () => void {
+  const element = document.getElementById(id) as
+    | {
+        addEventListener: (event: "click", callback: () => void) => void;
+        removeEventListener: (event: "click", callback: () => void) => void;
+      }
+    | null;
+
+  if (!element) {
+    return () => {};
+  }
+
+  const callback = () => {
+    void onClick();
+  };
+  element.addEventListener("click", callback);
+
+  return () => element.removeEventListener("click", callback);
 }
 
 export class PanelSystem extends createSystem({
@@ -194,8 +435,23 @@ export class PanelSystem extends createSystem({
       const update = () => applyInfoView(document, currentPanelView(controls));
       const unsubscribeState = controls.state.subscribe(update);
       const stopClock = startPanelClock(update);
+      const cardCleanups = [0, 1, 2, 3].map((index) =>
+        bindClick(document, `worldCard${index}`, () => {
+          const world = browserState.worlds[index];
+          if (!world) {
+            return;
+          }
+
+          browserState = selectWorldLabsWorld(browserState, world.worldId);
+          signalBrowserUpdate(
+            controls,
+            `Selected ${world.displayName || world.worldId}.`
+          );
+        })
+      );
 
       panelCleanups.set(entity.index, () => {
+        cardCleanups.forEach((cleanup) => cleanup());
         unsubscribeState();
         stopClock();
       });
@@ -225,6 +481,33 @@ export class PanelSystem extends createSystem({
       const update = () => applyOpsView(document, currentPanelView(controls));
       const unsubscribeState = controls.state.subscribe(update);
       const stopClock = startPanelClock(update);
+      const browserControlCleanups = [
+        bindClick(document, "browseWorldsButton", () =>
+          refreshWorldLabsWorlds(controls)
+        ),
+        bindClick(document, "refreshWorldsButton", () =>
+          refreshWorldLabsWorlds(controls)
+        ),
+        bindClick(document, "prevWorldsButton", () =>
+          refreshWorldLabsWorlds(controls)
+        ),
+        bindClick(document, "nextWorldsButton", () =>
+          refreshWorldLabsWorlds(controls, { append: true })
+        ),
+        bindClick(document, "loadWorldButton", () =>
+          loadSelectedWorldLabsWorld(controls)
+        ),
+        bindClick(document, "deleteWorldButton", () => {
+          browserState = confirmWorldDelete(browserState);
+          signalBrowserUpdate(controls, "Confirm WorldLabs delete.");
+        }),
+        bindClick(document, "confirmDeleteButton", () =>
+          deletePendingWorldLabsWorld(controls)
+        ),
+        bindClick(document, "cancelBrowserButton", () =>
+          cancelWorldLabsBrowser(controls)
+        )
+      ];
 
       const onRecordClick = async () => {
         if (panelSession.isGenerating) {
@@ -319,6 +602,7 @@ export class PanelSystem extends createSystem({
         recordButton.removeEventListener("click", onRecordClick);
         loadSplatButton.removeEventListener("click", onLoadSplatClick);
         resetButton.removeEventListener("click", onResetClick);
+        browserControlCleanups.forEach((cleanup) => cleanup());
         unsubscribeState();
         stopClock();
       });

@@ -38,6 +38,59 @@ describe("hasSplatSource", () => {
   });
 });
 
+describe("WorldLabs browser panel helpers", () => {
+  it("treats WorldLabs summaries with pano or splat assets as loadable", async () => {
+    const { isWorldLabsSummaryLoadable } = await importPanel();
+
+    expect(
+      isWorldLabsSummaryLoadable({
+        hasPanorama: true,
+        hasSplat: false
+      })
+    ).toBe(true);
+    expect(
+      isWorldLabsSummaryLoadable({
+        hasPanorama: false,
+        hasSplat: true
+      })
+    ).toBe(true);
+    expect(
+      isWorldLabsSummaryLoadable({
+        hasPanorama: false,
+        hasSplat: false
+      })
+    ).toBe(false);
+  });
+
+  it("filters hidden deleted ids from browser world pages", async () => {
+    const { filterHiddenWorldLabsWorlds } = await importPanel();
+
+    expect(
+      filterHiddenWorldLabsWorlds(
+        {
+          worlds: [
+            {
+              worldId: "world-123",
+              displayName: "Park"
+            },
+            {
+              worldId: "world-456",
+              displayName: "Circus"
+            }
+          ],
+          pageSize: 20
+        },
+        ["world-123"]
+      ).worlds
+    ).toEqual([
+      {
+        worldId: "world-456",
+        displayName: "Circus"
+      }
+    ]);
+  });
+});
+
 async function importPanel(): Promise<typeof import("./panel.js")> {
   return import("./panel.js");
 }

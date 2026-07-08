@@ -146,7 +146,8 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     recorder,
     coordinator,
     renderer: worldRenderer,
-    openLocalSplatFilePicker: () => localSplatFileInput.click()
+    openLocalSplatFilePicker: () => localSplatFileInput.click(),
+    api
   });
   localSplatFileInput.addEventListener("change", () => {
     const file = localSplatFileInput.files?.[0] ?? null;
