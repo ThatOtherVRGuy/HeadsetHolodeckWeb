@@ -7,6 +7,7 @@ import {
   Interactable,
   PanelUI,
   LocomotionSystem,
+  SlideSystem,
 } from "@iwsdk/core";
 
 import { EnvironmentType, LocomotionEnvironment } from "@iwsdk/core";
@@ -48,7 +49,8 @@ import {
 } from "./holodeck/world/localSplatUrl";
 
 const apiBaseUrl = "http://localhost:4817";
-const XR_SLIDING_SPEED_METERS_PER_SECOND = 1.1;
+const XR_SLIDING_SPEED_METERS_PER_SECOND = 0.35;
+const XR_LOCOMOTION_TUNING_ATTEMPTS = 20;
 
 const assets: AssetManifest = {
   holodeckShell: {
@@ -372,6 +374,33 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
 function tuneXrLocomotion(world: World): void {
   const locomotionSystem = world.getSystem(LocomotionSystem);
   locomotionSystem.config.slidingSpeed.value = XR_SLIDING_SPEED_METERS_PER_SECOND;
+
+  let attempts = 0;
+  const applyToSlideSystem = () => {
+    attempts += 1;
+
+    try {
+      const slideSystem = world.getSystem(SlideSystem);
+      slideSystem.config.maxSpeed.value = XR_SLIDING_SPEED_METERS_PER_SECOND;
+      console.info("[Holodeck] XR locomotion speed tuned", {
+        metersPerSecond: XR_SLIDING_SPEED_METERS_PER_SECOND,
+        attempts
+      });
+      return;
+    } catch {
+      if (attempts < XR_LOCOMOTION_TUNING_ATTEMPTS) {
+        window.setTimeout(applyToSlideSystem, 50);
+        return;
+      }
+
+      console.warn("[Holodeck] XR slide system was not available for speed tuning", {
+        metersPerSecond: XR_SLIDING_SPEED_METERS_PER_SECOND,
+        attempts
+      });
+    }
+  };
+
+  applyToSlideSystem();
 }
 
 function statusMessageForVoiceToWorldJob(
