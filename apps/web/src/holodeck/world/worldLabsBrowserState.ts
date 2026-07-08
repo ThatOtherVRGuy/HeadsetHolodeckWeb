@@ -4,7 +4,7 @@ export type WorldLabsBrowserMode = "closed" | "browse" | "confirm-delete";
 
 export interface WorldLabsBrowserState {
   mode: WorldLabsBrowserMode;
-  worlds: WorldLabsWorldSummary[];
+  worlds: readonly WorldLabsWorldSummary[];
   selectedWorldId: string | null;
   selectedWorld: WorldLabsWorldSummary | null;
   pendingDeleteWorldId: string | null;
@@ -13,7 +13,7 @@ export interface WorldLabsBrowserState {
   pageSize: number;
   isLoading: boolean;
   errorMessage: string;
-  hiddenDeletedWorldIds: string[];
+  hiddenDeletedWorldIds: readonly string[];
   canLoadSelectedWorld: boolean;
 }
 
@@ -61,17 +61,17 @@ export function loadWorldLabsPage(
   const hiddenDeletedWorldIds = state.hiddenDeletedWorldIds;
   const visibleWorlds = filterHiddenWorlds(page.worlds, hiddenDeletedWorldIds);
   const nextWorlds = options.append
-    ? [
-        ...filterHiddenWorlds(state.worlds, hiddenDeletedWorldIds),
-        ...visibleWorlds
-      ]
+    ? mergeWorldsById(
+        filterHiddenWorlds(state.worlds, hiddenDeletedWorldIds),
+        visibleWorlds
+      )
     : visibleWorlds;
 
   return buildWorldLabsBrowserState({
     ...state,
     worlds: nextWorlds,
     pageSize: page.pageSize,
-    pageToken: page.pageToken !== undefined ? page.pageToken : state.pageToken,
+    pageToken: page.pageToken ?? null,
     nextPageToken:
       page.nextPageToken !== undefined ? page.nextPageToken : null,
     isLoading: false,
@@ -160,7 +160,7 @@ function buildWorldLabsBrowserState(
 }
 
 function filterHiddenWorlds(
-  worlds: WorldLabsWorldSummary[],
+  worlds: readonly WorldLabsWorldSummary[],
   hiddenDeletedWorldIds: readonly string[]
 ): WorldLabsWorldSummary[] {
   if (hiddenDeletedWorldIds.length === 0) {
@@ -173,4 +173,28 @@ function filterHiddenWorlds(
 
 function uniqueIds(ids: readonly string[]): string[] {
   return [...new Set(ids)];
+}
+
+function mergeWorldsById(
+  existingWorlds: readonly WorldLabsWorldSummary[],
+  incomingWorlds: readonly WorldLabsWorldSummary[]
+): WorldLabsWorldSummary[] {
+  const merged = [...existingWorlds];
+  const indicesByWorldId = new Map(
+    merged.map((world, index) => [world.worldId, index])
+  );
+
+  for (const incomingWorld of incomingWorlds) {
+    const existingIndex = indicesByWorldId.get(incomingWorld.worldId);
+
+    if (existingIndex === undefined) {
+      indicesByWorldId.set(incomingWorld.worldId, merged.length);
+      merged.push(incomingWorld);
+      continue;
+    }
+
+    merged[existingIndex] = incomingWorld;
+  }
+
+  return merged;
 }

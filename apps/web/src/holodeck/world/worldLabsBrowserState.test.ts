@@ -90,6 +90,99 @@ describe("worldLabsBrowserState", () => {
     expect(appended.pageToken).toBe("page-2");
   });
 
+  it("dedupes overlapping appended pages and prefers incoming worlds", () => {
+    const firstPage = createPage([
+      {
+        worldId: "world-1",
+        displayName: "World One",
+        model: "standard",
+        status: "ready",
+        createdAt: "2026-01-01T00:00:00Z",
+        updatedAt: "2026-01-01T00:00:00Z",
+        thumbnailUrl: "/thumb-1.jpg",
+        prompt: "one",
+        hasPanorama: true,
+        hasSplat: false
+      },
+      {
+        worldId: "world-2",
+        displayName: "World Two",
+        model: "standard",
+        status: "ready",
+        createdAt: "2026-01-02T00:00:00Z",
+        updatedAt: "2026-01-02T00:00:00Z",
+        thumbnailUrl: "/thumb-2.jpg",
+        prompt: "two",
+        hasPanorama: false,
+        hasSplat: true
+      }
+    ]);
+    const overlappingPage = createPage([
+      {
+        worldId: "world-2",
+        displayName: "World Two Updated",
+        model: "standard",
+        status: "ready",
+        createdAt: "2026-01-02T00:00:00Z",
+        updatedAt: "2026-01-03T00:00:00Z",
+        thumbnailUrl: "/thumb-2b.jpg",
+        prompt: "two updated",
+        hasPanorama: true,
+        hasSplat: true
+      },
+      {
+        worldId: "world-3",
+        displayName: "World Three",
+        model: "standard",
+        status: "ready",
+        createdAt: "2026-01-03T00:00:00Z",
+        updatedAt: "2026-01-03T00:00:00Z",
+        thumbnailUrl: "/thumb-3.jpg",
+        prompt: "three",
+        hasPanorama: false,
+        hasSplat: true
+      }
+    ]);
+
+    const loaded = loadWorldLabsPage(createWorldLabsBrowserState(), firstPage);
+    const appended = loadWorldLabsPage(loaded, overlappingPage, { append: true });
+
+    expect(appended.worlds.map((world) => world.worldId)).toEqual([
+      "world-1",
+      "world-2",
+      "world-3"
+    ]);
+    expect(appended.worlds[1].displayName).toBe("World Two Updated");
+    expect(appended.worlds[1].updatedAt).toBe("2026-01-03T00:00:00Z");
+  });
+
+  it("clears pageToken when a replacement page omits it", () => {
+    const loaded = loadWorldLabsPage(
+      createWorldLabsBrowserState(),
+      createPage([], { pageToken: "page-2" })
+    );
+    const refreshed = loadWorldLabsPage(
+      loaded,
+      createPage([
+        {
+          worldId: "world-1",
+          displayName: "World One",
+          model: "standard",
+          status: "ready",
+          createdAt: "2026-01-01T00:00:00Z",
+          updatedAt: "2026-01-01T00:00:00Z",
+          thumbnailUrl: "/thumb-1.jpg",
+          prompt: "one",
+          hasPanorama: true,
+          hasSplat: false
+        }
+      ])
+    );
+
+    expect(loaded.pageToken).toBe("page-2");
+    expect(refreshed.pageToken).toBeNull();
+  });
+
   it("selects a visible world and derives canLoadSelectedWorld", () => {
     const state = loadWorldLabsPage(
       openWorldLabsBrowser(createWorldLabsBrowserState()),
