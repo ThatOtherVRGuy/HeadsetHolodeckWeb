@@ -171,6 +171,11 @@ describe("buildPanelViewModel", () => {
     expect(view.ops.mode).toBe("BROWSE");
     expect(view.ops.browseActionLabel).toBe("BROWSE");
     expect(view.ops.refreshActionLabel).toBe("REFRESH");
+    expect(view.ops.browserCards).toHaveLength(1);
+    expect(view.ops.browserCards[0]).toMatchObject({
+      title: "Autumn Park",
+      thumbnailUrl: "https://example.test/thumb.jpg"
+    });
     expect(view.info.title).toBe("WORLDLABS BROWSER");
     expect(view.info.browserCards).toHaveLength(1);
     expect(view.info.browserCards[0]).toMatchObject({
@@ -222,6 +227,9 @@ describe("buildPanelViewModel", () => {
     expect(view.ops.mode).toBe("ALERT");
     expect(view.ops.refreshActionLabel).toBe("CONFIRM");
     expect(view.ops.cancelActionLabel).toBe("CANCEL");
+    expect(view.ops.deleteConfirmVisible).toBe(true);
+    expect(view.ops.deleteConfirmTitle).toBe("Are you sure?");
+    expect(view.ops.deleteConfirmDetail).toBe("There is no 'undo'");
     expect(view.info.title).toBe("CONFIRM DELETE");
     expect(view.info.detail).toContain("Autumn Park");
     expect(view.info.deleteConfirmText).toContain("Autumn Park");
@@ -241,7 +249,7 @@ function browserState(
     pendingDeleteWorldId: null,
     nextPageToken: null,
     pageToken: null,
-    pageSize: 24,
+    pageSize: 20,
     isLoading: false,
     errorMessage: "",
     hiddenDeletedWorldIds: [],

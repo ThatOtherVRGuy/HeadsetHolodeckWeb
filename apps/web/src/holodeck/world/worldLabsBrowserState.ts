@@ -35,7 +35,7 @@ export function createWorldLabsBrowserState(
     pendingDeleteWorldId: null,
     nextPageToken: null,
     pageToken: null,
-    pageSize: options.pageSize ?? 24,
+    pageSize: options.pageSize ?? 20,
     isLoading: false,
     errorMessage: "",
     hiddenDeletedWorldIds: []

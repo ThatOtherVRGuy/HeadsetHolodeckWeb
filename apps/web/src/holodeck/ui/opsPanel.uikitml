@@ -1,157 +1,390 @@
 <style>
   .ops-panel {
     align-items: stretch;
-    padding: 0.9;
-    width: 30;
+    padding: 0.48;
+    width: 43;
     display: flex;
     flex-direction: column;
-    gap: 0.45;
+    gap: 0.18;
     background-color: #050608;
-    border-color: #ff9c2a;
-    border-width: 0.18;
-    border-radius: 0.8;
+    border-color: #ff8c00;
+    border-width: 0.16;
+    border-radius: 0.55;
   }
 
-  .ops-header {
+  .ops-title-row {
     display: flex;
     flex-direction: row;
-    gap: 0.45;
     align-items: center;
-  }
-
-  .mode-pill {
-    padding: 0.35;
-    width: 8;
-    background-color: #ff9c2a;
-    color: #050608;
-    font-size: 1.25;
-    font-weight: bold;
-    text-align: center;
-    border-radius: 0.45;
-  }
-
-  .model-label {
-    color: #f6efe5;
-    font-size: 1.05;
-    text-align: left;
-  }
-
-  .ops-button {
-    padding: 0.7;
-    border-radius: 0.7;
-    border-width: 0.1;
-    font-size: 1.45;
-    font-weight: medium;
-    text-align: center;
-    cursor: pointer;
-  }
-
-  .secondary-row {
-    display: flex;
-    flex-direction: row;
-    gap: 0.45;
-  }
-
-  .secondary-button {
-    width: 14;
-    padding: 0.55;
-    border-radius: 0.65;
-    border-width: 0.1;
-    font-size: 1.05;
-    font-weight: medium;
-    text-align: center;
-    cursor: pointer;
-  }
-
-  .browser-grid {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
     gap: 0.35;
   }
 
-  .browser-button {
-    width: 9.6;
-    padding: 0.42;
-    border-radius: 0.45;
-    border-width: 0.1;
-    font-size: 0.82;
+  .ops-cap-left {
+    width: 15.6;
+    height: 2.8;
+    background-color: #ff7a1f;
+    border-radius: 0.9;
+  }
+
+  .ops-title {
+    color: #ff7a1f;
+    font-size: 1.95;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .ops-cap-right {
+    width: 5.2;
+    height: 1.55;
+    background-color: #ff7a1f;
+    border-radius: 0.8;
+  }
+
+  .ops-body {
+    display: flex;
+    flex-direction: row;
+    gap: 0.34;
+  }
+
+  .mode-rail {
+    width: 10.8;
+    display: flex;
+    flex-direction: column;
+    gap: 0.14;
+  }
+
+  .rail-block {
+    height: 1.35;
+    padding: 0.12;
+    font-size: 0.66;
+    font-weight: medium;
+    text-align: center;
+    color: #050608;
+    border-radius: 0.1;
+    cursor: pointer;
+  }
+
+  .rail-orange {
+    background-color: #ff9800;
+  }
+
+  .rail-red {
+    background-color: #ff3d10;
+  }
+
+  .rail-blue {
+    background-color: #1018ff;
+  }
+
+  .rail-purple {
+    background-color: #9f83cc;
+  }
+
+  .ops-main {
+    width: 30.9;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2;
+  }
+
+  .control-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.24;
+  }
+
+  .ops-button {
+    padding: 0.2;
+    width: 6.2;
+    height: 1.45;
+    border-radius: 0.35;
+    border-width: 0.05;
+    font-size: 0.66;
     font-weight: bold;
     text-align: center;
     cursor: pointer;
   }
 
-  #recordButton {
-    background-color: #ff9c2a;
-    border-color: #ff6a2a;
-    color: #050608;
+  .small-button {
+    width: 6.3;
+    height: 1.75;
+    padding: 0.25;
+    border-radius: 0.35;
+    border-width: 0.05;
+    font-size: 0.75;
+    text-align: center;
+    cursor: pointer;
   }
 
-  #loadSplatButton {
-    background-color: #f6efe5;
-    border-color: #ff9c2a;
-    color: #050608;
+  .world-grid-wrap {
+    display: flex;
+    flex-direction: row;
+    gap: 0.22;
   }
 
-  #resetButton {
-    background-color: #58b7ff;
-    border-color: #b48cff;
-    color: #050608;
+  .world-grid {
+    width: 26.1;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.16;
   }
 
-  #browseWorldsButton,
-  #refreshWorldsButton,
-  #prevWorldsButton,
-  #nextWorldsButton,
-  #loadWorldButton {
-    background-color: #050608;
-    border-color: #58b7ff;
-    color: #58b7ff;
+  .world-card {
+    width: 8.55;
+    height: 5.15;
+    display: flex;
+    flex-direction: column;
+    background-color: #1b2032;
+    border-color: #2d3658;
+    border-width: 0.1;
+    border-radius: 0.1;
+    cursor: pointer;
   }
 
-  #deleteWorldButton {
-    background-color: #050608;
-    border-color: #ff6a2a;
-    color: #ff9c2a;
+  .world-card:hover {
+    background-color: #6883ad;
+    border-color: #b7c7ef;
   }
 
-  #confirmDeleteButton {
-    background-color: #ff9c2a;
-    border-color: #ff6a2a;
-    color: #050608;
+  .world-image-wrap {
+    width: 8.35;
+    height: 3.75;
+    display: flex;
+    background-color: #273047;
   }
 
-  #cancelBrowserButton {
-    background-color: #f6efe5;
-    border-color: #58b7ff;
-    color: #050608;
+  .world-image {
+    width: 8.35;
+    height: 3.75;
+    object-fit: cover;
   }
 
-  #opsDetailText {
+  .world-prompt {
+    height: 1.1;
+    padding: 0.1;
+    background-color: #10121d;
     color: #f6efe5;
-    font-size: 0.95;
+    font-size: 0.34;
+    font-weight: bold;
+    text-align: left;
+  }
+
+  .delete-x {
+    width: 0.72;
+    height: 0.72;
+    padding: 0.04;
+    background-color: #c21d2a;
+    color: #ffffff;
+    font-size: 0.48;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 0.1;
+    cursor: pointer;
+  }
+
+  .card-top-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    height: 0.72;
+    margin-bottom: -0.72;
+  }
+
+  .scrollbar-rail {
+    width: 0.62;
+    height: 15.3;
+    background-color: #11131b;
+    border-radius: 0.35;
+  }
+
+  .scrollbar-thumb {
+    width: 0.62;
+    height: 7.6;
+    background-color: #ffc400;
+    border-radius: 0.35;
+  }
+
+  .pager-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .page-label {
+    color: #f6efe5;
+    font-size: 0.58;
+    text-align: center;
+  }
+
+  .model-row {
+    display: flex;
+    flex-direction: row;
+    gap: 0.22;
+    justify-content: flex-end;
+  }
+
+  .model-chip {
+    width: 4.2;
+    height: 1.0;
+    padding: 0.12;
+    background-color: #9f83cc;
+    color: #37284b;
+    font-size: 0.42;
+    font-weight: medium;
+    text-align: center;
+    border-radius: 0.1;
+  }
+
+  .confirm-panel {
+    display: none;
+    padding: 0.3;
+    width: 14.5;
+    align-self: center;
+    background-color: rgba(0, 0, 0, 0.82);
+    border-color: #ff7a1f;
+    border-width: 0.08;
+    border-radius: 0.25;
+  }
+
+  .confirm-title {
+    color: #ffffff;
+    font-size: 0.8;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .confirm-detail {
+    color: #ffffff;
+    font-size: 0.72;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .confirm-yes {
+    margin-top: 0.45;
+    padding: 0.16;
+    background-color: #b80f17;
+    color: #ffffff;
+    font-size: 0.66;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 0.15;
+    cursor: pointer;
+  }
+
+  .confirm-no {
+    margin-top: 0.25;
+    padding: 0.16;
+    background-color: #9f83cc;
+    color: #ffffff;
+    font-size: 0.66;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 0.15;
+    cursor: pointer;
+  }
+
+  #recordButton,
+  #browseWorldsButton,
+  #loadWorldButton,
+  #nextWorldsButton {
+    background-color: #1018ff;
+    border-color: #1018ff;
+    color: #050608;
+  }
+
+  #loadSplatButton,
+  #resetButton,
+  #refreshWorldsButton,
+  #deleteWorldButton {
+    background-color: #ff3d10;
+    border-color: #ff3d10;
+    color: #050608;
+  }
+
+  #prevWorldsButton,
+  #cancelBrowserButton {
+    background-color: #050608;
+    border-color: #1018ff;
+    color: #1018ff;
+  }
+
+  .status-line {
+    color: #f6efe5;
+    font-size: 0.46;
+    text-align: left;
+  }
+
+  #selectedWorldText {
+    color: #f6efe5;
+    font-size: 0.46;
     text-align: left;
   }
 </style>
 <div class="ops-panel">
-  <div class="ops-header">
-    <span id="opsModeText" class="mode-pill">IDLE</span>
-    <span id="modelText" class="model-label">Model: Marble 1.1</span>
+  <div class="ops-title-row">
+    <div class="ops-cap-left"></div>
+    <span class="ops-title">HOLODECK OPS</span>
+    <div class="ops-cap-right"></div>
   </div>
-  <button id="recordButton" class="ops-button">Record</button>
-  <div class="secondary-row">
-    <button id="loadSplatButton" class="secondary-button">Load SPZ</button>
-    <button id="resetButton" class="secondary-button">Reset</button>
+  <div class="ops-body">
+    <div class="mode-rail">
+      <button id="browseWorldsButton" class="rail-block rail-orange">WORLDLABS</button>
+      <div class="rail-block rail-red">MY WORLDS</div>
+      <button id="loadSplatButton" class="rail-block rail-blue">FILES/URL</button>
+      <button id="recordButton" class="rail-block rail-orange">CREATE</button>
+      <button id="loadWorldButton" class="rail-block rail-blue">LOAD</button>
+      <div class="rail-block rail-blue">CAMERA</div>
+      <div class="rail-block rail-purple">IMAGE</div>
+      <div class="rail-block rail-orange">OBJECTS</div>
+      <div class="rail-block rail-purple">THUMBNAIL</div>
+      <div class="rail-block rail-purple">PANORAMA</div>
+      <button id="resetButton" class="rail-block rail-orange">RESET</button>
+    </div>
+    <div class="ops-main">
+      <div class="control-row">
+        <button id="refreshWorldsButton" class="ops-button">Unload</button>
+        <span id="opsModeText" class="page-label">IDLE</span>
+        <button id="deleteWorldButton" class="ops-button">Delete</button>
+      </div>
+      <span id="selectedWorldText">WORLDLABS --</span>
+      <div id="worldDeleteConfirm" class="confirm-panel">
+        <span id="deleteConfirmTitleText" class="confirm-title">Are you sure?</span>
+        <span id="deleteConfirmDetailText" class="confirm-detail">There is no 'undo'</span>
+        <button id="confirmDeleteButton" class="confirm-yes">Yes, delete!</button>
+        <button id="cancelBrowserButton" class="confirm-no">No, cancel!</button>
+      </div>
+      <div class="world-grid-wrap">
+        <div class="world-grid">
+          <div id="worldCard0" class="world-card"><div class="card-top-row"><button id="worldDelete0" class="delete-x">x</button></div><div class="world-image-wrap"><Image id="worldCard0Image" class="world-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" /></div><span id="worldCard0Prompt" class="world-prompt">--</span></div>
+          <div id="worldCard1" class="world-card"><div class="card-top-row"><button id="worldDelete1" class="delete-x">x</button></div><div class="world-image-wrap"><Image id="worldCard1Image" class="world-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" /></div><span id="worldCard1Prompt" class="world-prompt">--</span></div>
+          <div id="worldCard2" class="world-card"><div class="card-top-row"><button id="worldDelete2" class="delete-x">x</button></div><div class="world-image-wrap"><Image id="worldCard2Image" class="world-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" /></div><span id="worldCard2Prompt" class="world-prompt">--</span></div>
+          <div id="worldCard3" class="world-card"><div class="card-top-row"><button id="worldDelete3" class="delete-x">x</button></div><div class="world-image-wrap"><Image id="worldCard3Image" class="world-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" /></div><span id="worldCard3Prompt" class="world-prompt">--</span></div>
+          <div id="worldCard4" class="world-card"><div class="card-top-row"><button id="worldDelete4" class="delete-x">x</button></div><div class="world-image-wrap"><Image id="worldCard4Image" class="world-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" /></div><span id="worldCard4Prompt" class="world-prompt">--</span></div>
+          <div id="worldCard5" class="world-card"><div class="card-top-row"><button id="worldDelete5" class="delete-x">x</button></div><div class="world-image-wrap"><Image id="worldCard5Image" class="world-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" /></div><span id="worldCard5Prompt" class="world-prompt">--</span></div>
+          <div id="worldCard6" class="world-card"><div class="card-top-row"><button id="worldDelete6" class="delete-x">x</button></div><div class="world-image-wrap"><Image id="worldCard6Image" class="world-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" /></div><span id="worldCard6Prompt" class="world-prompt">--</span></div>
+          <div id="worldCard7" class="world-card"><div class="card-top-row"><button id="worldDelete7" class="delete-x">x</button></div><div class="world-image-wrap"><Image id="worldCard7Image" class="world-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" /></div><span id="worldCard7Prompt" class="world-prompt">--</span></div>
+          <div id="worldCard8" class="world-card"><div class="card-top-row"><button id="worldDelete8" class="delete-x">x</button></div><div class="world-image-wrap"><Image id="worldCard8Image" class="world-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" /></div><span id="worldCard8Prompt" class="world-prompt">--</span></div>
+        </div>
+        <div class="scrollbar-rail"><div class="scrollbar-thumb"></div></div>
+      </div>
+      <div class="pager-row">
+        <button id="prevWorldsButton" class="ops-button">Previous</button>
+        <span id="pageText" class="page-label">Page 1</span>
+        <button id="nextWorldsButton" class="ops-button">Next</button>
+      </div>
+      <span id="opsDetailText" class="status-line">Holodeck systems standing by.</span>
+      <div class="model-row">
+        <span class="model-chip">DRAFT</span>
+        <span class="model-chip">FAST</span>
+        <span class="model-chip">STANDARD</span>
+        <span class="model-chip">HIGH</span>
+      </div>
+      <span id="modelText" class="page-label">Model: Marble 1.1</span>
+    </div>
   </div>
-  <div class="browser-grid">
-    <button id="browseWorldsButton" class="browser-button">BROWSE</button>
-    <button id="refreshWorldsButton" class="browser-button">REFRESH</button>
-    <button id="prevWorldsButton" class="browser-button">PREV</button>
-    <button id="nextWorldsButton" class="browser-button">NEXT</button>
-    <button id="loadWorldButton" class="browser-button">LOAD</button>
-    <button id="deleteWorldButton" class="browser-button">DELETE</button>
-    <button id="confirmDeleteButton" class="browser-button">CONFIRM</button>
-    <button id="cancelBrowserButton" class="browser-button">BACK</button>
-  </div>
-  <span id="opsDetailText">Holodeck systems standing by.</span>
 </div>

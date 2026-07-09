@@ -32,6 +32,12 @@ export interface OpsPanelView {
   primaryActionLabel: string;
   modelLabel: string;
   detail: string;
+  browserCards: BrowserWorldCardView[];
+  selectedWorldLabel: string;
+  pageLabel: string;
+  deleteConfirmTitle: string;
+  deleteConfirmDetail: string;
+  deleteConfirmVisible: boolean;
   browseActionLabel: string;
   refreshActionLabel: string;
   previousActionLabel: string;
@@ -94,6 +100,12 @@ export function buildPanelViewModel(input: PanelViewModelInput): PanelViewModel 
       primaryActionLabel: primaryActionLabelFor(input),
       modelLabel: `Model: ${input.selectedModelLabel}`,
       detail: message,
+      browserCards: [],
+      selectedWorldLabel: "WORLDLABS --",
+      pageLabel: "PAGE --",
+      deleteConfirmTitle: "",
+      deleteConfirmDetail: "",
+      deleteConfirmVisible: false,
       ...defaultBrowserActions()
     },
     info: {
@@ -246,6 +258,16 @@ function buildBrowserPanelView(
       primaryActionLabel: "Browse",
       modelLabel: `Model: ${input.selectedModelLabel}`,
       detail: message,
+      browserCards: browser.worlds.slice(0, 9).map((world) =>
+        buildBrowserCard(world, browser.selectedWorldId)
+      ),
+      selectedWorldLabel: selected
+        ? selected.displayName || selected.worldId
+        : "WORLDLABS SERVER",
+      pageLabel: `Page ${browser.pageToken ? "token" : "1"}`,
+      deleteConfirmTitle: isConfirming ? "Are you sure?" : "",
+      deleteConfirmDetail: isConfirming ? "There is no 'undo'" : "",
+      deleteConfirmVisible: isConfirming,
       browseActionLabel: "BROWSE",
       refreshActionLabel: isConfirming ? "CONFIRM" : "REFRESH",
       previousActionLabel: "PREV",
@@ -306,16 +328,33 @@ function buildBrowserCard(
   world: WorldLabsWorldSummary,
   selectedWorldId: string | null
 ): BrowserWorldCardView {
+  const title = cleanPanelText(world.displayName || world.worldId, 72);
+
   return {
     worldId: world.worldId,
-    title: world.displayName || world.worldId,
+    title,
     meta: [world.model, world.status].filter(Boolean).join(" / ") || "WORLDLABS",
     asset: browserAssetLabel(world).toUpperCase(),
-    prompt: world.prompt || "--",
+    prompt: cleanPanelText(world.prompt || title || "--", 54),
     thumbnailUrl: world.thumbnailUrl,
     isSelected: world.worldId === selectedWorldId,
     canLoad: world.hasPanorama || world.hasSplat
   };
+}
+
+function cleanPanelText(text: string, maxLength: number): string {
+  const normalized = text
+    .replace(/[–—]/g, "-")
+    .replace(/[“”]/g, "\"")
+    .replace(/[‘’]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
 }
 
 function browserAssetLabel(world: WorldLabsWorldSummary): string {

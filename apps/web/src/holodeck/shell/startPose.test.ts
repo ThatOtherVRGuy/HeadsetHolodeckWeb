@@ -33,19 +33,19 @@ describe("applyUserStartPose", () => {
     });
 
     expect(player.position.toArray()).toEqual([
-      expect.closeTo(4.35),
+      expect.closeTo(2.95),
       0,
-      expect.closeTo(-1.75)
+      expect.closeTo(-1.1)
     ]);
-    expect([...HOLODECK_INITIAL_PLAYER_POSITION]).toEqual([4.35, 0, -1.75]);
+    expect([...HOLODECK_INITIAL_PLAYER_POSITION]).toEqual([2.95, 0, -1.1]);
     expect(camera.position.toArray()).toEqual([0, 1.55, 0]);
 
     const cameraWorldPosition = new Vector3();
     camera.getWorldPosition(cameraWorldPosition);
     expect(cameraWorldPosition.toArray()).toEqual([
-      expect.closeTo(4.35),
+      expect.closeTo(2.95),
       1.55,
-      expect.closeTo(-1.75)
+      expect.closeTo(-1.1)
     ]);
   });
 

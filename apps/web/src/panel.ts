@@ -38,11 +38,14 @@ interface HolodeckPanelControls {
 
 let holodeckControls: HolodeckPanelControls | null = null;
 let browserState = createWorldLabsBrowserState();
+let hasRequestedInitialWorldLabsBrowse = false;
 const STATUS_PANEL_CONFIG = "./ui/holodeck/statusPanel.json";
 const OPS_PANEL_CONFIG = "./ui/holodeck/opsPanel.json";
 const INFO_PANEL_CONFIG = "./ui/holodeck/infoPanel.json";
 const SELECTED_MODEL_LABEL = "Marble 1.1";
 const APP_STARTED_AT = Date.now();
+const EMPTY_THUMBNAIL_SRC =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
 
 interface PanelSessionState {
   isGenerating: boolean;
@@ -141,11 +144,35 @@ function setText(
   element?.setProperties({ text });
 }
 
+function setImageSource(
+  document: UIKitDocument,
+  id: string,
+  src: string
+): void {
+  const element = document.getElementById(id) as UIKit.Image | null;
+  element?.setProperties({ src: src || EMPTY_THUMBNAIL_SRC });
+}
+
+function setElementDisplay(
+  document: UIKitDocument,
+  id: string,
+  display: "flex" | "none"
+): void {
+  const element = document.getElementById(id) as
+    | { setProperties: (properties: { display: "flex" | "none" }) => void }
+    | null;
+  element?.setProperties({ display });
+}
+
 function applyOpsView(document: UIKitDocument, view: PanelViewModel): void {
   setText(document, "opsModeText", view.ops.mode);
   setText(document, "recordButton", view.ops.primaryActionLabel);
   setText(document, "modelText", view.ops.modelLabel);
   setText(document, "opsDetailText", view.ops.detail);
+  setText(document, "selectedWorldText", view.ops.selectedWorldLabel);
+  setText(document, "pageText", view.ops.pageLabel);
+  setText(document, "deleteConfirmTitleText", view.ops.deleteConfirmTitle);
+  setText(document, "deleteConfirmDetailText", view.ops.deleteConfirmDetail);
   setText(document, "browseWorldsButton", view.ops.browseActionLabel);
   setText(document, "refreshWorldsButton", view.ops.refreshActionLabel);
   setText(document, "prevWorldsButton", view.ops.previousActionLabel);
@@ -154,6 +181,23 @@ function applyOpsView(document: UIKitDocument, view: PanelViewModel): void {
   setText(document, "deleteWorldButton", view.ops.deleteActionLabel);
   setText(document, "confirmDeleteButton", view.ops.confirmActionLabel);
   setText(document, "cancelBrowserButton", view.ops.cancelActionLabel);
+  setElementDisplay(
+    document,
+    "worldDeleteConfirm",
+    view.ops.deleteConfirmVisible ? "flex" : "none"
+  );
+
+  for (let index = 0; index < 9; index += 1) {
+    const card = view.ops.browserCards[index];
+    setElementDisplay(document, `worldCard${index}`, card ? "flex" : "none");
+    setElementDisplay(document, `worldDelete${index}`, card ? "flex" : "none");
+    setImageSource(document, `worldCard${index}Image`, card?.thumbnailUrl ?? "");
+    setText(
+      document,
+      `worldCard${index}Prompt`,
+      card ? card.prompt || card.title : "--"
+    );
+  }
 }
 
 function applyInfoView(document: UIKitDocument, view: PanelViewModel): void {
@@ -506,6 +550,32 @@ export class PanelSystem extends createSystem({
         ),
         bindClick(document, "cancelBrowserButton", () =>
           cancelWorldLabsBrowser(controls)
+        ),
+        ...Array.from({ length: 9 }, (_, index) =>
+          bindClick(document, `worldCard${index}`, async () => {
+            const world = browserState.worlds[index];
+            if (!world) {
+              return;
+            }
+
+            browserState = selectWorldLabsWorld(browserState, world.worldId);
+            signalBrowserUpdate(
+              controls,
+              `Selected ${world.displayName || world.worldId}.`
+            );
+            await loadSelectedWorldLabsWorld(controls);
+          })
+        ),
+        ...Array.from({ length: 9 }, (_, index) =>
+          bindClick(document, `worldDelete${index}`, () => {
+            const world = browserState.worlds[index];
+            if (!world) {
+              return;
+            }
+
+            browserState = confirmWorldDelete(browserState, world.worldId);
+            signalBrowserUpdate(controls, "Confirm WorldLabs delete.");
+          })
         )
       ];
 
@@ -597,6 +667,11 @@ export class PanelSystem extends createSystem({
       recordButton.addEventListener("click", onRecordClick);
       loadSplatButton.addEventListener("click", onLoadSplatClick);
       resetButton.addEventListener("click", onResetClick);
+
+      if (!hasRequestedInitialWorldLabsBrowse) {
+        hasRequestedInitialWorldLabsBrowse = true;
+        void refreshWorldLabsWorlds(controls);
+      }
 
       panelCleanups.set(entity.index, () => {
         recordButton.removeEventListener("click", onRecordClick);

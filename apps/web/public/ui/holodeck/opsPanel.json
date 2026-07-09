@@ -8,14 +8,11 @@
         "sourceTag": "div",
         "children": [
           {
-            "sourceTag": "span",
-            "type": "custom",
-            "children": [
-              "IDLE"
-            ],
+            "type": "container",
+            "sourceTag": "div",
+            "children": [],
             "properties": {
-              "id": "opsModeText",
-              "class": "mode-pill"
+              "class": "ops-cap-left"
             },
             "dataUid": "uid-3"
           },
@@ -23,182 +20,1047 @@
             "sourceTag": "span",
             "type": "custom",
             "children": [
-              "Model: Marble 1.1"
+              "HOLODECK OPS"
             ],
             "properties": {
-              "id": "modelText",
-              "class": "model-label"
+              "class": "ops-title"
             },
             "dataUid": "uid-4"
+          },
+          {
+            "type": "container",
+            "sourceTag": "div",
+            "children": [],
+            "properties": {
+              "class": "ops-cap-right"
+            },
+            "dataUid": "uid-5"
           }
         ],
         "properties": {
-          "class": "ops-header"
+          "class": "ops-title-row"
         },
         "dataUid": "uid-2"
       },
       {
-        "sourceTag": "button",
-        "type": "custom",
-        "children": [
-          "Record"
-        ],
-        "properties": {
-          "id": "recordButton",
-          "class": "ops-button"
-        },
-        "dataUid": "uid-5"
-      },
-      {
         "type": "container",
         "sourceTag": "div",
         "children": [
           {
-            "sourceTag": "button",
-            "type": "custom",
+            "type": "container",
+            "sourceTag": "div",
             "children": [
-              "Load SPZ"
+              {
+                "sourceTag": "button",
+                "type": "custom",
+                "children": [
+                  "WORLDLABS"
+                ],
+                "properties": {
+                  "id": "browseWorldsButton",
+                  "class": "rail-block rail-orange"
+                },
+                "dataUid": "uid-8"
+              },
+              {
+                "type": "container",
+                "sourceTag": "div",
+                "children": [
+                  "MY WORLDS"
+                ],
+                "properties": {
+                  "class": "rail-block rail-red"
+                },
+                "dataUid": "uid-9"
+              },
+              {
+                "sourceTag": "button",
+                "type": "custom",
+                "children": [
+                  "FILES/URL"
+                ],
+                "properties": {
+                  "id": "loadSplatButton",
+                  "class": "rail-block rail-blue"
+                },
+                "dataUid": "uid-10"
+              },
+              {
+                "sourceTag": "button",
+                "type": "custom",
+                "children": [
+                  "CREATE"
+                ],
+                "properties": {
+                  "id": "recordButton",
+                  "class": "rail-block rail-orange"
+                },
+                "dataUid": "uid-11"
+              },
+              {
+                "sourceTag": "button",
+                "type": "custom",
+                "children": [
+                  "LOAD"
+                ],
+                "properties": {
+                  "id": "loadWorldButton",
+                  "class": "rail-block rail-blue"
+                },
+                "dataUid": "uid-12"
+              },
+              {
+                "type": "container",
+                "sourceTag": "div",
+                "children": [
+                  "CAMERA"
+                ],
+                "properties": {
+                  "class": "rail-block rail-blue"
+                },
+                "dataUid": "uid-13"
+              },
+              {
+                "type": "container",
+                "sourceTag": "div",
+                "children": [
+                  "IMAGE"
+                ],
+                "properties": {
+                  "class": "rail-block rail-purple"
+                },
+                "dataUid": "uid-14"
+              },
+              {
+                "type": "container",
+                "sourceTag": "div",
+                "children": [
+                  "OBJECTS"
+                ],
+                "properties": {
+                  "class": "rail-block rail-orange"
+                },
+                "dataUid": "uid-15"
+              },
+              {
+                "type": "container",
+                "sourceTag": "div",
+                "children": [
+                  "THUMBNAIL"
+                ],
+                "properties": {
+                  "class": "rail-block rail-purple"
+                },
+                "dataUid": "uid-16"
+              },
+              {
+                "type": "container",
+                "sourceTag": "div",
+                "children": [
+                  "PANORAMA"
+                ],
+                "properties": {
+                  "class": "rail-block rail-purple"
+                },
+                "dataUid": "uid-17"
+              },
+              {
+                "sourceTag": "button",
+                "type": "custom",
+                "children": [
+                  "RESET"
+                ],
+                "properties": {
+                  "id": "resetButton",
+                  "class": "rail-block rail-orange"
+                },
+                "dataUid": "uid-18"
+              }
             ],
             "properties": {
-              "id": "loadSplatButton",
-              "class": "secondary-button"
+              "class": "mode-rail"
             },
             "dataUid": "uid-7"
           },
           {
-            "sourceTag": "button",
-            "type": "custom",
+            "type": "container",
+            "sourceTag": "div",
             "children": [
-              "Reset"
+              {
+                "type": "container",
+                "sourceTag": "div",
+                "children": [
+                  {
+                    "sourceTag": "button",
+                    "type": "custom",
+                    "children": [
+                      "Unload"
+                    ],
+                    "properties": {
+                      "id": "refreshWorldsButton",
+                      "class": "ops-button"
+                    },
+                    "dataUid": "uid-21"
+                  },
+                  {
+                    "sourceTag": "span",
+                    "type": "custom",
+                    "children": [
+                      "IDLE"
+                    ],
+                    "properties": {
+                      "id": "opsModeText",
+                      "class": "page-label"
+                    },
+                    "dataUid": "uid-22"
+                  },
+                  {
+                    "sourceTag": "button",
+                    "type": "custom",
+                    "children": [
+                      "Delete"
+                    ],
+                    "properties": {
+                      "id": "deleteWorldButton",
+                      "class": "ops-button"
+                    },
+                    "dataUid": "uid-23"
+                  }
+                ],
+                "properties": {
+                  "class": "control-row"
+                },
+                "dataUid": "uid-20"
+              },
+              {
+                "sourceTag": "span",
+                "type": "custom",
+                "children": [
+                  "WORLDLABS --"
+                ],
+                "properties": {
+                  "id": "selectedWorldText"
+                },
+                "dataUid": "uid-24"
+              },
+              {
+                "type": "container",
+                "sourceTag": "div",
+                "children": [
+                  {
+                    "sourceTag": "span",
+                    "type": "custom",
+                    "children": [
+                      "Are you sure?"
+                    ],
+                    "properties": {
+                      "id": "deleteConfirmTitleText",
+                      "class": "confirm-title"
+                    },
+                    "dataUid": "uid-26"
+                  },
+                  {
+                    "sourceTag": "span",
+                    "type": "custom",
+                    "children": [
+                      "There is no 'undo'"
+                    ],
+                    "properties": {
+                      "id": "deleteConfirmDetailText",
+                      "class": "confirm-detail"
+                    },
+                    "dataUid": "uid-27"
+                  },
+                  {
+                    "sourceTag": "button",
+                    "type": "custom",
+                    "children": [
+                      "Yes, delete!"
+                    ],
+                    "properties": {
+                      "id": "confirmDeleteButton",
+                      "class": "confirm-yes"
+                    },
+                    "dataUid": "uid-28"
+                  },
+                  {
+                    "sourceTag": "button",
+                    "type": "custom",
+                    "children": [
+                      "No, cancel!"
+                    ],
+                    "properties": {
+                      "id": "cancelBrowserButton",
+                      "class": "confirm-no"
+                    },
+                    "dataUid": "uid-29"
+                  }
+                ],
+                "properties": {
+                  "id": "worldDeleteConfirm",
+                  "class": "confirm-panel"
+                },
+                "dataUid": "uid-25"
+              },
+              {
+                "type": "container",
+                "sourceTag": "div",
+                "children": [
+                  {
+                    "type": "container",
+                    "sourceTag": "div",
+                    "children": [
+                      {
+                        "type": "container",
+                        "sourceTag": "div",
+                        "children": [
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "sourceTag": "button",
+                                "type": "custom",
+                                "children": [
+                                  "x"
+                                ],
+                                "properties": {
+                                  "id": "worldDelete0",
+                                  "class": "delete-x"
+                                },
+                                "dataUid": "uid-34"
+                              }
+                            ],
+                            "properties": {
+                              "class": "card-top-row"
+                            },
+                            "dataUid": "uid-33"
+                          },
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "type": "image",
+                                "sourceTag": "img",
+                                "properties": {
+                                  "id": "worldCard0Image",
+                                  "class": "world-image",
+                                  "src": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                                },
+                                "dataUid": "uid-36"
+                              }
+                            ],
+                            "properties": {
+                              "class": "world-image-wrap"
+                            },
+                            "dataUid": "uid-35"
+                          },
+                          {
+                            "sourceTag": "span",
+                            "type": "custom",
+                            "children": [
+                              "--"
+                            ],
+                            "properties": {
+                              "id": "worldCard0Prompt",
+                              "class": "world-prompt"
+                            },
+                            "dataUid": "uid-37"
+                          }
+                        ],
+                        "properties": {
+                          "id": "worldCard0",
+                          "class": "world-card"
+                        },
+                        "dataUid": "uid-32"
+                      },
+                      {
+                        "type": "container",
+                        "sourceTag": "div",
+                        "children": [
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "sourceTag": "button",
+                                "type": "custom",
+                                "children": [
+                                  "x"
+                                ],
+                                "properties": {
+                                  "id": "worldDelete1",
+                                  "class": "delete-x"
+                                },
+                                "dataUid": "uid-40"
+                              }
+                            ],
+                            "properties": {
+                              "class": "card-top-row"
+                            },
+                            "dataUid": "uid-39"
+                          },
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "type": "image",
+                                "sourceTag": "img",
+                                "properties": {
+                                  "id": "worldCard1Image",
+                                  "class": "world-image",
+                                  "src": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                                },
+                                "dataUid": "uid-42"
+                              }
+                            ],
+                            "properties": {
+                              "class": "world-image-wrap"
+                            },
+                            "dataUid": "uid-41"
+                          },
+                          {
+                            "sourceTag": "span",
+                            "type": "custom",
+                            "children": [
+                              "--"
+                            ],
+                            "properties": {
+                              "id": "worldCard1Prompt",
+                              "class": "world-prompt"
+                            },
+                            "dataUid": "uid-43"
+                          }
+                        ],
+                        "properties": {
+                          "id": "worldCard1",
+                          "class": "world-card"
+                        },
+                        "dataUid": "uid-38"
+                      },
+                      {
+                        "type": "container",
+                        "sourceTag": "div",
+                        "children": [
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "sourceTag": "button",
+                                "type": "custom",
+                                "children": [
+                                  "x"
+                                ],
+                                "properties": {
+                                  "id": "worldDelete2",
+                                  "class": "delete-x"
+                                },
+                                "dataUid": "uid-46"
+                              }
+                            ],
+                            "properties": {
+                              "class": "card-top-row"
+                            },
+                            "dataUid": "uid-45"
+                          },
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "type": "image",
+                                "sourceTag": "img",
+                                "properties": {
+                                  "id": "worldCard2Image",
+                                  "class": "world-image",
+                                  "src": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                                },
+                                "dataUid": "uid-48"
+                              }
+                            ],
+                            "properties": {
+                              "class": "world-image-wrap"
+                            },
+                            "dataUid": "uid-47"
+                          },
+                          {
+                            "sourceTag": "span",
+                            "type": "custom",
+                            "children": [
+                              "--"
+                            ],
+                            "properties": {
+                              "id": "worldCard2Prompt",
+                              "class": "world-prompt"
+                            },
+                            "dataUid": "uid-49"
+                          }
+                        ],
+                        "properties": {
+                          "id": "worldCard2",
+                          "class": "world-card"
+                        },
+                        "dataUid": "uid-44"
+                      },
+                      {
+                        "type": "container",
+                        "sourceTag": "div",
+                        "children": [
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "sourceTag": "button",
+                                "type": "custom",
+                                "children": [
+                                  "x"
+                                ],
+                                "properties": {
+                                  "id": "worldDelete3",
+                                  "class": "delete-x"
+                                },
+                                "dataUid": "uid-52"
+                              }
+                            ],
+                            "properties": {
+                              "class": "card-top-row"
+                            },
+                            "dataUid": "uid-51"
+                          },
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "type": "image",
+                                "sourceTag": "img",
+                                "properties": {
+                                  "id": "worldCard3Image",
+                                  "class": "world-image",
+                                  "src": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                                },
+                                "dataUid": "uid-54"
+                              }
+                            ],
+                            "properties": {
+                              "class": "world-image-wrap"
+                            },
+                            "dataUid": "uid-53"
+                          },
+                          {
+                            "sourceTag": "span",
+                            "type": "custom",
+                            "children": [
+                              "--"
+                            ],
+                            "properties": {
+                              "id": "worldCard3Prompt",
+                              "class": "world-prompt"
+                            },
+                            "dataUid": "uid-55"
+                          }
+                        ],
+                        "properties": {
+                          "id": "worldCard3",
+                          "class": "world-card"
+                        },
+                        "dataUid": "uid-50"
+                      },
+                      {
+                        "type": "container",
+                        "sourceTag": "div",
+                        "children": [
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "sourceTag": "button",
+                                "type": "custom",
+                                "children": [
+                                  "x"
+                                ],
+                                "properties": {
+                                  "id": "worldDelete4",
+                                  "class": "delete-x"
+                                },
+                                "dataUid": "uid-58"
+                              }
+                            ],
+                            "properties": {
+                              "class": "card-top-row"
+                            },
+                            "dataUid": "uid-57"
+                          },
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "type": "image",
+                                "sourceTag": "img",
+                                "properties": {
+                                  "id": "worldCard4Image",
+                                  "class": "world-image",
+                                  "src": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                                },
+                                "dataUid": "uid-60"
+                              }
+                            ],
+                            "properties": {
+                              "class": "world-image-wrap"
+                            },
+                            "dataUid": "uid-59"
+                          },
+                          {
+                            "sourceTag": "span",
+                            "type": "custom",
+                            "children": [
+                              "--"
+                            ],
+                            "properties": {
+                              "id": "worldCard4Prompt",
+                              "class": "world-prompt"
+                            },
+                            "dataUid": "uid-61"
+                          }
+                        ],
+                        "properties": {
+                          "id": "worldCard4",
+                          "class": "world-card"
+                        },
+                        "dataUid": "uid-56"
+                      },
+                      {
+                        "type": "container",
+                        "sourceTag": "div",
+                        "children": [
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "sourceTag": "button",
+                                "type": "custom",
+                                "children": [
+                                  "x"
+                                ],
+                                "properties": {
+                                  "id": "worldDelete5",
+                                  "class": "delete-x"
+                                },
+                                "dataUid": "uid-64"
+                              }
+                            ],
+                            "properties": {
+                              "class": "card-top-row"
+                            },
+                            "dataUid": "uid-63"
+                          },
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "type": "image",
+                                "sourceTag": "img",
+                                "properties": {
+                                  "id": "worldCard5Image",
+                                  "class": "world-image",
+                                  "src": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                                },
+                                "dataUid": "uid-66"
+                              }
+                            ],
+                            "properties": {
+                              "class": "world-image-wrap"
+                            },
+                            "dataUid": "uid-65"
+                          },
+                          {
+                            "sourceTag": "span",
+                            "type": "custom",
+                            "children": [
+                              "--"
+                            ],
+                            "properties": {
+                              "id": "worldCard5Prompt",
+                              "class": "world-prompt"
+                            },
+                            "dataUid": "uid-67"
+                          }
+                        ],
+                        "properties": {
+                          "id": "worldCard5",
+                          "class": "world-card"
+                        },
+                        "dataUid": "uid-62"
+                      },
+                      {
+                        "type": "container",
+                        "sourceTag": "div",
+                        "children": [
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "sourceTag": "button",
+                                "type": "custom",
+                                "children": [
+                                  "x"
+                                ],
+                                "properties": {
+                                  "id": "worldDelete6",
+                                  "class": "delete-x"
+                                },
+                                "dataUid": "uid-70"
+                              }
+                            ],
+                            "properties": {
+                              "class": "card-top-row"
+                            },
+                            "dataUid": "uid-69"
+                          },
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "type": "image",
+                                "sourceTag": "img",
+                                "properties": {
+                                  "id": "worldCard6Image",
+                                  "class": "world-image",
+                                  "src": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                                },
+                                "dataUid": "uid-72"
+                              }
+                            ],
+                            "properties": {
+                              "class": "world-image-wrap"
+                            },
+                            "dataUid": "uid-71"
+                          },
+                          {
+                            "sourceTag": "span",
+                            "type": "custom",
+                            "children": [
+                              "--"
+                            ],
+                            "properties": {
+                              "id": "worldCard6Prompt",
+                              "class": "world-prompt"
+                            },
+                            "dataUid": "uid-73"
+                          }
+                        ],
+                        "properties": {
+                          "id": "worldCard6",
+                          "class": "world-card"
+                        },
+                        "dataUid": "uid-68"
+                      },
+                      {
+                        "type": "container",
+                        "sourceTag": "div",
+                        "children": [
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "sourceTag": "button",
+                                "type": "custom",
+                                "children": [
+                                  "x"
+                                ],
+                                "properties": {
+                                  "id": "worldDelete7",
+                                  "class": "delete-x"
+                                },
+                                "dataUid": "uid-76"
+                              }
+                            ],
+                            "properties": {
+                              "class": "card-top-row"
+                            },
+                            "dataUid": "uid-75"
+                          },
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "type": "image",
+                                "sourceTag": "img",
+                                "properties": {
+                                  "id": "worldCard7Image",
+                                  "class": "world-image",
+                                  "src": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                                },
+                                "dataUid": "uid-78"
+                              }
+                            ],
+                            "properties": {
+                              "class": "world-image-wrap"
+                            },
+                            "dataUid": "uid-77"
+                          },
+                          {
+                            "sourceTag": "span",
+                            "type": "custom",
+                            "children": [
+                              "--"
+                            ],
+                            "properties": {
+                              "id": "worldCard7Prompt",
+                              "class": "world-prompt"
+                            },
+                            "dataUid": "uid-79"
+                          }
+                        ],
+                        "properties": {
+                          "id": "worldCard7",
+                          "class": "world-card"
+                        },
+                        "dataUid": "uid-74"
+                      },
+                      {
+                        "type": "container",
+                        "sourceTag": "div",
+                        "children": [
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "sourceTag": "button",
+                                "type": "custom",
+                                "children": [
+                                  "x"
+                                ],
+                                "properties": {
+                                  "id": "worldDelete8",
+                                  "class": "delete-x"
+                                },
+                                "dataUid": "uid-82"
+                              }
+                            ],
+                            "properties": {
+                              "class": "card-top-row"
+                            },
+                            "dataUid": "uid-81"
+                          },
+                          {
+                            "type": "container",
+                            "sourceTag": "div",
+                            "children": [
+                              {
+                                "type": "image",
+                                "sourceTag": "img",
+                                "properties": {
+                                  "id": "worldCard8Image",
+                                  "class": "world-image",
+                                  "src": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                                },
+                                "dataUid": "uid-84"
+                              }
+                            ],
+                            "properties": {
+                              "class": "world-image-wrap"
+                            },
+                            "dataUid": "uid-83"
+                          },
+                          {
+                            "sourceTag": "span",
+                            "type": "custom",
+                            "children": [
+                              "--"
+                            ],
+                            "properties": {
+                              "id": "worldCard8Prompt",
+                              "class": "world-prompt"
+                            },
+                            "dataUid": "uid-85"
+                          }
+                        ],
+                        "properties": {
+                          "id": "worldCard8",
+                          "class": "world-card"
+                        },
+                        "dataUid": "uid-80"
+                      }
+                    ],
+                    "properties": {
+                      "class": "world-grid"
+                    },
+                    "dataUid": "uid-31"
+                  },
+                  {
+                    "type": "container",
+                    "sourceTag": "div",
+                    "children": [
+                      {
+                        "type": "container",
+                        "sourceTag": "div",
+                        "children": [],
+                        "properties": {
+                          "class": "scrollbar-thumb"
+                        },
+                        "dataUid": "uid-87"
+                      }
+                    ],
+                    "properties": {
+                      "class": "scrollbar-rail"
+                    },
+                    "dataUid": "uid-86"
+                  }
+                ],
+                "properties": {
+                  "class": "world-grid-wrap"
+                },
+                "dataUid": "uid-30"
+              },
+              {
+                "type": "container",
+                "sourceTag": "div",
+                "children": [
+                  {
+                    "sourceTag": "button",
+                    "type": "custom",
+                    "children": [
+                      "Previous"
+                    ],
+                    "properties": {
+                      "id": "prevWorldsButton",
+                      "class": "ops-button"
+                    },
+                    "dataUid": "uid-89"
+                  },
+                  {
+                    "sourceTag": "span",
+                    "type": "custom",
+                    "children": [
+                      "Page 1"
+                    ],
+                    "properties": {
+                      "id": "pageText",
+                      "class": "page-label"
+                    },
+                    "dataUid": "uid-90"
+                  },
+                  {
+                    "sourceTag": "button",
+                    "type": "custom",
+                    "children": [
+                      "Next"
+                    ],
+                    "properties": {
+                      "id": "nextWorldsButton",
+                      "class": "ops-button"
+                    },
+                    "dataUid": "uid-91"
+                  }
+                ],
+                "properties": {
+                  "class": "pager-row"
+                },
+                "dataUid": "uid-88"
+              },
+              {
+                "sourceTag": "span",
+                "type": "custom",
+                "children": [
+                  "Holodeck systems standing by."
+                ],
+                "properties": {
+                  "id": "opsDetailText",
+                  "class": "status-line"
+                },
+                "dataUid": "uid-92"
+              },
+              {
+                "type": "container",
+                "sourceTag": "div",
+                "children": [
+                  {
+                    "sourceTag": "span",
+                    "type": "custom",
+                    "children": [
+                      "DRAFT"
+                    ],
+                    "properties": {
+                      "class": "model-chip"
+                    },
+                    "dataUid": "uid-94"
+                  },
+                  {
+                    "sourceTag": "span",
+                    "type": "custom",
+                    "children": [
+                      "FAST"
+                    ],
+                    "properties": {
+                      "class": "model-chip"
+                    },
+                    "dataUid": "uid-95"
+                  },
+                  {
+                    "sourceTag": "span",
+                    "type": "custom",
+                    "children": [
+                      "STANDARD"
+                    ],
+                    "properties": {
+                      "class": "model-chip"
+                    },
+                    "dataUid": "uid-96"
+                  },
+                  {
+                    "sourceTag": "span",
+                    "type": "custom",
+                    "children": [
+                      "HIGH"
+                    ],
+                    "properties": {
+                      "class": "model-chip"
+                    },
+                    "dataUid": "uid-97"
+                  }
+                ],
+                "properties": {
+                  "class": "model-row"
+                },
+                "dataUid": "uid-93"
+              },
+              {
+                "sourceTag": "span",
+                "type": "custom",
+                "children": [
+                  "Model: Marble 1.1"
+                ],
+                "properties": {
+                  "id": "modelText",
+                  "class": "page-label"
+                },
+                "dataUid": "uid-98"
+              }
             ],
             "properties": {
-              "id": "resetButton",
-              "class": "secondary-button"
+              "class": "ops-main"
             },
-            "dataUid": "uid-8"
+            "dataUid": "uid-19"
           }
         ],
         "properties": {
-          "class": "secondary-row"
+          "class": "ops-body"
         },
         "dataUid": "uid-6"
-      },
-      {
-        "type": "container",
-        "sourceTag": "div",
-        "children": [
-          {
-            "sourceTag": "button",
-            "type": "custom",
-            "children": [
-              "BROWSE"
-            ],
-            "properties": {
-              "id": "browseWorldsButton",
-              "class": "browser-button"
-            },
-            "dataUid": "uid-10"
-          },
-          {
-            "sourceTag": "button",
-            "type": "custom",
-            "children": [
-              "REFRESH"
-            ],
-            "properties": {
-              "id": "refreshWorldsButton",
-              "class": "browser-button"
-            },
-            "dataUid": "uid-11"
-          },
-          {
-            "sourceTag": "button",
-            "type": "custom",
-            "children": [
-              "PREV"
-            ],
-            "properties": {
-              "id": "prevWorldsButton",
-              "class": "browser-button"
-            },
-            "dataUid": "uid-12"
-          },
-          {
-            "sourceTag": "button",
-            "type": "custom",
-            "children": [
-              "NEXT"
-            ],
-            "properties": {
-              "id": "nextWorldsButton",
-              "class": "browser-button"
-            },
-            "dataUid": "uid-13"
-          },
-          {
-            "sourceTag": "button",
-            "type": "custom",
-            "children": [
-              "LOAD"
-            ],
-            "properties": {
-              "id": "loadWorldButton",
-              "class": "browser-button"
-            },
-            "dataUid": "uid-14"
-          },
-          {
-            "sourceTag": "button",
-            "type": "custom",
-            "children": [
-              "DELETE"
-            ],
-            "properties": {
-              "id": "deleteWorldButton",
-              "class": "browser-button"
-            },
-            "dataUid": "uid-15"
-          },
-          {
-            "sourceTag": "button",
-            "type": "custom",
-            "children": [
-              "CONFIRM"
-            ],
-            "properties": {
-              "id": "confirmDeleteButton",
-              "class": "browser-button"
-            },
-            "dataUid": "uid-16"
-          },
-          {
-            "sourceTag": "button",
-            "type": "custom",
-            "children": [
-              "BACK"
-            ],
-            "properties": {
-              "id": "cancelBrowserButton",
-              "class": "browser-button"
-            },
-            "dataUid": "uid-17"
-          }
-        ],
-        "properties": {
-          "class": "browser-grid"
-        },
-        "dataUid": "uid-9"
-      },
-      {
-        "sourceTag": "span",
-        "type": "custom",
-        "children": [
-          "Holodeck systems standing by."
-        ],
-        "properties": {
-          "id": "opsDetailText"
-        },
-        "dataUid": "uid-18"
       }
     ],
     "properties": {
@@ -210,147 +1072,358 @@
     "ops-panel": {
       "content": {
         "alignItems": "stretch",
-        "padding": "0.9",
-        "width": "30",
+        "padding": "0.48",
+        "width": "43",
         "display": "flex",
         "flexDirection": "column",
-        "gap": "0.45",
+        "gap": "0.18",
         "backgroundColor": "#050608",
-        "borderColor": "#ff9c2a",
-        "borderWidth": "0.18",
-        "borderRadius": 0.8
+        "borderColor": "#ff8c00",
+        "borderWidth": "0.16",
+        "borderRadius": 0.55
       }
     },
-    "ops-header": {
+    "ops-title-row": {
       "content": {
         "display": "flex",
         "flexDirection": "row",
-        "gap": "0.45",
-        "alignItems": "center"
+        "alignItems": "center",
+        "gap": "0.35"
       }
     },
-    "mode-pill": {
+    "ops-cap-left": {
       "content": {
-        "padding": "0.35",
-        "width": "8",
-        "backgroundColor": "#ff9c2a",
-        "color": "#050608",
-        "fontSize": "1.25",
+        "width": "15.6",
+        "height": "2.8",
+        "backgroundColor": "#ff7a1f",
+        "borderRadius": 0.9
+      }
+    },
+    "ops-title": {
+      "content": {
+        "color": "#ff7a1f",
+        "fontSize": "1.95",
         "fontWeight": "bold",
-        "textAlign": "center",
-        "borderRadius": 0.45
+        "textAlign": "center"
       }
     },
-    "model-label": {
+    "ops-cap-right": {
       "content": {
-        "color": "#f6efe5",
-        "fontSize": "1.05",
-        "textAlign": "left"
+        "width": "5.2",
+        "height": "1.55",
+        "backgroundColor": "#ff7a1f",
+        "borderRadius": 0.8
+      }
+    },
+    "ops-body": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "0.34"
+      }
+    },
+    "mode-rail": {
+      "content": {
+        "width": "10.8",
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "0.14"
+      }
+    },
+    "rail-block": {
+      "content": {
+        "height": "1.35",
+        "padding": "0.12",
+        "fontSize": "0.66",
+        "fontWeight": "medium",
+        "textAlign": "center",
+        "color": "#050608",
+        "borderRadius": 0.1,
+        "cursor": "pointer"
+      }
+    },
+    "rail-orange": {
+      "content": {
+        "backgroundColor": "#ff9800"
+      }
+    },
+    "rail-red": {
+      "content": {
+        "backgroundColor": "#ff3d10"
+      }
+    },
+    "rail-blue": {
+      "content": {
+        "backgroundColor": "#1018ff"
+      }
+    },
+    "rail-purple": {
+      "content": {
+        "backgroundColor": "#9f83cc"
+      }
+    },
+    "ops-main": {
+      "content": {
+        "width": "30.9",
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "0.2"
+      }
+    },
+    "control-row": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "row",
+        "justifyContent": "space-between",
+        "alignItems": "center",
+        "gap": "0.24"
       }
     },
     "ops-button": {
       "content": {
-        "padding": "0.7",
-        "borderRadius": 0.7,
-        "borderWidth": "0.1",
-        "fontSize": "1.45",
-        "fontWeight": "medium",
-        "textAlign": "center",
-        "cursor": "pointer"
-      }
-    },
-    "secondary-row": {
-      "content": {
-        "display": "flex",
-        "flexDirection": "row",
-        "gap": "0.45"
-      }
-    },
-    "secondary-button": {
-      "content": {
-        "width": "14",
-        "padding": "0.55",
-        "borderRadius": 0.65,
-        "borderWidth": "0.1",
-        "fontSize": "1.05",
-        "fontWeight": "medium",
-        "textAlign": "center",
-        "cursor": "pointer"
-      }
-    },
-    "browser-grid": {
-      "content": {
-        "display": "flex",
-        "flexDirection": "row",
-        "flexWrap": "wrap",
-        "gap": "0.35"
-      }
-    },
-    "browser-button": {
-      "content": {
-        "width": "9.6",
-        "padding": "0.42",
-        "borderRadius": 0.45,
-        "borderWidth": "0.1",
-        "fontSize": "0.82",
+        "padding": "0.2",
+        "width": "6.2",
+        "height": "1.45",
+        "borderRadius": 0.35,
+        "borderWidth": "0.05",
+        "fontSize": "0.66",
         "fontWeight": "bold",
         "textAlign": "center",
         "cursor": "pointer"
       }
     },
-    "__id__recordButton": {
+    "small-button": {
       "content": {
-        "backgroundColor": "#ff9c2a",
-        "borderColor": "#ff6a2a",
-        "color": "#050608"
+        "width": "6.3",
+        "height": "1.75",
+        "padding": "0.25",
+        "borderRadius": 0.35,
+        "borderWidth": "0.05",
+        "fontSize": "0.75",
+        "textAlign": "center",
+        "cursor": "pointer"
       }
     },
-    "__id__loadSplatButton": {
+    "world-grid-wrap": {
       "content": {
-        "backgroundColor": "#f6efe5",
-        "borderColor": "#ff9c2a",
-        "color": "#050608"
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "0.22"
       }
     },
-    "__id__resetButton": {
+    "world-grid": {
       "content": {
-        "backgroundColor": "#58b7ff",
-        "borderColor": "#b48cff",
-        "color": "#050608"
+        "width": "26.1",
+        "display": "flex",
+        "flexDirection": "row",
+        "flexWrap": "wrap",
+        "gap": "0.16"
       }
     },
-    "__id__loadWorldButton": {
+    "world-card": {
       "content": {
-        "backgroundColor": "#050608",
-        "borderColor": "#58b7ff",
-        "color": "#58b7ff"
+        "width": "8.55",
+        "height": "5.15",
+        "display": "flex",
+        "flexDirection": "column",
+        "backgroundColor": "#1b2032",
+        "borderColor": "#2d3658",
+        "borderWidth": "0.1",
+        "borderRadius": 0.1,
+        "cursor": "pointer",
+        "hover": {
+          "backgroundColor": "#6883ad",
+          "borderColor": "#b7c7ef"
+        }
+      }
+    },
+    "world-image-wrap": {
+      "content": {
+        "width": "8.35",
+        "height": "3.75",
+        "display": "flex",
+        "backgroundColor": "#273047"
+      }
+    },
+    "world-image": {
+      "content": {
+        "width": "8.35",
+        "height": "3.75",
+        "objectFit": "cover"
+      }
+    },
+    "world-prompt": {
+      "content": {
+        "height": "1.1",
+        "padding": "0.1",
+        "backgroundColor": "#10121d",
+        "color": "#f6efe5",
+        "fontSize": "0.34",
+        "fontWeight": "bold",
+        "textAlign": "left"
+      }
+    },
+    "delete-x": {
+      "content": {
+        "width": "0.72",
+        "height": "0.72",
+        "padding": "0.04",
+        "backgroundColor": "#c21d2a",
+        "color": "#ffffff",
+        "fontSize": "0.48",
+        "fontWeight": "bold",
+        "textAlign": "center",
+        "borderRadius": 0.1,
+        "cursor": "pointer"
+      }
+    },
+    "card-top-row": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "row",
+        "justifyContent": "flex-end",
+        "height": "0.72",
+        "marginBottom": "-0.72"
+      }
+    },
+    "scrollbar-rail": {
+      "content": {
+        "width": "0.62",
+        "height": "15.3",
+        "backgroundColor": "#11131b",
+        "borderRadius": 0.35
+      }
+    },
+    "scrollbar-thumb": {
+      "content": {
+        "width": "0.62",
+        "height": "7.6",
+        "backgroundColor": "#ffc400",
+        "borderRadius": 0.35
+      }
+    },
+    "pager-row": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "row",
+        "alignItems": "center",
+        "justifyContent": "space-between"
+      }
+    },
+    "page-label": {
+      "content": {
+        "color": "#f6efe5",
+        "fontSize": "0.58",
+        "textAlign": "center"
+      }
+    },
+    "model-row": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "0.22",
+        "justifyContent": "flex-end"
+      }
+    },
+    "model-chip": {
+      "content": {
+        "width": "4.2",
+        "height": "1.0",
+        "padding": "0.12",
+        "backgroundColor": "#9f83cc",
+        "color": "#37284b",
+        "fontSize": "0.42",
+        "fontWeight": "medium",
+        "textAlign": "center",
+        "borderRadius": 0.1
+      }
+    },
+    "confirm-panel": {
+      "content": {
+        "display": "none",
+        "padding": "0.3",
+        "width": "14.5",
+        "alignSelf": "center",
+        "backgroundColor": "rgba(0, 0, 0, 0.82)",
+        "borderColor": "#ff7a1f",
+        "borderWidth": "0.08",
+        "borderRadius": 0.25
+      }
+    },
+    "confirm-title": {
+      "content": {
+        "color": "#ffffff",
+        "fontSize": "0.8",
+        "fontWeight": "bold",
+        "textAlign": "center"
+      }
+    },
+    "confirm-detail": {
+      "content": {
+        "color": "#ffffff",
+        "fontSize": "0.72",
+        "fontWeight": "bold",
+        "textAlign": "center"
+      }
+    },
+    "confirm-yes": {
+      "content": {
+        "marginTop": "0.45",
+        "padding": "0.16",
+        "backgroundColor": "#b80f17",
+        "color": "#ffffff",
+        "fontSize": "0.66",
+        "fontWeight": "bold",
+        "textAlign": "center",
+        "borderRadius": 0.15,
+        "cursor": "pointer"
+      }
+    },
+    "confirm-no": {
+      "content": {
+        "marginTop": "0.25",
+        "padding": "0.16",
+        "backgroundColor": "#9f83cc",
+        "color": "#ffffff",
+        "fontSize": "0.66",
+        "fontWeight": "bold",
+        "textAlign": "center",
+        "borderRadius": 0.15,
+        "cursor": "pointer"
+      }
+    },
+    "status-line": {
+      "content": {
+        "color": "#f6efe5",
+        "fontSize": "0.46",
+        "textAlign": "left"
+      }
+    },
+    "__id__nextWorldsButton": {
+      "content": {
+        "backgroundColor": "#1018ff",
+        "borderColor": "#1018ff",
+        "color": "#050608"
       }
     },
     "__id__deleteWorldButton": {
       "content": {
-        "backgroundColor": "#050608",
-        "borderColor": "#ff6a2a",
-        "color": "#ff9c2a"
-      }
-    },
-    "__id__confirmDeleteButton": {
-      "content": {
-        "backgroundColor": "#ff9c2a",
-        "borderColor": "#ff6a2a",
+        "backgroundColor": "#ff3d10",
+        "borderColor": "#ff3d10",
         "color": "#050608"
       }
     },
     "__id__cancelBrowserButton": {
       "content": {
-        "backgroundColor": "#f6efe5",
-        "borderColor": "#58b7ff",
-        "color": "#050608"
+        "backgroundColor": "#050608",
+        "borderColor": "#1018ff",
+        "color": "#1018ff"
       }
     },
-    "__id__opsDetailText": {
+    "__id__selectedWorldText": {
       "content": {
         "color": "#f6efe5",
-        "fontSize": "0.95",
+        "fontSize": "0.46",
         "textAlign": "left"
       }
     }
@@ -366,344 +1439,1374 @@
         "column": 12
       }
     },
-    "ops-header": {
+    "ops-title-row": {
       "start": {
         "line": 14,
         "column": 2
       },
       "end": {
         "line": 14,
-        "column": 13
+        "column": 16
       }
     },
-    "mode-pill": {
+    "ops-cap-left": {
       "start": {
         "line": 21,
         "column": 2
       },
       "end": {
         "line": 21,
+        "column": 15
+      }
+    },
+    "ops-title": {
+      "start": {
+        "line": 28,
+        "column": 2
+      },
+      "end": {
+        "line": 28,
         "column": 12
       }
     },
-    "model-label": {
+    "ops-cap-right": {
       "start": {
-        "line": 32,
+        "line": 35,
         "column": 2
       },
       "end": {
-        "line": 32,
+        "line": 35,
+        "column": 16
+      }
+    },
+    "ops-body": {
+      "start": {
+        "line": 42,
+        "column": 2
+      },
+      "end": {
+        "line": 42,
+        "column": 11
+      }
+    },
+    "mode-rail": {
+      "start": {
+        "line": 48,
+        "column": 2
+      },
+      "end": {
+        "line": 48,
+        "column": 12
+      }
+    },
+    "rail-block": {
+      "start": {
+        "line": 55,
+        "column": 2
+      },
+      "end": {
+        "line": 55,
+        "column": 13
+      }
+    },
+    "rail-orange": {
+      "start": {
+        "line": 66,
+        "column": 2
+      },
+      "end": {
+        "line": 66,
+        "column": 14
+      }
+    },
+    "rail-red": {
+      "start": {
+        "line": 70,
+        "column": 2
+      },
+      "end": {
+        "line": 70,
+        "column": 11
+      }
+    },
+    "rail-blue": {
+      "start": {
+        "line": 74,
+        "column": 2
+      },
+      "end": {
+        "line": 74,
+        "column": 12
+      }
+    },
+    "rail-purple": {
+      "start": {
+        "line": 78,
+        "column": 2
+      },
+      "end": {
+        "line": 78,
+        "column": 14
+      }
+    },
+    "ops-main": {
+      "start": {
+        "line": 82,
+        "column": 2
+      },
+      "end": {
+        "line": 82,
+        "column": 11
+      }
+    },
+    "control-row": {
+      "start": {
+        "line": 89,
+        "column": 2
+      },
+      "end": {
+        "line": 89,
         "column": 14
       }
     },
     "ops-button": {
       "start": {
-        "line": 38,
+        "line": 97,
         "column": 2
       },
       "end": {
-        "line": 38,
+        "line": 97,
         "column": 13
       }
     },
-    "secondary-row": {
+    "small-button": {
       "start": {
-        "line": 48,
+        "line": 109,
         "column": 2
       },
       "end": {
-        "line": 48,
-        "column": 16
+        "line": 109,
+        "column": 15
       }
     },
-    "secondary-button": {
+    "world-grid-wrap": {
       "start": {
-        "line": 54,
+        "line": 120,
         "column": 2
       },
       "end": {
-        "line": 54,
+        "line": 120,
+        "column": 18
+      }
+    },
+    "world-grid": {
+      "start": {
+        "line": 126,
+        "column": 2
+      },
+      "end": {
+        "line": 126,
+        "column": 13
+      }
+    },
+    "world-card": {
+      "start": {
+        "line": 134,
+        "column": 2
+      },
+      "end": {
+        "line": 134,
+        "column": 13
+      }
+    },
+    "world-image-wrap": {
+      "start": {
+        "line": 151,
+        "column": 2
+      },
+      "end": {
+        "line": 151,
         "column": 19
       }
     },
-    "browser-grid": {
+    "world-image": {
       "start": {
-        "line": 65,
+        "line": 158,
         "column": 2
       },
       "end": {
-        "line": 65,
-        "column": 15
-      }
-    },
-    "browser-button": {
-      "start": {
-        "line": 72,
-        "column": 2
-      },
-      "end": {
-        "line": 72,
-        "column": 17
-      }
-    },
-    "__id__recordButton": {
-      "start": {
-        "line": 83,
-        "column": 2
-      },
-      "end": {
-        "line": 83,
-        "column": 15
-      }
-    },
-    "__id__loadSplatButton": {
-      "start": {
-        "line": 89,
-        "column": 2
-      },
-      "end": {
-        "line": 89,
-        "column": 18
-      }
-    },
-    "__id__resetButton": {
-      "start": {
-        "line": 95,
-        "column": 2
-      },
-      "end": {
-        "line": 95,
+        "line": 158,
         "column": 14
       }
     },
-    "__id__loadWorldButton": {
+    "world-prompt": {
       "start": {
-        "line": 105,
+        "line": 164,
         "column": 2
       },
       "end": {
-        "line": 105,
+        "line": 164,
+        "column": 15
+      }
+    },
+    "delete-x": {
+      "start": {
+        "line": 174,
+        "column": 2
+      },
+      "end": {
+        "line": 174,
+        "column": 11
+      }
+    },
+    "card-top-row": {
+      "start": {
+        "line": 187,
+        "column": 2
+      },
+      "end": {
+        "line": 187,
+        "column": 15
+      }
+    },
+    "scrollbar-rail": {
+      "start": {
+        "line": 195,
+        "column": 2
+      },
+      "end": {
+        "line": 195,
+        "column": 17
+      }
+    },
+    "scrollbar-thumb": {
+      "start": {
+        "line": 202,
+        "column": 2
+      },
+      "end": {
+        "line": 202,
         "column": 18
+      }
+    },
+    "pager-row": {
+      "start": {
+        "line": 209,
+        "column": 2
+      },
+      "end": {
+        "line": 209,
+        "column": 12
+      }
+    },
+    "page-label": {
+      "start": {
+        "line": 216,
+        "column": 2
+      },
+      "end": {
+        "line": 216,
+        "column": 13
+      }
+    },
+    "model-row": {
+      "start": {
+        "line": 222,
+        "column": 2
+      },
+      "end": {
+        "line": 222,
+        "column": 12
+      }
+    },
+    "model-chip": {
+      "start": {
+        "line": 229,
+        "column": 2
+      },
+      "end": {
+        "line": 229,
+        "column": 13
+      }
+    },
+    "confirm-panel": {
+      "start": {
+        "line": 241,
+        "column": 2
+      },
+      "end": {
+        "line": 241,
+        "column": 16
+      }
+    },
+    "confirm-title": {
+      "start": {
+        "line": 252,
+        "column": 2
+      },
+      "end": {
+        "line": 252,
+        "column": 16
+      }
+    },
+    "confirm-detail": {
+      "start": {
+        "line": 259,
+        "column": 2
+      },
+      "end": {
+        "line": 259,
+        "column": 17
+      }
+    },
+    "confirm-yes": {
+      "start": {
+        "line": 266,
+        "column": 2
+      },
+      "end": {
+        "line": 266,
+        "column": 14
+      }
+    },
+    "confirm-no": {
+      "start": {
+        "line": 278,
+        "column": 2
+      },
+      "end": {
+        "line": 278,
+        "column": 13
+      }
+    },
+    "status-line": {
+      "start": {
+        "line": 315,
+        "column": 2
+      },
+      "end": {
+        "line": 315,
+        "column": 14
+      }
+    },
+    "__id__nextWorldsButton": {
+      "start": {
+        "line": 293,
+        "column": 2
+      },
+      "end": {
+        "line": 293,
+        "column": 19
       }
     },
     "__id__deleteWorldButton": {
       "start": {
-        "line": 111,
+        "line": 302,
         "column": 2
       },
       "end": {
-        "line": 111,
+        "line": 302,
         "column": 20
-      }
-    },
-    "__id__confirmDeleteButton": {
-      "start": {
-        "line": 117,
-        "column": 2
-      },
-      "end": {
-        "line": 117,
-        "column": 22
       }
     },
     "__id__cancelBrowserButton": {
       "start": {
-        "line": 123,
+        "line": 309,
         "column": 2
       },
       "end": {
-        "line": 123,
+        "line": 309,
         "column": 22
       }
     },
-    "__id__opsDetailText": {
+    "__id__selectedWorldText": {
       "start": {
-        "line": 129,
+        "line": 321,
         "column": 2
       },
       "end": {
-        "line": 129,
-        "column": 16
+        "line": 321,
+        "column": 20
       }
     },
     "uid-1": {
       "start": {
-        "line": 135,
+        "line": 327,
         "column": 0
       },
       "end": {
-        "line": 156,
+        "line": 389,
         "column": 6
       }
     },
     "uid-2": {
       "start": {
-        "line": 136,
+        "line": 328,
         "column": 2
       },
       "end": {
-        "line": 139,
+        "line": 332,
         "column": 8
       }
     },
     "uid-3": {
       "start": {
-        "line": 137,
+        "line": 329,
         "column": 4
       },
       "end": {
-        "line": 137,
-        "column": 56
+        "line": 329,
+        "column": 36
       }
     },
     "uid-4": {
       "start": {
-        "line": 138,
+        "line": 330,
         "column": 4
       },
       "end": {
-        "line": 138,
-        "column": 69
+        "line": 330,
+        "column": 47
       }
     },
     "uid-5": {
       "start": {
-        "line": 140,
-        "column": 2
+        "line": 331,
+        "column": 4
       },
       "end": {
-        "line": 140,
-        "column": 62
+        "line": 331,
+        "column": 37
       }
     },
     "uid-6": {
       "start": {
-        "line": 141,
+        "line": 333,
         "column": 2
       },
       "end": {
-        "line": 144,
+        "line": 388,
         "column": 8
       }
     },
     "uid-7": {
       "start": {
-        "line": 142,
+        "line": 334,
         "column": 4
       },
       "end": {
-        "line": 142,
-        "column": 75
+        "line": 346,
+        "column": 10
       }
     },
     "uid-8": {
       "start": {
-        "line": 143,
-        "column": 4
+        "line": 335,
+        "column": 6
       },
       "end": {
-        "line": 143,
-        "column": 68
+        "line": 335,
+        "column": 87
       }
     },
     "uid-9": {
       "start": {
-        "line": 145,
-        "column": 2
+        "line": 336,
+        "column": 6
       },
       "end": {
-        "line": 154,
-        "column": 8
+        "line": 336,
+        "column": 54
       }
     },
     "uid-10": {
       "start": {
-        "line": 146,
-        "column": 4
+        "line": 337,
+        "column": 6
       },
       "end": {
-        "line": 146,
-        "column": 74
+        "line": 337,
+        "column": 82
       }
     },
     "uid-11": {
       "start": {
-        "line": 147,
-        "column": 4
+        "line": 338,
+        "column": 6
       },
       "end": {
-        "line": 147,
-        "column": 76
+        "line": 338,
+        "column": 78
       }
     },
     "uid-12": {
       "start": {
-        "line": 148,
-        "column": 4
+        "line": 339,
+        "column": 6
       },
       "end": {
-        "line": 148,
-        "column": 70
+        "line": 339,
+        "column": 77
       }
     },
     "uid-13": {
       "start": {
-        "line": 149,
-        "column": 4
+        "line": 340,
+        "column": 6
       },
       "end": {
-        "line": 149,
-        "column": 70
+        "line": 340,
+        "column": 52
       }
     },
     "uid-14": {
       "start": {
-        "line": 150,
-        "column": 4
+        "line": 341,
+        "column": 6
       },
       "end": {
-        "line": 150,
-        "column": 69
+        "line": 341,
+        "column": 53
       }
     },
     "uid-15": {
       "start": {
-        "line": 151,
-        "column": 4
+        "line": 342,
+        "column": 6
       },
       "end": {
-        "line": 151,
-        "column": 73
+        "line": 342,
+        "column": 55
       }
     },
     "uid-16": {
       "start": {
-        "line": 152,
-        "column": 4
+        "line": 343,
+        "column": 6
       },
       "end": {
-        "line": 152,
-        "column": 76
+        "line": 343,
+        "column": 57
       }
     },
     "uid-17": {
       "start": {
-        "line": 153,
-        "column": 4
+        "line": 344,
+        "column": 6
       },
       "end": {
-        "line": 153,
-        "column": 73
+        "line": 344,
+        "column": 56
       }
     },
     "uid-18": {
       "start": {
-        "line": 155,
-        "column": 2
+        "line": 345,
+        "column": 6
       },
       "end": {
-        "line": 155,
-        "column": 63
+        "line": 345,
+        "column": 76
+      }
+    },
+    "uid-19": {
+      "start": {
+        "line": 347,
+        "column": 4
+      },
+      "end": {
+        "line": 387,
+        "column": 10
+      }
+    },
+    "uid-20": {
+      "start": {
+        "line": 348,
+        "column": 6
+      },
+      "end": {
+        "line": 352,
+        "column": 12
+      }
+    },
+    "uid-21": {
+      "start": {
+        "line": 349,
+        "column": 8
+      },
+      "end": {
+        "line": 349,
+        "column": 75
+      }
+    },
+    "uid-22": {
+      "start": {
+        "line": 350,
+        "column": 8
+      },
+      "end": {
+        "line": 350,
+        "column": 61
+      }
+    },
+    "uid-23": {
+      "start": {
+        "line": 351,
+        "column": 8
+      },
+      "end": {
+        "line": 351,
+        "column": 73
+      }
+    },
+    "uid-24": {
+      "start": {
+        "line": 353,
+        "column": 6
+      },
+      "end": {
+        "line": 353,
+        "column": 54
+      }
+    },
+    "uid-25": {
+      "start": {
+        "line": 354,
+        "column": 6
+      },
+      "end": {
+        "line": 359,
+        "column": 12
+      }
+    },
+    "uid-26": {
+      "start": {
+        "line": 355,
+        "column": 8
+      },
+      "end": {
+        "line": 355,
+        "column": 84
+      }
+    },
+    "uid-27": {
+      "start": {
+        "line": 356,
+        "column": 8
+      },
+      "end": {
+        "line": 356,
+        "column": 91
+      }
+    },
+    "uid-28": {
+      "start": {
+        "line": 357,
+        "column": 8
+      },
+      "end": {
+        "line": 357,
+        "column": 82
+      }
+    },
+    "uid-29": {
+      "start": {
+        "line": 358,
+        "column": 8
+      },
+      "end": {
+        "line": 358,
+        "column": 80
+      }
+    },
+    "uid-30": {
+      "start": {
+        "line": 360,
+        "column": 6
+      },
+      "end": {
+        "line": 373,
+        "column": 12
+      }
+    },
+    "uid-31": {
+      "start": {
+        "line": 361,
+        "column": 8
+      },
+      "end": {
+        "line": 371,
+        "column": 14
+      }
+    },
+    "uid-32": {
+      "start": {
+        "line": 362,
+        "column": 10
+      },
+      "end": {
+        "line": 362,
+        "column": 362
+      }
+    },
+    "uid-33": {
+      "start": {
+        "line": 362,
+        "column": 50
+      },
+      "end": {
+        "line": 362,
+        "column": 135
+      }
+    },
+    "uid-34": {
+      "start": {
+        "line": 362,
+        "column": 76
+      },
+      "end": {
+        "line": 362,
+        "column": 129
+      }
+    },
+    "uid-35": {
+      "start": {
+        "line": 362,
+        "column": 135
+      },
+      "end": {
+        "line": 362,
+        "column": 298
+      }
+    },
+    "uid-36": {
+      "start": {
+        "line": 362,
+        "column": 165
+      },
+      "end": {
+        "line": 362,
+        "column": 292
+      }
+    },
+    "uid-37": {
+      "start": {
+        "line": 362,
+        "column": 298
+      },
+      "end": {
+        "line": 362,
+        "column": 356
+      }
+    },
+    "uid-38": {
+      "start": {
+        "line": 363,
+        "column": 10
+      },
+      "end": {
+        "line": 363,
+        "column": 362
+      }
+    },
+    "uid-39": {
+      "start": {
+        "line": 363,
+        "column": 50
+      },
+      "end": {
+        "line": 363,
+        "column": 135
+      }
+    },
+    "uid-40": {
+      "start": {
+        "line": 363,
+        "column": 76
+      },
+      "end": {
+        "line": 363,
+        "column": 129
+      }
+    },
+    "uid-41": {
+      "start": {
+        "line": 363,
+        "column": 135
+      },
+      "end": {
+        "line": 363,
+        "column": 298
+      }
+    },
+    "uid-42": {
+      "start": {
+        "line": 363,
+        "column": 165
+      },
+      "end": {
+        "line": 363,
+        "column": 292
+      }
+    },
+    "uid-43": {
+      "start": {
+        "line": 363,
+        "column": 298
+      },
+      "end": {
+        "line": 363,
+        "column": 356
+      }
+    },
+    "uid-44": {
+      "start": {
+        "line": 364,
+        "column": 10
+      },
+      "end": {
+        "line": 364,
+        "column": 362
+      }
+    },
+    "uid-45": {
+      "start": {
+        "line": 364,
+        "column": 50
+      },
+      "end": {
+        "line": 364,
+        "column": 135
+      }
+    },
+    "uid-46": {
+      "start": {
+        "line": 364,
+        "column": 76
+      },
+      "end": {
+        "line": 364,
+        "column": 129
+      }
+    },
+    "uid-47": {
+      "start": {
+        "line": 364,
+        "column": 135
+      },
+      "end": {
+        "line": 364,
+        "column": 298
+      }
+    },
+    "uid-48": {
+      "start": {
+        "line": 364,
+        "column": 165
+      },
+      "end": {
+        "line": 364,
+        "column": 292
+      }
+    },
+    "uid-49": {
+      "start": {
+        "line": 364,
+        "column": 298
+      },
+      "end": {
+        "line": 364,
+        "column": 356
+      }
+    },
+    "uid-50": {
+      "start": {
+        "line": 365,
+        "column": 10
+      },
+      "end": {
+        "line": 365,
+        "column": 362
+      }
+    },
+    "uid-51": {
+      "start": {
+        "line": 365,
+        "column": 50
+      },
+      "end": {
+        "line": 365,
+        "column": 135
+      }
+    },
+    "uid-52": {
+      "start": {
+        "line": 365,
+        "column": 76
+      },
+      "end": {
+        "line": 365,
+        "column": 129
+      }
+    },
+    "uid-53": {
+      "start": {
+        "line": 365,
+        "column": 135
+      },
+      "end": {
+        "line": 365,
+        "column": 298
+      }
+    },
+    "uid-54": {
+      "start": {
+        "line": 365,
+        "column": 165
+      },
+      "end": {
+        "line": 365,
+        "column": 292
+      }
+    },
+    "uid-55": {
+      "start": {
+        "line": 365,
+        "column": 298
+      },
+      "end": {
+        "line": 365,
+        "column": 356
+      }
+    },
+    "uid-56": {
+      "start": {
+        "line": 366,
+        "column": 10
+      },
+      "end": {
+        "line": 366,
+        "column": 362
+      }
+    },
+    "uid-57": {
+      "start": {
+        "line": 366,
+        "column": 50
+      },
+      "end": {
+        "line": 366,
+        "column": 135
+      }
+    },
+    "uid-58": {
+      "start": {
+        "line": 366,
+        "column": 76
+      },
+      "end": {
+        "line": 366,
+        "column": 129
+      }
+    },
+    "uid-59": {
+      "start": {
+        "line": 366,
+        "column": 135
+      },
+      "end": {
+        "line": 366,
+        "column": 298
+      }
+    },
+    "uid-60": {
+      "start": {
+        "line": 366,
+        "column": 165
+      },
+      "end": {
+        "line": 366,
+        "column": 292
+      }
+    },
+    "uid-61": {
+      "start": {
+        "line": 366,
+        "column": 298
+      },
+      "end": {
+        "line": 366,
+        "column": 356
+      }
+    },
+    "uid-62": {
+      "start": {
+        "line": 367,
+        "column": 10
+      },
+      "end": {
+        "line": 367,
+        "column": 362
+      }
+    },
+    "uid-63": {
+      "start": {
+        "line": 367,
+        "column": 50
+      },
+      "end": {
+        "line": 367,
+        "column": 135
+      }
+    },
+    "uid-64": {
+      "start": {
+        "line": 367,
+        "column": 76
+      },
+      "end": {
+        "line": 367,
+        "column": 129
+      }
+    },
+    "uid-65": {
+      "start": {
+        "line": 367,
+        "column": 135
+      },
+      "end": {
+        "line": 367,
+        "column": 298
+      }
+    },
+    "uid-66": {
+      "start": {
+        "line": 367,
+        "column": 165
+      },
+      "end": {
+        "line": 367,
+        "column": 292
+      }
+    },
+    "uid-67": {
+      "start": {
+        "line": 367,
+        "column": 298
+      },
+      "end": {
+        "line": 367,
+        "column": 356
+      }
+    },
+    "uid-68": {
+      "start": {
+        "line": 368,
+        "column": 10
+      },
+      "end": {
+        "line": 368,
+        "column": 362
+      }
+    },
+    "uid-69": {
+      "start": {
+        "line": 368,
+        "column": 50
+      },
+      "end": {
+        "line": 368,
+        "column": 135
+      }
+    },
+    "uid-70": {
+      "start": {
+        "line": 368,
+        "column": 76
+      },
+      "end": {
+        "line": 368,
+        "column": 129
+      }
+    },
+    "uid-71": {
+      "start": {
+        "line": 368,
+        "column": 135
+      },
+      "end": {
+        "line": 368,
+        "column": 298
+      }
+    },
+    "uid-72": {
+      "start": {
+        "line": 368,
+        "column": 165
+      },
+      "end": {
+        "line": 368,
+        "column": 292
+      }
+    },
+    "uid-73": {
+      "start": {
+        "line": 368,
+        "column": 298
+      },
+      "end": {
+        "line": 368,
+        "column": 356
+      }
+    },
+    "uid-74": {
+      "start": {
+        "line": 369,
+        "column": 10
+      },
+      "end": {
+        "line": 369,
+        "column": 362
+      }
+    },
+    "uid-75": {
+      "start": {
+        "line": 369,
+        "column": 50
+      },
+      "end": {
+        "line": 369,
+        "column": 135
+      }
+    },
+    "uid-76": {
+      "start": {
+        "line": 369,
+        "column": 76
+      },
+      "end": {
+        "line": 369,
+        "column": 129
+      }
+    },
+    "uid-77": {
+      "start": {
+        "line": 369,
+        "column": 135
+      },
+      "end": {
+        "line": 369,
+        "column": 298
+      }
+    },
+    "uid-78": {
+      "start": {
+        "line": 369,
+        "column": 165
+      },
+      "end": {
+        "line": 369,
+        "column": 292
+      }
+    },
+    "uid-79": {
+      "start": {
+        "line": 369,
+        "column": 298
+      },
+      "end": {
+        "line": 369,
+        "column": 356
+      }
+    },
+    "uid-80": {
+      "start": {
+        "line": 370,
+        "column": 10
+      },
+      "end": {
+        "line": 370,
+        "column": 362
+      }
+    },
+    "uid-81": {
+      "start": {
+        "line": 370,
+        "column": 50
+      },
+      "end": {
+        "line": 370,
+        "column": 135
+      }
+    },
+    "uid-82": {
+      "start": {
+        "line": 370,
+        "column": 76
+      },
+      "end": {
+        "line": 370,
+        "column": 129
+      }
+    },
+    "uid-83": {
+      "start": {
+        "line": 370,
+        "column": 135
+      },
+      "end": {
+        "line": 370,
+        "column": 298
+      }
+    },
+    "uid-84": {
+      "start": {
+        "line": 370,
+        "column": 165
+      },
+      "end": {
+        "line": 370,
+        "column": 292
+      }
+    },
+    "uid-85": {
+      "start": {
+        "line": 370,
+        "column": 298
+      },
+      "end": {
+        "line": 370,
+        "column": 356
+      }
+    },
+    "uid-86": {
+      "start": {
+        "line": 372,
+        "column": 8
+      },
+      "end": {
+        "line": 372,
+        "column": 77
+      }
+    },
+    "uid-87": {
+      "start": {
+        "line": 372,
+        "column": 36
+      },
+      "end": {
+        "line": 372,
+        "column": 71
+      }
+    },
+    "uid-88": {
+      "start": {
+        "line": 374,
+        "column": 6
+      },
+      "end": {
+        "line": 378,
+        "column": 12
+      }
+    },
+    "uid-89": {
+      "start": {
+        "line": 375,
+        "column": 8
+      },
+      "end": {
+        "line": 375,
+        "column": 74
+      }
+    },
+    "uid-90": {
+      "start": {
+        "line": 376,
+        "column": 8
+      },
+      "end": {
+        "line": 376,
+        "column": 60
+      }
+    },
+    "uid-91": {
+      "start": {
+        "line": 377,
+        "column": 8
+      },
+      "end": {
+        "line": 377,
+        "column": 70
+      }
+    },
+    "uid-92": {
+      "start": {
+        "line": 379,
+        "column": 6
+      },
+      "end": {
+        "line": 379,
+        "column": 87
+      }
+    },
+    "uid-93": {
+      "start": {
+        "line": 380,
+        "column": 6
+      },
+      "end": {
+        "line": 385,
+        "column": 12
+      }
+    },
+    "uid-94": {
+      "start": {
+        "line": 381,
+        "column": 8
+      },
+      "end": {
+        "line": 381,
+        "column": 45
+      }
+    },
+    "uid-95": {
+      "start": {
+        "line": 382,
+        "column": 8
+      },
+      "end": {
+        "line": 382,
+        "column": 44
+      }
+    },
+    "uid-96": {
+      "start": {
+        "line": 383,
+        "column": 8
+      },
+      "end": {
+        "line": 383,
+        "column": 48
+      }
+    },
+    "uid-97": {
+      "start": {
+        "line": 384,
+        "column": 8
+      },
+      "end": {
+        "line": 384,
+        "column": 44
+      }
+    },
+    "uid-98": {
+      "start": {
+        "line": 386,
+        "column": 6
+      },
+      "end": {
+        "line": 386,
+        "column": 70
       }
     }
   }
