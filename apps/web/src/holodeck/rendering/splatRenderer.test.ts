@@ -78,13 +78,13 @@ describe("SplatRenderer", () => {
     expect(scene.children[1].name).toBe("WorldSplat_world-123");
     expect(scene.children[1].visible).toBe(false);
     expect(scene.children[1].scale).toMatchObject({
-      x: 0.6,
-      y: -0.6,
-      z: 0.6
+      x: 4.8,
+      y: -4.8,
+      z: 4.8
     });
     expect(scene.children[1].position).toMatchObject({
-      x: -3,
-      y: 1.5,
+      x: -24,
+      y: 12,
       z: -0
     });
 
@@ -119,12 +119,12 @@ describe("SplatRenderer", () => {
     );
 
     expect(scene.children[1].scale).toMatchObject({
-      x: 0.2,
-      y: -0.2,
-      z: 0.2
+      x: 1.6,
+      y: -1.6,
+      z: 1.6
     });
     expect(scene.children[1].position).toMatchObject({
-      x: -1,
+      x: -8,
       y: 1.2,
       z: -0
     });
@@ -161,6 +161,28 @@ describe("SplatRenderer", () => {
     );
   });
 
+  it("keeps the default scale when Spark reports unusable bounds", async () => {
+    const scene = new Scene();
+    const constructors = createSparkTestConstructors({
+      bounds: new Box3()
+    });
+    const renderer = new SplatRenderer(scene, {} as WebGLRenderer, constructors);
+
+    await renderer.load(
+      worldResult({
+        spzUrls: {
+          full_res: "https://remote.test/empty-bounds.spz"
+        }
+      })
+    );
+
+    expect(scene.children[1].scale).toMatchObject({
+      x: 8,
+      y: -8,
+      z: 8
+    });
+  });
+
   it("disposes stale splats when overlapping loads resolve out of order", async () => {
     const scene = new Scene();
     const constructors = createSparkTestConstructors();
@@ -189,7 +211,9 @@ describe("SplatRenderer", () => {
   });
 });
 
-function createSparkTestConstructors() {
+function createSparkTestConstructors(options: {
+  bounds?: Box3;
+} = {}) {
   const disposedMeshes: string[] = [];
 
   class FakeSparkRenderer extends Object3D {
@@ -215,7 +239,10 @@ function createSparkTestConstructors() {
     }
 
     getBoundingBox() {
-      return new Box3(new Vector3(0, -2.5, -2), new Vector3(10, 2.5, 2));
+      return options.bounds ?? new Box3(
+        new Vector3(0, -2.5, -2),
+        new Vector3(10, 2.5, 2)
+      );
     }
 
     dispose() {

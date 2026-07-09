@@ -12,6 +12,7 @@ interface VoiceToWorldCoordinatorDeps {
   renderer: WorldRenderer;
   pollIntervalMs?: number;
   onProgress?: (job: VoiceToWorldJob, progress: VoiceToWorldProgress) => void;
+  onWorldShown?: (world: WorldResult) => void;
 }
 
 export interface VoiceToWorldProgress {
@@ -47,6 +48,7 @@ export class VoiceToWorldCoordinator {
           : await this.generateFromBlockingRequest(audio);
       await renderer.load(world);
       renderer.show();
+      this.deps.onWorldShown?.(world);
 
       if (!state.tryTransitionTo("Ready")) {
         state.forceState("Ready");

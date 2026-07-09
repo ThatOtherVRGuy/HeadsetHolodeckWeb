@@ -15,6 +15,7 @@ import { EnvironmentType, LocomotionEnvironment } from "@iwsdk/core";
 
 import {
   configureHolodeckPanelControls,
+  hasSplatSource,
   PanelSystem,
   setLoadedWorldPanelInfo,
   setPanelWorldLoadInProgress
@@ -32,11 +33,13 @@ import { PanoramaRenderer } from "./holodeck/rendering/panoramaRenderer";
 import { PreferredWorldRenderer } from "./holodeck/rendering/preferredWorldRenderer";
 import { loadHolodeckShell } from "./holodeck/shell/shellLoader";
 import { placePanelForShellComposition } from "./holodeck/shell/panelPose";
+import { setShellVisualsVisible } from "./holodeck/shell/shellVisibility";
 import {
   applyUserStartPose,
   HOLODECK_INITIAL_PLAYER_POSITION
 } from "./holodeck/shell/startPose";
 import { SplatRenderer } from "./holodeck/rendering/splatRenderer";
+import type { SplatFrameDiagnostics } from "./holodeck/rendering/splatRenderer";
 import { HolodeckStateMachine } from "./holodeck/state/holodeckState";
 import { BrowserVoiceRecorder } from "./holodeck/voice/browserVoiceRecorder";
 import {
@@ -64,7 +67,8 @@ import {
 } from "@iwsdk/core/dist/runtime/three.js";
 
 const apiBaseUrl = "http://localhost:4817";
-const XR_SLIDING_SPEED_METERS_PER_SECOND = 0.35;
+const XR_SLIDING_SPEED_METERS_PER_SECOND = 0.7;
+const XR_KEYBOARD_TURN_RADIANS_PER_SECOND = Math.PI / 2;
 const XR_LOCOMOTION_TUNING_ATTEMPTS = 20;
 const HOLODECK_PLAYER_BOUNDS_RADIUS_METERS = 8;
 
@@ -116,6 +120,14 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   state.setStatusMessage(shell.message);
 
   const generatedWorldRoot = shell.placement.generatedWorld.object ?? scene;
+  const archRoot = shell.root?.getObjectByName("Arch") ?? null;
+  const setShellVisible = (visible: boolean) => {
+    setShellVisualsVisible(
+      shell.root,
+      [shell.placement.generatedWorld.object, archRoot],
+      visible
+    );
+  };
   const panoramaRenderer = new PanoramaRenderer(generatedWorldRoot);
   let activeBrowserSplatObjectUrl: string | null = null;
   let activeLocalSplatLoadId = 0;
@@ -142,11 +154,30 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       if (shouldAcceptRendererStatus(statusWorld)) {
         state.setStatusMessage(message);
       }
+    },
+    onFrame: (frame, statusWorld) => {
+      window.holodeckDebug = {
+        ...window.holodeckDebug,
+        splatFrame: frame,
+        splatWorldId: statusWorld.worldId
+      };
     }
   });
   const worldRenderer = new PreferredWorldRenderer(
     splatRenderer,
     panoramaRenderer,
+    {
+      onActiveRendererChanged: (activeRenderer, statusWorld, error) => {
+        window.holodeckDebug = {
+          ...window.holodeckDebug,
+          worldRenderer: {
+            activeRenderer,
+            worldId: statusWorld.worldId,
+            fallbackError: error instanceof Error ? error.message : String(error ?? "")
+          }
+        };
+      }
+    }
   );
   const revokeActiveBrowserSplatObjectUrl = () => {
     if (!activeBrowserSplatObjectUrl) {
@@ -163,6 +194,11 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     onProgress: (job, progress) => {
       state.setStatusMessage(statusMessageForVoiceToWorldJob(job, progress));
     },
+    onWorldShown: (world) => {
+      if (hasSplatSource(world)) {
+        setShellVisible(false);
+      }
+    }
   });
   configureHolodeckPanelControls({
     state,
@@ -170,7 +206,8 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     coordinator,
     renderer: worldRenderer,
     openLocalSplatFilePicker: () => localSplatFileInput.click(),
-    api
+    api,
+    setShellVisible
   });
   localSplatFileInput.addEventListener("change", () => {
     const file = localSplatFileInput.files?.[0] ?? null;
@@ -213,6 +250,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
         }
 
         worldRenderer.show();
+        setShellVisible(false);
         setLoadedWorldPanelInfo({
           title: url,
           source: "LOCAL SPZ",
@@ -238,6 +276,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
           error: error instanceof Error ? error.message : String(error)
         };
         setLoadedWorldPanelInfo(null);
+        setShellVisible(true);
         throw error;
       } finally {
         if (isActiveLocalSplatLoad(loadId)) {
@@ -273,6 +312,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
         }
 
         worldRenderer.show();
+        setShellVisible(false);
         setLoadedWorldPanelInfo({
           title: file.name,
           source: "LOCAL SPZ",
@@ -304,6 +344,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
           error: error instanceof Error ? error.message : String(error)
         };
         setLoadedWorldPanelInfo(null);
+        setShellVisible(true);
         throw error;
       } finally {
         if (isActiveLocalSplatLoad(loadId)) {
@@ -445,22 +486,42 @@ function installBoundedHolodeckLocomotion(world: World, camera: Object3D): void 
   const inputAxis = new Vector2();
   const movement = new Vector3();
   const boundsCenter = new Vector3(...HOLODECK_INITIAL_PLAYER_POSITION);
+  const speedMultiplier = { value: 1 };
   let lastTimestamp = performance.now();
 
   const step = (timestamp: number) => {
     const deltaSeconds = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
     lastTimestamp = timestamp;
 
-    getHolodeckMoveAxis(world, inputAxis);
+    getHolodeckMoveAxis(world, inputAxis, speedMultiplier);
 
     if (inputAxis.lengthSq() > 0.0001) {
       cameraRelativeMovement(inputAxis, camera, movement).multiplyScalar(
-        XR_SLIDING_SPEED_METERS_PER_SECOND * deltaSeconds
+        XR_SLIDING_SPEED_METERS_PER_SECOND *
+          speedMultiplier.value *
+          deltaSeconds
       );
       world.player.position.add(movement);
     }
 
-    world.player.position.y = boundsCenter.y;
+    const verticalAxis = keyboardLocomotion.getVerticalAxis();
+    if (verticalAxis !== 0) {
+      world.player.position.y +=
+        verticalAxis *
+        XR_SLIDING_SPEED_METERS_PER_SECOND *
+        keyboardLocomotion.getSpeedMultiplier() *
+        deltaSeconds;
+    }
+
+    const yawAxis = keyboardLocomotion.getYawAxis();
+    if (yawAxis !== 0) {
+      world.player.rotation.y +=
+        yawAxis *
+        XR_KEYBOARD_TURN_RADIANS_PER_SECOND *
+        keyboardLocomotion.getSpeedMultiplier() *
+        deltaSeconds;
+    }
+
     clampPlayerToHolodeckBounds(world.player.position, boundsCenter);
     window.requestAnimationFrame(step);
   };
@@ -468,13 +529,23 @@ function installBoundedHolodeckLocomotion(world: World, camera: Object3D): void 
   window.requestAnimationFrame(step);
 }
 
-function getHolodeckMoveAxis(world: World, out: Vector2): Vector2 {
+function getHolodeckMoveAxis(
+  world: World,
+  out: Vector2,
+  speedMultiplier?: { value: number }
+): Vector2 {
   const keyboardAxis = keyboardLocomotion.getAxis();
 
   if (keyboardAxis.x !== 0 || keyboardAxis.y !== 0) {
+    if (speedMultiplier) {
+      speedMultiplier.value = keyboardLocomotion.getSpeedMultiplier();
+    }
     return out.set(keyboardAxis.x, keyboardAxis.y);
   }
 
+  if (speedMultiplier) {
+    speedMultiplier.value = 1;
+  }
   const moveAxis = world.input.actions.getAxis2D(InputActions.LocomotionMove);
   return out.set(moveAxis.x, moveAxis.y);
 }
@@ -685,6 +756,19 @@ declare global {
       listLocalSplats(): Promise<unknown>;
     };
     holodeckCompose?: HolodeckComposeController;
+    holodeckDebug?: {
+      world?: World;
+      locomotionSystem?: () => LocomotionSystem;
+      slideSystem?: () => SlideSystem;
+      movementSnapshot?: () => unknown;
+      splatFrame?: SplatFrameDiagnostics;
+      splatWorldId?: string;
+      worldRenderer?: {
+        activeRenderer: "preferred" | "fallback";
+        worldId: string;
+        fallbackError: string;
+      };
+    };
   }
 }
 

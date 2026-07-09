@@ -34,6 +34,7 @@ interface HolodeckPanelControls {
   renderer: WorldRenderer;
   openLocalSplatFilePicker: () => void;
   api: HolodeckApi;
+  setShellVisible: (visible: boolean) => void;
 }
 
 let holodeckControls: HolodeckPanelControls | null = null;
@@ -317,6 +318,9 @@ async function loadSelectedWorldLabsWorld(
     const world = await controls.api.getWorldLabsWorld(browserState.selectedWorldId);
     await controls.renderer.load(world);
     controls.renderer.show();
+    if (hasSplatSource(world)) {
+      controls.setShellVisible(false);
+    }
     panelSession.transcript = world.prompt || world.transcript;
     panelSession.rendererLabel = hasSplatSource(world) ? "Splat" : "Panorama";
     panelSession.loadedWorld = {
@@ -648,6 +652,7 @@ export class PanelSystem extends createSystem({
         panelSession.loadedWorld = null;
         panelSession.worldReadyAt = null;
         controls.renderer.hide();
+        controls.setShellVisible(true);
         controls.state.clearErrorAndReturnToIdle();
         update();
       };

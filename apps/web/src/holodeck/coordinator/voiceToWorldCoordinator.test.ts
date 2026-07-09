@@ -49,6 +49,26 @@ describe("VoiceToWorldCoordinator", () => {
     expect(rendererCalls).toEqual(["world_123", "show"]);
   });
 
+  it("notifies when a generated world is shown", async () => {
+    const state = new HolodeckStateMachine();
+    const world = createWorld();
+    const shownWorlds: string[] = [];
+    const api: HolodeckApi = {
+      voiceToWorld: async () => world,
+    };
+    const renderer = createRenderer();
+    const coordinator = new VoiceToWorldCoordinator({
+      state,
+      api,
+      renderer,
+      onWorldShown: (shownWorld) => shownWorlds.push(shownWorld.worldId)
+    });
+
+    await coordinator.generateFromAudio(new Blob(["fake audio"]));
+
+    expect(shownWorlds).toEqual(["world_123"]);
+  });
+
   it("polls a voice-to-world job and reports progress until the world is ready", async () => {
     const state = new HolodeckStateMachine();
     const world = createWorld();

@@ -12,6 +12,22 @@ interface SplatRendererOptions {
   SparkRendererCtor?: typeof SparkRenderer;
   SplatMeshCtor?: typeof SplatMesh;
   onStatus?: (message: string, world: WorldResult) => void;
+  onFrame?: (frame: SplatFrameDiagnostics, world: WorldResult) => void;
+}
+
+const DEFAULT_SPLAT_SCALE_MULTIPLIER = 8;
+
+export interface SplatFrameDiagnostics {
+  policy: SplatPlacement;
+  scaleMultiplier: number;
+  skippedReason?: string;
+  maxDimension?: number;
+  finalScale?: [number, number, number];
+  finalPosition?: [number, number, number];
+  bounds: {
+    min: [number, number, number];
+    max: [number, number, number];
+  };
 }
 
 export class SplatRenderer implements WorldRenderer {
@@ -58,7 +74,11 @@ export class SplatRenderer implements WorldRenderer {
     });
     mesh.name = `WorldSplat_${world.worldId}`;
     mesh.visible = false;
-    mesh.scale.set(1, -1, 1);
+    mesh.scale.set(
+      DEFAULT_SPLAT_SCALE_MULTIPLIER,
+      -DEFAULT_SPLAT_SCALE_MULTIPLIER,
+      DEFAULT_SPLAT_SCALE_MULTIPLIER
+    );
 
     await mesh.initialized;
 
@@ -68,7 +88,9 @@ export class SplatRenderer implements WorldRenderer {
     }
 
     this.clearCurrentMesh();
-    frameSplatMesh(mesh, placementPolicyForWorld(world));
+    const frame = frameSplatMesh(mesh, placementPolicyForWorld(world));
+    this.options.onFrame?.(frame, world);
+    console.info("[Holodeck] splat framed", frame);
     this.currentMesh = mesh;
     this.scene.add(mesh);
     this.options.onStatus?.(loadedMessageForMesh(mesh), world);
@@ -150,27 +172,33 @@ function placementPolicyForWorld(world: WorldResult): SplatPlacement {
   return raw?.source === "browser-file-spz" ? "loose-object" : "world";
 }
 
-function frameSplatMesh(mesh: SplatMesh, policy: SplatPlacement) {
+function frameSplatMesh(
+  mesh: SplatMesh,
+  policy: SplatPlacement
+): SplatFrameDiagnostics {
   const bounds = mesh.getBoundingBox(true);
   if (!isUsableBounds(bounds)) {
-    return;
+    return skippedSplatFrameDiagnostics(bounds, policy, "unusable-bounds");
   }
 
   const center = bounds.getCenter(mesh.position as Vector3);
   const size = bounds.getSize(mesh.scale as Vector3);
   const maxDimension = Math.max(size.x, size.y, size.z);
   if (!Number.isFinite(maxDimension) || maxDimension <= 0) {
-    return;
+    return skippedSplatFrameDiagnostics(bounds, policy, "invalid-max-dimension");
   }
 
-  const scale = Math.min(1, (policy === "loose-object" ? 2 : 6) / maxDimension);
+  const scale =
+    Math.min(1, (policy === "loose-object" ? 2 : 6) / maxDimension) *
+    DEFAULT_SPLAT_SCALE_MULTIPLIER;
   mesh.scale.set(scale, -scale, scale);
   if (policy === "loose-object") {
     mesh.position.set(-center.x * scale, 1.2 + center.y * scale, -center.z * scale);
-    return;
+    return splatFrameDiagnostics(mesh, bounds, policy, maxDimension);
   }
 
   mesh.position.set(-center.x * scale, bounds.max.y * scale, -center.z * scale);
+  return splatFrameDiagnostics(mesh, bounds, policy, maxDimension);
 }
 
 function isUsableBounds(bounds: Box3) {
@@ -198,4 +226,39 @@ function formatBytes(bytes: number) {
   }
 
   return `${value.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function splatFrameDiagnostics(
+  mesh: SplatMesh,
+  bounds: Box3,
+  policy: SplatPlacement,
+  maxDimension: number
+): SplatFrameDiagnostics {
+  return {
+    policy,
+    maxDimension,
+    scaleMultiplier: DEFAULT_SPLAT_SCALE_MULTIPLIER,
+    finalScale: [mesh.scale.x, mesh.scale.y, mesh.scale.z],
+    finalPosition: [mesh.position.x, mesh.position.y, mesh.position.z],
+    bounds: {
+      min: [bounds.min.x, bounds.min.y, bounds.min.z],
+      max: [bounds.max.x, bounds.max.y, bounds.max.z]
+    }
+  };
+}
+
+function skippedSplatFrameDiagnostics(
+  bounds: Box3,
+  policy: SplatPlacement,
+  skippedReason: string
+): SplatFrameDiagnostics {
+  return {
+    policy,
+    scaleMultiplier: DEFAULT_SPLAT_SCALE_MULTIPLIER,
+    skippedReason,
+    bounds: {
+      min: [bounds.min.x, bounds.min.y, bounds.min.z],
+      max: [bounds.max.x, bounds.max.y, bounds.max.z]
+    }
+  };
 }
