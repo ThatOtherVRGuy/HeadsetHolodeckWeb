@@ -108,6 +108,10 @@ export class SplatRenderer implements WorldRenderer {
     }
   }
 
+  getTransformTarget(): Object3D | null {
+    return this.currentMesh;
+  }
+
   dispose() {
     this.disposed = true;
     this.loadSequence += 1;

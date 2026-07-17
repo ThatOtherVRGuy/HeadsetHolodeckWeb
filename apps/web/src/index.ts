@@ -17,8 +17,11 @@ import {
   configureHolodeckPanelControls,
   hasSplatSource,
   PanelSystem,
+  resetGeneratedWorldPanelSession,
   setLoadedWorldPanelInfo,
-  setPanelWorldLoadInProgress
+  setPanelWorldLoadInProgress,
+  startVoicePromptRecording,
+  stopVoicePromptAndGenerateWorld
 } from "./panel.js";
 
 import {
@@ -52,6 +55,10 @@ import {
   localSplatUrlFromSearch
 } from "./holodeck/world/localSplatUrl";
 import { KeyboardLocomotionTracker } from "./holodeck/input/keyboardLocomotion";
+import {
+  installKeyboardPushToTalk,
+  updateXrPushToTalk
+} from "./holodeck/input/xrPushToTalk";
 import { cameraRelativeMovement } from "./holodeck/input/cameraRelativeMovement";
 import {
   createHolodeckComposeController,
@@ -59,6 +66,8 @@ import {
   type HolodeckComposeController,
   type HolodeckComposeTarget
 } from "./holodeck/compose/composeMode";
+import { executeVoiceCommandIntent } from "./holodeck/voiceCommand/executor";
+import { parseVoiceCommandIntent } from "./holodeck/voiceCommand/intent";
 import {
   AxesHelper,
   Object3D,
@@ -66,7 +75,7 @@ import {
   Vector3
 } from "@iwsdk/core/dist/runtime/three.js";
 
-const apiBaseUrl = "http://localhost:4817";
+const apiBaseUrl = "";
 const XR_SLIDING_SPEED_METERS_PER_SECOND = 0.7;
 const XR_KEYBOARD_TURN_RADIANS_PER_SECOND = Math.PI / 2;
 const XR_LOCOMOTION_TUNING_ATTEMPTS = 20;
@@ -108,6 +117,11 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   const { camera } = world;
   tuneXrLocomotion(world);
   installXrMovementDiagnostics(world);
+  installXrPushToTalk(world);
+  installKeyboardPushToTalk({
+    start: startVoicePromptRecording,
+    stop: stopVoicePromptAndGenerateWorld
+  });
 
   const shell = loadHolodeckShell({
     assetId: "holodeckShell",
@@ -120,6 +134,62 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   state.setStatusMessage(shell.message);
 
   const generatedWorldRoot = shell.placement.generatedWorld.object ?? scene;
+  const generatedWorldContentRoot = new Object3D();
+  generatedWorldContentRoot.name = "GeneratedWorldContentRoot";
+  generatedWorldRoot.add(generatedWorldContentRoot);
+  const executeVoiceCommand = (text: string) => {
+    const intent = parseVoiceCommandIntent(text);
+    if (!intent) {
+      const message = "No voice command matched.";
+      state.setStatusMessage(message);
+      console.info("[Holodeck] voice command ignored", { text, message });
+      return { handled: false, ok: false, message };
+    }
+
+    if (intent.kind === "endProgram") {
+      worldRenderer.hide();
+      setShellVisible(true);
+      resetGeneratedWorldPanelSession();
+      state.clearErrorAndReturnToIdle();
+      state.setStatusMessage(intent.response);
+      console.info("[Holodeck] end program command executed", { text, intent });
+      return {
+        handled: true,
+        ok: true,
+        message: intent.response,
+        intent
+      };
+    }
+
+    const target = worldRenderer.getTransformTarget?.() ?? generatedWorldRoot;
+    const before = objectTransformSnapshot(target);
+    const result = executeVoiceCommandIntent(intent, {
+      world: target
+    });
+    const after = objectTransformSnapshot(target);
+    state.setStatusMessage(result.message);
+    console.info("[Holodeck] voice command executed", {
+      text,
+      intent,
+      result,
+      before,
+      after,
+      target: objectTransformSnapshot(target),
+      fallbackTarget: target === generatedWorldRoot,
+      childCount: generatedWorldRoot.children.length
+    });
+    return {
+      handled: true,
+      ...result,
+      intent,
+      before,
+      after
+    };
+  };
+  window.holodeckDebug = {
+    ...window.holodeckDebug,
+    executeVoiceCommand
+  };
   const archRoot = shell.root?.getObjectByName("Arch") ?? null;
   const setShellVisible = (visible: boolean) => {
     setShellVisualsVisible(
@@ -128,7 +198,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       visible
     );
   };
-  const panoramaRenderer = new PanoramaRenderer(generatedWorldRoot);
+  const panoramaRenderer = new PanoramaRenderer(generatedWorldContentRoot);
   let activeBrowserSplatObjectUrl: string | null = null;
   let activeLocalSplatLoadId = 0;
   const isActiveLocalSplatLoad = (loadId: number) =>
@@ -149,7 +219,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       statusLocalUrl === activeBrowserSplatObjectUrl
     );
   };
-  const splatRenderer = new SplatRenderer(generatedWorldRoot, world.renderer, {
+  const splatRenderer = new SplatRenderer(generatedWorldContentRoot, world.renderer, {
     onStatus: (message, statusWorld) => {
       if (shouldAcceptRendererStatus(statusWorld)) {
         state.setStatusMessage(message);
@@ -159,7 +229,11 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       window.holodeckDebug = {
         ...window.holodeckDebug,
         splatFrame: frame,
-        splatWorldId: statusWorld.worldId
+        splatWorldId: statusWorld.worldId,
+        generatedWorldTransform: objectTransformSnapshot(generatedWorldRoot),
+        generatedWorldContentTransform: objectTransformSnapshot(
+          generatedWorldContentRoot
+        )
       };
     }
   });
@@ -207,7 +281,8 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     renderer: worldRenderer,
     openLocalSplatFilePicker: () => localSplatFileInput.click(),
     api,
-    setShellVisible
+    setShellVisible,
+    executeVoiceCommand
   });
   localSplatFileInput.addEventListener("change", () => {
     const file = localSplatFileInput.files?.[0] ?? null;
@@ -529,6 +604,19 @@ function installBoundedHolodeckLocomotion(world: World, camera: Object3D): void 
   window.requestAnimationFrame(step);
 }
 
+function installXrPushToTalk(world: World): void {
+  const sample = () => {
+    updateXrPushToTalk(world.input.xr.gamepads.right, {
+      start: startVoicePromptRecording,
+      stop: stopVoicePromptAndGenerateWorld
+    });
+
+    window.requestAnimationFrame(sample);
+  };
+
+  window.requestAnimationFrame(sample);
+}
+
 function getHolodeckMoveAxis(
   world: World,
   out: Vector2,
@@ -671,6 +759,17 @@ function movementSnapshot(
   };
 }
 
+function objectTransformSnapshot(object: Object3D) {
+  return {
+    name: object.name,
+    childCount: object.children.length,
+    position: object.position.toArray(),
+    rotation: [object.rotation.x, object.rotation.y, object.rotation.z],
+    scale: object.scale.toArray(),
+    visible: object.visible
+  };
+}
+
 function statusMessageForVoiceToWorldJob(
   job: VoiceToWorldJob,
   progress: VoiceToWorldProgress,
@@ -763,10 +862,20 @@ declare global {
       movementSnapshot?: () => unknown;
       splatFrame?: SplatFrameDiagnostics;
       splatWorldId?: string;
+      generatedWorldTransform?: unknown;
+      generatedWorldContentTransform?: unknown;
       worldRenderer?: {
         activeRenderer: "preferred" | "fallback";
         worldId: string;
         fallbackError: string;
+      };
+      executeVoiceCommand?: (text: string) => {
+        handled: boolean;
+        ok: boolean;
+        message: string;
+        intent?: unknown;
+        before?: unknown;
+        after?: unknown;
       };
     };
   }

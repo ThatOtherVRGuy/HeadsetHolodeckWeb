@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { Object3D } from "@iwsdk/core/dist/runtime/three.js";
 import type { WorldResult } from "../world/worldResult";
 import { PreferredWorldRenderer } from "./preferredWorldRenderer.js";
 import type { WorldRenderer } from "./worldRenderer";
@@ -41,6 +42,25 @@ describe("PreferredWorldRenderer", () => {
 
     expect(fallback.load).toHaveBeenCalledOnce();
     expect(fallback.show).toHaveBeenCalledOnce();
+  });
+
+  it("returns the active renderer transform target", async () => {
+    const preferredTarget = new Object3D();
+    preferredTarget.name = "PreferredTarget";
+    const fallbackTarget = new Object3D();
+    fallbackTarget.name = "FallbackTarget";
+    const preferred = createRenderer({
+      load: vi.fn().mockRejectedValue(new Error("splat failed")),
+      getTransformTarget: () => preferredTarget
+    });
+    const fallback = createRenderer({
+      getTransformTarget: () => fallbackTarget
+    });
+    const renderer = new PreferredWorldRenderer(preferred, fallback);
+
+    await renderer.load(worldResult());
+
+    expect(renderer.getTransformTarget()).toBe(fallbackTarget);
   });
 });
 

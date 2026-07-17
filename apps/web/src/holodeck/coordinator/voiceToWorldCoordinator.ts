@@ -26,7 +26,7 @@ export class VoiceToWorldCoordinator {
   constructor(private readonly deps: VoiceToWorldCoordinatorDeps) {}
 
   async generateFromAudio(audio: Blob): Promise<WorldResult | null> {
-    const { state, api, renderer } = this.deps;
+    const { state, api } = this.deps;
 
     if (this.isGenerating) {
       state.setError("World generation is already running.");
@@ -46,17 +46,42 @@ export class VoiceToWorldCoordinator {
         api.startVoiceToWorldJob && api.getVoiceToWorldJob
           ? await this.generateFromJob(audio)
           : await this.generateFromBlockingRequest(audio);
-      await renderer.load(world);
-      renderer.show();
-      this.deps.onWorldShown?.(world);
-
-      if (!state.tryTransitionTo("Ready")) {
-        state.forceState("Ready");
-      }
-
-      return world;
+      return await this.loadGeneratedWorld(world);
     } catch (error) {
       state.setError(error instanceof Error ? error.message : "Voice-to-world failed.");
+      return null;
+    } finally {
+      this.isGenerating = false;
+    }
+  }
+
+  async generateFromTranscript(transcript: string): Promise<WorldResult | null> {
+    const { api, state } = this.deps;
+    const trimmedTranscript = transcript.trim();
+
+    if (this.isGenerating) {
+      state.setError("World generation is already running.");
+      return null;
+    }
+
+    if (!trimmedTranscript) {
+      state.setError("No transcript was captured.");
+      return null;
+    }
+
+    if (!api.startTextToWorldJob || !api.getVoiceToWorldJob) {
+      state.setError("Text-to-world generation is not available.");
+      return null;
+    }
+
+    this.isGenerating = true;
+    state.forceState("Generating");
+
+    try {
+      const world = await this.generateFromTextJob(trimmedTranscript);
+      return await this.loadGeneratedWorld(world);
+    } catch (error) {
+      state.setError(error instanceof Error ? error.message : "Text-to-world failed.");
       return null;
     } finally {
       this.isGenerating = false;
@@ -104,6 +129,57 @@ export class VoiceToWorldCoordinator {
 
     state.forceState("Generating");
     return job.world;
+  }
+
+  private async generateFromTextJob(transcript: string) {
+    const { api, state } = this.deps;
+    const startedAt = Date.now();
+    let pollCount = 0;
+
+    if (!api.startTextToWorldJob || !api.getVoiceToWorldJob) {
+      throw new Error("Text-to-world generation is not available.");
+    }
+
+    let job = await api.startTextToWorldJob(transcript);
+    this.reportJob(job, {
+      pollCount,
+      elapsedMs: Date.now() - startedAt
+    });
+
+    while (job.status === "queued" || job.status === "running") {
+      state.forceState("Generating");
+      await sleep(this.deps.pollIntervalMs ?? 2_000);
+      pollCount += 1;
+      job = await api.getVoiceToWorldJob(job.jobId);
+      this.reportJob(job, {
+        pollCount,
+        elapsedMs: Date.now() - startedAt
+      });
+    }
+
+    if (job.status === "error") {
+      throw new Error(job.error ?? job.message ?? "Text-to-world job failed.");
+    }
+
+    if (!job.world) {
+      throw new Error("Text-to-world job completed without a world.");
+    }
+
+    return job.world;
+  }
+
+  private async loadGeneratedWorld(world: WorldResult): Promise<WorldResult> {
+    const { renderer, state } = this.deps;
+
+    await renderer.load(world);
+    renderer.show();
+    this.deps.onWorldShown?.(world);
+
+    if (!state.tryTransitionTo("Ready")) {
+      state.forceState("Ready");
+    }
+
+    return world;
   }
 
   private reportJob(job: VoiceToWorldJob, progress: VoiceToWorldProgress) {

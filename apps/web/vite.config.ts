@@ -21,7 +21,15 @@ export default defineConfig({
       verbose: true,
     }),
   ],
-  server: { host: "0.0.0.0", port: 8081, open: true },
+  server: {
+    host: "0.0.0.0",
+    port: 8081,
+    open: true,
+    proxy: {
+      "/api": "http://localhost:4817",
+      "/generated-worlds": "http://localhost:4817"
+    }
+  },
   build: {
     outDir: "dist",
     sourcemap: process.env.NODE_ENV !== "production",

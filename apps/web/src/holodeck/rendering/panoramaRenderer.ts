@@ -77,6 +77,10 @@ export class PanoramaRenderer implements WorldRenderer {
     }
   }
 
+  getTransformTarget(): Object3D | null {
+    return this.mesh;
+  }
+
   dispose(): void {
     this.loadSequence++;
     this.disposeCurrentMesh();

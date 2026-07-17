@@ -129,6 +129,46 @@ describe("VoiceToWorldCoordinator", () => {
     expect(rendererCalls).toEqual(["world_123", "show"]);
   });
 
+  it("generates a world from an existing transcript job", async () => {
+    const state = new HolodeckStateMachine();
+    const world = createWorld();
+    const progressMessages: string[] = [];
+    const api: HolodeckApi = {
+      voiceToWorld: vi.fn(),
+      startTextToWorldJob: vi.fn().mockResolvedValue({
+        jobId: "job_text",
+        status: "running",
+        stage: "world-generation",
+        message: "Generating world."
+      }),
+      getVoiceToWorldJob: vi.fn().mockResolvedValue({
+        jobId: "job_text",
+        status: "complete",
+        stage: "complete",
+        message: "World ready.",
+        world
+      })
+    };
+    const rendererCalls: string[] = [];
+    const renderer = createRenderer(rendererCalls);
+    const coordinator = new VoiceToWorldCoordinator({
+      state,
+      api,
+      renderer,
+      pollIntervalMs: 0,
+      onProgress: (job) => progressMessages.push(job.message)
+    });
+
+    const result = await coordinator.generateFromTranscript("Crystal Atrium");
+
+    expect(result).toBe(world);
+    expect(api.startTextToWorldJob).toHaveBeenCalledWith("Crystal Atrium");
+    expect(api.voiceToWorld).not.toHaveBeenCalled();
+    expect(state.current).toBe("Ready");
+    expect(progressMessages).toEqual(["Generating world.", "World ready."]);
+    expect(rendererCalls).toEqual(["world_123", "show"]);
+  });
+
   it("sets an error for empty audio without calling the API or renderer", async () => {
     const state = new HolodeckStateMachine();
     const api: HolodeckApi = {

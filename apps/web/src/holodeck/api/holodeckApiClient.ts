@@ -32,8 +32,10 @@ export interface VoiceToWorldJob {
 }
 
 export interface HolodeckApi {
+  transcribeAudio?(audio: Blob): Promise<string>;
   voiceToWorld(audio: Blob): Promise<WorldResult>;
   startVoiceToWorldJob?(audio: Blob): Promise<VoiceToWorldJob>;
+  startTextToWorldJob?(transcript: string): Promise<VoiceToWorldJob>;
   getVoiceToWorldJob?(jobId: string): Promise<VoiceToWorldJob>;
   listWorldLabsWorlds?(options?: {
     pageSize?: number;
@@ -55,14 +57,39 @@ export class HolodeckApiClient implements HolodeckApi {
     this.fetchImpl = fetchImpl.bind(globalThis);
   }
 
+  async transcribeAudio(audio: Blob): Promise<string> {
+    const formData = new FormData();
+    formData.append("audio", audio, "command.webm");
+
+    const response = await this.fetchImpl(this.apiUrl("/api/transcriptions"), {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`Transcription failed: HTTP ${response.status} ${body}`);
+    }
+
+    const body = (await response.json()) as { transcript?: unknown };
+    if (typeof body.transcript !== "string") {
+      throw new Error("Transcription response did not include transcript.");
+    }
+
+    return body.transcript;
+  }
+
   async voiceToWorld(audio: Blob): Promise<WorldResult> {
     const formData = new FormData();
     formData.append("audio", audio, "command.webm");
 
-    const response = await this.fetchImpl(`${this.baseUrl}/api/voice-to-world`, {
-      method: "POST",
-      body: formData,
-    });
+    const response = await this.fetchImpl(
+      this.apiUrl("/api/voice-to-world"),
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
 
     if (!response.ok) {
       const body = await response.text();
@@ -77,7 +104,7 @@ export class HolodeckApiClient implements HolodeckApi {
     formData.append("audio", audio, "command.webm");
 
     const response = await this.fetchImpl(
-      `${this.baseUrl}/api/voice-to-world/jobs`,
+      this.apiUrl("/api/voice-to-world/jobs"),
       {
         method: "POST",
         body: formData,
@@ -94,9 +121,29 @@ export class HolodeckApiClient implements HolodeckApi {
     return this.normalizeJob((await response.json()) as VoiceToWorldJob);
   }
 
+  async startTextToWorldJob(transcript: string): Promise<VoiceToWorldJob> {
+    const response = await this.fetchImpl(
+      this.apiUrl("/api/voice-to-world/text-jobs"),
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({ transcript })
+      }
+    );
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`Text-to-world job failed: HTTP ${response.status} ${body}`);
+    }
+
+    return this.normalizeJob((await response.json()) as VoiceToWorldJob);
+  }
+
   async getVoiceToWorldJob(jobId: string): Promise<VoiceToWorldJob> {
     const response = await this.fetchImpl(
-      `${this.baseUrl}/api/voice-to-world/jobs/${encodeURIComponent(jobId)}`
+      this.apiUrl(`/api/voice-to-world/jobs/${encodeURIComponent(jobId)}`)
     );
 
     if (!response.ok) {
@@ -113,17 +160,20 @@ export class HolodeckApiClient implements HolodeckApi {
     pageSize?: number;
     pageToken?: string;
   }): Promise<WorldLabsWorldPage> {
-    const url = new URL(`${this.baseUrl}/api/worldlabs/worlds`);
+    const searchParams = new URLSearchParams();
 
     if (options?.pageSize !== undefined) {
-      url.searchParams.set("pageSize", String(options.pageSize));
+      searchParams.set("pageSize", String(options.pageSize));
     }
 
     if (options?.pageToken !== undefined) {
-      url.searchParams.set("pageToken", options.pageToken);
+      searchParams.set("pageToken", options.pageToken);
     }
 
-    const response = await this.fetchImpl(url.toString());
+    const query = searchParams.toString();
+    const response = await this.fetchImpl(
+      this.apiUrl(`/api/worldlabs/worlds${query ? `?${query}` : ""}`)
+    );
 
     if (!response.ok) {
       const body = await response.text();
@@ -137,7 +187,7 @@ export class HolodeckApiClient implements HolodeckApi {
 
   async getWorldLabsWorld(worldId: string): Promise<WorldResult> {
     const response = await this.fetchImpl(
-      `${this.baseUrl}/api/worldlabs/worlds/${encodeURIComponent(worldId)}`
+      this.apiUrl(`/api/worldlabs/worlds/${encodeURIComponent(worldId)}`)
     );
 
     if (!response.ok) {
@@ -152,7 +202,7 @@ export class HolodeckApiClient implements HolodeckApi {
 
   async deleteWorldLabsWorld(worldId: string): Promise<WorldLabsDeleteResult> {
     const response = await this.fetchImpl(
-      `${this.baseUrl}/api/worldlabs/worlds/${encodeURIComponent(worldId)}`,
+      this.apiUrl(`/api/worldlabs/worlds/${encodeURIComponent(worldId)}`),
       {
         method: "DELETE",
       }
@@ -178,12 +228,21 @@ export class HolodeckApiClient implements HolodeckApi {
 
   private normalizeWorld(world: WorldResult) {
     if (world.localSplat?.publicUrl) {
-      world.localSplat.publicUrl = new URL(
-        world.localSplat.publicUrl,
-        this.baseUrl
-      ).toString();
+      world.localSplat.publicUrl = this.assetUrl(world.localSplat.publicUrl);
     }
 
     return world;
+  }
+
+  private apiUrl(path: string) {
+    return `${this.baseUrl}${path}`;
+  }
+
+  private assetUrl(url: string) {
+    if (this.baseUrl === "") {
+      return url;
+    }
+
+    return new URL(url, this.baseUrl).toString();
   }
 }

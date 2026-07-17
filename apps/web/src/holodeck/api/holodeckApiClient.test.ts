@@ -96,6 +96,109 @@ describe("HolodeckApiClient", () => {
     );
   });
 
+  it("transcribes audio without starting world generation", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ transcript: "move world up 3 feet" }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      })
+    );
+    const client = new HolodeckApiClient("http://api.test", fetch);
+
+    await expect(client.transcribeAudio?.(new Blob(["audio"]))).resolves.toBe(
+      "move world up 3 feet"
+    );
+
+    expect(fetch).toHaveBeenCalledWith(
+      "http://api.test/api/transcriptions",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.any(FormData)
+      })
+    );
+  });
+
+  it("starts a text-to-world job from an existing transcript", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          jobId: "job_text",
+          status: "running",
+          stage: "world-generation",
+          message: "Generating world."
+        }),
+        { status: 202, headers: { "content-type": "application/json" } }
+      )
+    );
+    const client = new HolodeckApiClient("http://api.test", fetch);
+
+    await expect(
+      client.startTextToWorldJob?.("A glass forest")
+    ).resolves.toMatchObject({
+      jobId: "job_text",
+      stage: "world-generation"
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      "http://api.test/api/voice-to-world/text-jobs",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ transcript: "A glass forest" })
+      })
+    );
+  });
+
+  it("supports a same-origin relative API base for headset browser testing", async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            worlds: [],
+            pageSize: 9
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            worldId: "world-123",
+            displayName: "Glass Forest",
+            prompt: "Glass forest",
+            transcript: "Glass forest",
+            panoUrl: "",
+            spzUrls: {},
+            localSplat: {
+              resolution: "full_res",
+              sourceUrl: "https://example.test/full_res.spz",
+              filePath: "/tmp/full_res.spz",
+              publicUrl: "/generated-worlds/world-123/full_res.spz",
+              byteLength: 123
+            },
+            raw: {}
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      );
+    const client = new HolodeckApiClient("", fetch);
+
+    await client.listWorldLabsWorlds?.({ pageSize: 9, pageToken: "next" });
+    const world = await client.getWorldLabsWorld?.("world-123");
+
+    expect(fetch).toHaveBeenNthCalledWith(
+      1,
+      "/api/worldlabs/worlds?pageSize=9&pageToken=next"
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      "/api/worldlabs/worlds/world-123"
+    );
+    expect(world?.localSplat?.publicUrl).toBe(
+      "/generated-worlds/world-123/full_res.spz"
+    );
+  });
+
   it("lists World Labs worlds with the requested query string", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
       new Response(

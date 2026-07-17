@@ -42,6 +42,91 @@ function multipartPayload(
   };
 }
 
+describe("POST /api/transcriptions", () => {
+  it("transcribes an uploaded audio file without generating a world", async () => {
+    const transcribe = vi.fn<TranscriptionClient["transcribe"]>();
+    transcribe.mockResolvedValue("move world up 3 feet");
+    const generateWorldFromText =
+      vi.fn<WorldLabsClient["generateWorldFromText"]>();
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: { transcribe },
+        worldLabsClient: { generateWorldFromText }
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "command.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/transcriptions",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({
+        transcript: "move world up 3 feet"
+      });
+      expect(transcribe).toHaveBeenCalledWith(
+        new Uint8Array([1, 2, 3]),
+        "command.webm",
+        "audio/webm",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal)
+        })
+      );
+      expect(generateWorldFromText).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns 400 when transcription audio is missing", async () => {
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: {
+          transcribe: vi.fn()
+        },
+        worldLabsClient: {
+          generateWorldFromText: vi.fn()
+        }
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "notAudio",
+          value: "hello"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/transcriptions",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: "Audio file is required"
+      });
+    } finally {
+      await app.close();
+    }
+  });
+});
+
 describe("POST /api/voice-to-world", () => {
   it("transcribes an uploaded audio file and returns the generated world", async () => {
     const transcribe = vi.fn<TranscriptionClient["transcribe"]>();
@@ -592,6 +677,142 @@ describe("voice-to-world jobs", () => {
             }
           }
         });
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("starts a background world job from an existing transcript", async () => {
+    const transcribe = vi.fn<TranscriptionClient["transcribe"]>();
+    const worldGeneration = deferred<{
+      worldId: string;
+      displayName: string;
+      prompt: string;
+      transcript: string;
+      panoUrl: string;
+      spzUrls: Record<string, string>;
+      raw: unknown;
+    }>();
+    const generateWorldFromText =
+      vi.fn<WorldLabsClient["generateWorldFromText"]>();
+    generateWorldFromText.mockImplementation(async (_prompt, _transcript, options) => {
+      options?.onProgress?.({
+        operationId: "op-456",
+        status: "running",
+        description: "Building world"
+      });
+      return worldGeneration.promise;
+    });
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: { transcribe },
+        worldLabsClient: { generateWorldFromText }
+      }
+    });
+
+    try {
+      const started = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world/text-jobs",
+        headers: {
+          "content-type": "application/json"
+        },
+        payload: JSON.stringify({
+          transcript: "A glass forest at sunrise"
+        })
+      });
+
+      expect(started.statusCode).toBe(202);
+      const { jobId } = started.json() as { jobId: string };
+      expect(started.json()).toMatchObject({
+        jobId,
+        status: "running",
+        stage: "world-generation"
+      });
+
+      await vi.waitFor(async () => {
+        const generating = await app.inject({
+          method: "GET",
+          url: `/api/voice-to-world/jobs/${jobId}`
+        });
+        expect(generating.json()).toMatchObject({
+          jobId,
+          status: "running",
+          stage: "world-generation",
+          operationId: "op-456",
+          progress: {
+            status: "running",
+            description: "Building world"
+          }
+        });
+      });
+
+      worldGeneration.resolve({
+        worldId: "world-456",
+        displayName: "Glass Forest",
+        prompt: "A glass forest at sunrise",
+        transcript: "A glass forest at sunrise",
+        panoUrl: "https://example.test/pano.jpg",
+        spzUrls: {},
+        raw: { world_id: "world-456" }
+      });
+
+      await vi.waitFor(async () => {
+        const completed = await app.inject({
+          method: "GET",
+          url: `/api/voice-to-world/jobs/${jobId}`
+        });
+        expect(completed.json()).toMatchObject({
+          jobId,
+          status: "complete",
+          stage: "complete",
+          world: {
+            worldId: "world-456"
+          }
+        });
+      });
+
+      expect(transcribe).not.toHaveBeenCalled();
+      expect(generateWorldFromText).toHaveBeenCalledWith(
+        "A glass forest at sunrise",
+        "A glass forest at sunrise",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal)
+        })
+      );
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("rejects text world jobs without a transcript", async () => {
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: {
+          transcribe: vi.fn()
+        },
+        worldLabsClient: {
+          generateWorldFromText: vi.fn()
+        }
+      }
+    });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/voice-to-world/text-jobs",
+        headers: {
+          "content-type": "application/json"
+        },
+        payload: JSON.stringify({
+          transcript: "   "
+        })
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: "Transcript is required"
       });
     } finally {
       await app.close();

@@ -1,5 +1,6 @@
 import type { WorldResult } from "../world/worldResult";
 import type { WorldRenderer } from "./worldRenderer";
+import type { Object3D } from "@iwsdk/core/dist/runtime/three.js";
 
 export class PreferredWorldRenderer implements WorldRenderer {
   readonly mode = "splat";
@@ -41,6 +42,10 @@ export class PreferredWorldRenderer implements WorldRenderer {
 
   hide() {
     this.activeRenderer.hide();
+  }
+
+  getTransformTarget(): Object3D | null {
+    return this.activeRenderer.getTransformTarget?.() ?? null;
   }
 
   dispose() {

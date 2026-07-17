@@ -35,9 +35,14 @@ interface HolodeckPanelControls {
   openLocalSplatFilePicker: () => void;
   api: HolodeckApi;
   setShellVisible: (visible: boolean) => void;
+  executeVoiceCommand?: (transcript: string) => {
+    handled: boolean;
+    message: string;
+  };
 }
 
 let holodeckControls: HolodeckPanelControls | null = null;
+let opsPanelUpdate: (() => void) | null = null;
 let browserState = createWorldLabsBrowserState();
 let hasRequestedInitialWorldLabsBrowse = false;
 const STATUS_PANEL_CONFIG = "./ui/holodeck/statusPanel.json";
@@ -91,6 +96,126 @@ export function setPanelWorldLoadInProgress(isGenerating: boolean): void {
   panelSession.isGenerating = isGenerating;
 }
 
+export function resetGeneratedWorldPanelSession(): void {
+  panelSession.transcript = "";
+  panelSession.rendererLabel = "None";
+  panelSession.loadedWorld = null;
+  panelSession.worldReadyAt = null;
+  updateOpsPanel();
+}
+
+export async function startVoicePromptRecording(): Promise<void> {
+  const controls = holodeckControls;
+  if (!controls) {
+    return;
+  }
+
+  if (panelSession.isGenerating) {
+    controls.state.setStatusMessage("Generation in progress.");
+    updateOpsPanel();
+    return;
+  }
+
+  if (controls.recorder.isRecording) {
+    return;
+  }
+
+  try {
+    console.info("[Holodeck] voice recording start requested");
+    await controls.recorder.start();
+    controls.state.forceState("ListeningForCommand");
+    controls.state.setStatusMessage("Listening for world prompt.");
+    console.info("[Holodeck] voice recording started");
+  } catch (error) {
+    console.warn("[Holodeck] voice recording failed to start", error);
+    controls.state.setError(
+      error instanceof Error ? error.message : "Voice recording failed."
+    );
+  } finally {
+    updateOpsPanel();
+  }
+}
+
+export async function stopVoicePromptAndGenerateWorld(): Promise<void> {
+  const controls = holodeckControls;
+  if (!controls) {
+    return;
+  }
+
+  if (panelSession.isGenerating) {
+    controls.state.setStatusMessage("Generation in progress.");
+    updateOpsPanel();
+    return;
+  }
+
+  if (!controls.recorder.isRecording) {
+    return;
+  }
+
+  try {
+    controls.state.setStatusMessage("Preparing world generation.");
+    console.info("[Holodeck] voice recording stop requested");
+    const audio = await controls.recorder.stop();
+    console.info("[Holodeck] voice recording stopped", {
+      byteLength: audio.size,
+      type: audio.type
+    });
+    panelSession.isGenerating = true;
+    updateOpsPanel();
+    if (controls.api.transcribeAudio && controls.executeVoiceCommand) {
+      controls.state.forceState("Interpreting");
+      controls.state.setStatusMessage("Interpreting voice command.");
+      console.info("[Holodeck] transcribing voice command audio");
+      const transcript = await controls.api.transcribeAudio(audio);
+      console.info("[Holodeck] voice transcript received", { transcript });
+      panelSession.transcript = transcript;
+      updateOpsPanel();
+      const commandResult = controls.executeVoiceCommand(transcript);
+      console.info("[Holodeck] voice command route result", commandResult);
+
+      if (commandResult.handled) {
+        controls.state.forceState("Ready");
+        controls.state.setStatusMessage(commandResult.message);
+        return;
+      }
+
+      console.info("[Holodeck] transcript was not a local command; generating world");
+      const world = await controls.coordinator.generateFromTranscript(transcript);
+      applyGeneratedWorldSession(world);
+      return;
+    }
+
+    const world = await controls.coordinator.generateFromAudio(audio);
+    applyGeneratedWorldSession(world);
+  } catch (error) {
+    console.warn("[Holodeck] voice prompt handling failed", error);
+    controls.state.setError(
+      error instanceof Error ? error.message : "Voice recording failed."
+    );
+  } finally {
+    panelSession.isGenerating = false;
+    updateOpsPanel();
+  }
+}
+
+function applyGeneratedWorldSession(
+  world: Awaited<ReturnType<VoiceToWorldCoordinator["generateFromAudio"]>>
+): void {
+  if (world === null) {
+    return;
+  }
+
+  panelSession.transcript = world.transcript;
+  panelSession.rendererLabel = hasSplatSource(world) ? "Splat" : "Panorama";
+  panelSession.loadedWorld = {
+    title: world.displayName || world.transcript || "WORLD LABS WORLD",
+    source: "WORLD LABS",
+    assetLabel: world.localSplat?.publicUrl,
+    worldId: world.worldId
+  };
+  panelSession.worldReadyAt = Date.now();
+}
+
 export function hasSplatSource(world: {
   localSplat?: unknown;
   spzUrls: Record<string, string>;
@@ -134,6 +259,10 @@ function startPanelClock(update: () => void): () => void {
   update();
 
   return () => window.clearInterval(interval);
+}
+
+function updateOpsPanel(): void {
+  opsPanelUpdate?.();
 }
 
 function setText(
@@ -527,6 +656,7 @@ export class PanelSystem extends createSystem({
       }
 
       const update = () => applyOpsView(document, currentPanelView(controls));
+      opsPanelUpdate = update;
       const unsubscribeState = controls.state.subscribe(update);
       const stopClock = startPanelClock(update);
       const browserControlCleanups = [
@@ -584,49 +714,10 @@ export class PanelSystem extends createSystem({
       ];
 
       const onRecordClick = async () => {
-        if (panelSession.isGenerating) {
-          controls.state.setStatusMessage("Generation in progress.");
-          update();
-          return;
-        }
-
-        try {
-          if (!controls.recorder.isRecording) {
-            await controls.recorder.start();
-            controls.state.forceState("ListeningForCommand");
-            controls.state.setStatusMessage("Listening for world prompt.");
-            update();
-            return;
-          }
-
-          controls.state.setStatusMessage("Preparing world generation.");
-          const audio = await controls.recorder.stop();
-          panelSession.isGenerating = true;
-          update();
-          const world = await controls.coordinator.generateFromAudio(audio);
-
-          if (world === null) {
-            return;
-          }
-
-          panelSession.transcript = world.transcript;
-          panelSession.rendererLabel = hasSplatSource(world)
-            ? "Splat"
-            : "Panorama";
-          panelSession.loadedWorld = {
-            title: world.displayName || world.transcript || "WORLD LABS WORLD",
-            source: "WORLD LABS",
-            assetLabel: world.localSplat?.publicUrl,
-            worldId: world.worldId
-          };
-          panelSession.worldReadyAt = Date.now();
-        } catch (error) {
-          controls.state.setError(
-            error instanceof Error ? error.message : "Voice recording failed."
-          );
-        } finally {
-          panelSession.isGenerating = false;
-          update();
+        if (controls.recorder.isRecording) {
+          await stopVoicePromptAndGenerateWorld();
+        } else {
+          await startVoicePromptRecording();
         }
       };
 
@@ -647,10 +738,7 @@ export class PanelSystem extends createSystem({
           return;
         }
 
-        panelSession.transcript = "";
-        panelSession.rendererLabel = "None";
-        panelSession.loadedWorld = null;
-        panelSession.worldReadyAt = null;
+        resetGeneratedWorldPanelSession();
         controls.renderer.hide();
         controls.setShellVisible(true);
         controls.state.clearErrorAndReturnToIdle();
@@ -685,6 +773,9 @@ export class PanelSystem extends createSystem({
         browserControlCleanups.forEach((cleanup) => cleanup());
         unsubscribeState();
         stopClock();
+        if (opsPanelUpdate === update) {
+          opsPanelUpdate = null;
+        }
       });
     });
   }

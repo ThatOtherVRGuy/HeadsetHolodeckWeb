@@ -49,6 +49,66 @@ export async function registerVoiceToWorldRoute(
 ) {
   const jobs = new Map<string, VoiceToWorldJob>();
 
+  app.post("/api/transcriptions", async (request, reply) => {
+    const abortController = new AbortController();
+    const abort = () => abortController.abort();
+    const abortIfResponseDidNotFinish = () => {
+      if (!reply.raw.writableEnded) {
+        abort();
+      }
+    };
+    request.raw.once("aborted", abort);
+    reply.raw.once("close", abortIfResponseDidNotFinish);
+
+    const file = await request.file();
+
+    if (!file || file.fieldname !== "audio") {
+      removeAbortListeners();
+      return reply.code(400).send({
+        error: "Audio file is required"
+      });
+    }
+
+    const audio = await file.toBuffer();
+
+    if (audio.length === 0) {
+      removeAbortListeners();
+      return reply.code(400).send({
+        error: "Audio file is empty"
+      });
+    }
+
+    try {
+      const transcript = await deps.transcriptionClient.transcribe(
+        new Uint8Array(audio),
+        file.filename,
+        file.mimetype,
+        { signal: abortController.signal }
+      );
+
+      return reply.send({ transcript });
+    } catch (error) {
+      if (abortController.signal.aborted) {
+        request.log.info({ err: error }, "transcription request aborted");
+        return reply.code(499).send({
+          error: "Request aborted"
+        });
+      }
+
+      request.log.warn({ err: error }, "transcription upstream request failed");
+      return reply.code(502).send({
+        error: "Transcription failed"
+      });
+    } finally {
+      removeAbortListeners();
+    }
+
+    function removeAbortListeners() {
+      request.raw.off("aborted", abort);
+      reply.raw.off("close", abortIfResponseDidNotFinish);
+    }
+  });
+
   app.post("/api/voice-to-world", async (request, reply) => {
     const abortController = new AbortController();
     const abort = () => abortController.abort();
@@ -182,6 +242,31 @@ export async function registerVoiceToWorldRoute(
     return reply.code(202).send(job);
   });
 
+  app.post<{
+    Body: { transcript?: string };
+  }>("/api/voice-to-world/text-jobs", async (request, reply) => {
+    const transcript = request.body?.transcript?.trim();
+
+    if (!transcript) {
+      return reply.code(400).send({
+        error: "Transcript is required"
+      });
+    }
+
+    const job = createJob({
+      stage: "world-generation",
+      message: "Generating world."
+    });
+    jobs.set(job.jobId, job);
+
+    runTextToWorldJob(job, transcript).catch((error) => {
+      request.log.error({ err: error, jobId: job.jobId }, "text-to-world job crashed");
+      markJobError(job, "Text-to-world job failed");
+    });
+
+    return reply.code(202).send(job);
+  });
+
   app.get<{
     Params: { jobId: string };
   }>("/api/voice-to-world/jobs/:jobId", async (request, reply) => {
@@ -194,14 +279,19 @@ export async function registerVoiceToWorldRoute(
     return reply.send(job);
   });
 
-  function createJob(): VoiceToWorldJob {
+  function createJob(
+    initial: Pick<VoiceToWorldJob, "stage" | "message"> = {
+      stage: "transcription",
+      message: "Transcribing voice prompt."
+    }
+  ): VoiceToWorldJob {
     const now = new Date().toISOString();
 
     return {
       jobId: `job_${nextJobNumber++}`,
       status: "running",
-      stage: "transcription",
-      message: "Transcribing voice prompt.",
+      stage: initial.stage,
+      message: initial.message,
       createdAt: now,
       updatedAt: now
     };
@@ -224,36 +314,57 @@ export async function registerVoiceToWorldRoute(
         stage: "world-generation",
         message: "Generating world."
       });
-      const world = await deps.worldLabsClient.generateWorldFromText(
-        transcript,
-        transcript,
-        {
-          signal: abortController.signal,
-          onProgress: (progress: WorldLabsProgress) => {
-            updateJobProgress(job, progress);
-          }
-        }
-      );
-      updateJob(job, {
-        stage: "splat-download",
-        message: "Saving generated splat."
-      });
-      const localSplat = await tryDownloadSplatForJob(job, world, abortController.signal);
-      updateJob(job, {
-        status: "complete",
-        stage: "complete",
-        message: "World ready.",
-        world: {
-          ...world,
-          ...(localSplat ? { localSplat } : {})
-        }
-      });
+      await generateWorldForJob(job, transcript, abortController.signal);
     } catch (error) {
       markJobError(
         job,
         error instanceof Error ? error.message : "Voice-to-world job failed"
       );
     }
+  }
+
+  async function runTextToWorldJob(job: VoiceToWorldJob, transcript: string) {
+    const abortController = new AbortController();
+
+    try {
+      await generateWorldForJob(job, transcript, abortController.signal);
+    } catch (error) {
+      markJobError(
+        job,
+        error instanceof Error ? error.message : "Text-to-world job failed"
+      );
+    }
+  }
+
+  async function generateWorldForJob(
+    job: VoiceToWorldJob,
+    transcript: string,
+    signal: AbortSignal
+  ) {
+    const world = await deps.worldLabsClient.generateWorldFromText(
+      transcript,
+      transcript,
+      {
+        signal,
+        onProgress: (progress: WorldLabsProgress) => {
+          updateJobProgress(job, progress);
+        }
+      }
+    );
+    updateJob(job, {
+      stage: "splat-download",
+      message: "Saving generated splat."
+    });
+    const localSplat = await tryDownloadSplatForJob(job, world, signal);
+    updateJob(job, {
+      status: "complete",
+      stage: "complete",
+      message: "World ready.",
+      world: {
+        ...world,
+        ...(localSplat ? { localSplat } : {})
+      }
+    });
   }
 
   function updateJob(job: VoiceToWorldJob, patch: Partial<VoiceToWorldJob>) {
