@@ -36,6 +36,11 @@ describe("OpenAiTranscriptionClient", () => {
         body: expect.any(FormData)
       })
     );
+    const [, request] = fetch.mock.calls[0];
+    const form = (request as RequestInit).body as FormData;
+    expect(form.get("prompt")).toContain("hide arch");
+    expect(form.get("language")).toBe("en");
+    expect(form.get("temperature")).toBe("0");
   });
 
   it("throws a useful error when OpenAI returns a non-OK response", async () => {

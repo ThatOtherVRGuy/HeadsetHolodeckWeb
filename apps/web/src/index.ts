@@ -66,7 +66,10 @@ import {
   type HolodeckComposeController,
   type HolodeckComposeTarget
 } from "./holodeck/compose/composeMode";
-import { executeVoiceCommandIntent } from "./holodeck/voiceCommand/executor";
+import {
+  executeVoiceCommandIntent,
+  type VoiceCommandTransformState
+} from "./holodeck/voiceCommand/executor";
 import { parseVoiceCommandIntent } from "./holodeck/voiceCommand/intent";
 import {
   AxesHelper,
@@ -137,6 +140,8 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   const generatedWorldContentRoot = new Object3D();
   generatedWorldContentRoot.name = "GeneratedWorldContentRoot";
   generatedWorldRoot.add(generatedWorldContentRoot);
+  let activeWorldInitialTransform: VoiceCommandTransformState | null = null;
+  let initialMeTransform: VoiceCommandTransformState | null = null;
   const executeVoiceCommand = (text: string) => {
     const intent = parseVoiceCommandIntent(text);
     if (!intent) {
@@ -148,7 +153,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
 
     if (intent.kind === "endProgram") {
       worldRenderer.hide();
-      setShellVisible(true);
+      setHolodeckVisible(true);
       resetGeneratedWorldPanelSession();
       state.clearErrorAndReturnToIdle();
       state.setStatusMessage(intent.response);
@@ -161,10 +166,38 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       };
     }
 
-    const target = worldRenderer.getTransformTarget?.() ?? generatedWorldRoot;
+    if (intent.kind === "setVisibility") {
+      if (intent.target === "holodeck") {
+        setHolodeckVisible(intent.visible);
+      } else {
+        setArchVisible(intent.visible);
+      }
+
+      state.setStatusMessage(intent.response);
+      console.info("[Holodeck] visibility voice command executed", {
+        text,
+        intent,
+        holodeckVisible,
+        archVisible
+      });
+      return {
+        handled: true,
+        ok: true,
+        message: intent.response,
+        intent
+      };
+    }
+
+    const generatedWorldTarget =
+      worldRenderer.getTransformTarget?.() ?? generatedWorldRoot;
+    const target = intent.target === "me" ? world.player : generatedWorldTarget;
     const before = objectTransformSnapshot(target);
     const result = executeVoiceCommandIntent(intent, {
-      world: target
+      world: generatedWorldTarget,
+      me: world.player,
+      camera,
+      initialWorldTransform: activeWorldInitialTransform,
+      initialMeTransform
     });
     const after = objectTransformSnapshot(target);
     state.setStatusMessage(result.message);
@@ -176,6 +209,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       after,
       target: objectTransformSnapshot(target),
       fallbackTarget: target === generatedWorldRoot,
+      playerTarget: target === world.player,
       childCount: generatedWorldRoot.children.length
     });
     return {
@@ -191,12 +225,32 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     executeVoiceCommand
   };
   const archRoot = shell.root?.getObjectByName("Arch") ?? null;
-  const setShellVisible = (visible: boolean) => {
+  const archAttachedObjects: Object3D[] = [];
+  let holodeckVisible = true;
+  let archVisible = true;
+  const setHolodeckVisible = (visible: boolean) => {
+    holodeckVisible = visible;
     setShellVisualsVisible(
       shell.root,
       [shell.placement.generatedWorld.object, archRoot],
       visible
     );
+    updateVisibilityDebugState();
+  };
+  const setArchVisible = (visible: boolean) => {
+    archVisible = visible;
+    setShellVisualsVisible(archRoot, [], visible);
+    for (const object of archAttachedObjects) {
+      object.visible = visible;
+    }
+    updateVisibilityDebugState();
+  };
+  const updateVisibilityDebugState = () => {
+    window.holodeckDebug = {
+      ...window.holodeckDebug,
+      holodeckVisible,
+      archVisible
+    };
   };
   const panoramaRenderer = new PanoramaRenderer(generatedWorldContentRoot);
   let activeBrowserSplatObjectUrl: string | null = null;
@@ -261,6 +315,15 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     URL.revokeObjectURL(activeBrowserSplatObjectUrl);
     activeBrowserSplatObjectUrl = null;
   };
+  const captureActiveWorldInitialTransform = () => {
+    const target = worldRenderer.getTransformTarget?.() ?? generatedWorldRoot;
+    activeWorldInitialTransform = objectVoiceTransformState(target);
+    window.holodeckDebug = {
+      ...window.holodeckDebug,
+      activeWorldInitialTransform,
+      activeWorldTransformTarget: objectTransformSnapshot(target)
+    };
+  };
   const coordinator = new VoiceToWorldCoordinator({
     state,
     api,
@@ -269,8 +332,9 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
       state.setStatusMessage(statusMessageForVoiceToWorldJob(job, progress));
     },
     onWorldShown: (world) => {
+      captureActiveWorldInitialTransform();
       if (hasSplatSource(world)) {
-        setShellVisible(false);
+        setHolodeckVisible(false);
       }
     }
   });
@@ -281,7 +345,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     renderer: worldRenderer,
     openLocalSplatFilePicker: () => localSplatFileInput.click(),
     api,
-    setShellVisible,
+    setShellVisible: setHolodeckVisible,
     executeVoiceCommand
   });
   localSplatFileInput.addEventListener("change", () => {
@@ -324,8 +388,9 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
           return;
         }
 
+        captureActiveWorldInitialTransform();
         worldRenderer.show();
-        setShellVisible(false);
+        setHolodeckVisible(false);
         setLoadedWorldPanelInfo({
           title: url,
           source: "LOCAL SPZ",
@@ -351,7 +416,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
           error: error instanceof Error ? error.message : String(error)
         };
         setLoadedWorldPanelInfo(null);
-        setShellVisible(true);
+        setHolodeckVisible(true);
         throw error;
       } finally {
         if (isActiveLocalSplatLoad(loadId)) {
@@ -386,8 +451,9 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
           return;
         }
 
+        captureActiveWorldInitialTransform();
         worldRenderer.show();
-        setShellVisible(false);
+        setHolodeckVisible(false);
         setLoadedWorldPanelInfo({
           title: file.name,
           source: "LOCAL SPZ",
@@ -419,7 +485,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
           error: error instanceof Error ? error.message : String(error)
         };
         setLoadedWorldPanelInfo(null);
-        setShellVisible(true);
+        setHolodeckVisible(true);
         throw error;
       } finally {
         if (isActiveLocalSplatLoad(loadId)) {
@@ -446,6 +512,12 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     userStart: shell.placement.userStart,
     generatedWorld: shell.placement.generatedWorld,
   });
+  initialMeTransform = objectVoiceTransformState(world.player);
+  window.holodeckDebug = {
+    ...window.holodeckDebug,
+    initialMeTransform,
+    playerTransform: objectTransformSnapshot(world.player)
+  };
   installBoundedHolodeckLocomotion(world, camera);
 
   const createSpatialPanel = (
@@ -488,6 +560,8 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     1.05,
     0.26
   );
+  archAttachedObjects.push(opsPanelObject, infoPanelObject, statusPanelObject);
+  setArchVisible(archVisible);
 
   if (isHolodeckComposeModeEnabled(window.location.search)) {
     const composeTargets = createComposeTargets({
@@ -770,6 +844,14 @@ function objectTransformSnapshot(object: Object3D) {
   };
 }
 
+function objectVoiceTransformState(object: Object3D): VoiceCommandTransformState {
+  return {
+    position: [object.position.x, object.position.y, object.position.z],
+    rotation: [object.rotation.x, object.rotation.y, object.rotation.z],
+    scale: [object.scale.x, object.scale.y, object.scale.z]
+  };
+}
+
 function statusMessageForVoiceToWorldJob(
   job: VoiceToWorldJob,
   progress: VoiceToWorldProgress,
@@ -862,6 +944,12 @@ declare global {
       movementSnapshot?: () => unknown;
       splatFrame?: SplatFrameDiagnostics;
       splatWorldId?: string;
+      activeWorldInitialTransform?: VoiceCommandTransformState;
+      activeWorldTransformTarget?: unknown;
+      initialMeTransform?: VoiceCommandTransformState;
+      playerTransform?: unknown;
+      holodeckVisible?: boolean;
+      archVisible?: boolean;
       generatedWorldTransform?: unknown;
       generatedWorldContentTransform?: unknown;
       worldRenderer?: {

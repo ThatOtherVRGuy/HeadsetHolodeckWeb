@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { buildServer } from "../app.js";
+import type { CommandInterpreter } from "../openai/commandInterpreter.js";
 import type { TranscriptionClient } from "../openai/transcriptionClient.js";
 import type { WorldLabsClient } from "../worldlabs/worldLabsClient.js";
 
@@ -85,6 +86,112 @@ describe("POST /api/transcriptions", () => {
         })
       );
       expect(generateWorldFromText).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns a canonical local command when command interpretation corrects the transcript", async () => {
+    const transcribe = vi.fn<TranscriptionClient["transcribe"]>();
+    transcribe.mockResolvedValue("I'd fart.");
+    const interpretTranscript =
+      vi.fn<CommandInterpreter["interpretTranscript"]>();
+    interpretTranscript.mockResolvedValue({
+      route: "command",
+      canonicalCommand: "hide arch",
+      reason: "Likely homophone for hide arch."
+    });
+    const generateWorldFromText =
+      vi.fn<WorldLabsClient["generateWorldFromText"]>();
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: { transcribe },
+        commandInterpreter: { interpretTranscript },
+        worldLabsClient: { generateWorldFromText }
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "command.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/transcriptions",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({
+        transcript: "hide arch",
+        rawTranscript: "I'd fart.",
+        interpretation: {
+          route: "command",
+          canonicalCommand: "hide arch",
+          reason: "Likely homophone for hide arch."
+        }
+      });
+      expect(interpretTranscript).toHaveBeenCalledWith(
+        "I'd fart.",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal)
+        })
+      );
+      expect(generateWorldFromText).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("keeps the raw transcript when command interpretation says it is a generation prompt", async () => {
+    const transcribe = vi.fn<TranscriptionClient["transcribe"]>();
+    transcribe.mockResolvedValue("a three ring circus");
+    const interpretTranscript =
+      vi.fn<CommandInterpreter["interpretTranscript"]>();
+    interpretTranscript.mockResolvedValue({
+      route: "generate",
+      reason: "Descriptive scene prompt."
+    });
+    const app = await buildServer({
+      voiceToWorld: {
+        transcriptionClient: { transcribe },
+        commandInterpreter: { interpretTranscript },
+        worldLabsClient: { generateWorldFromText: vi.fn() }
+      }
+    });
+
+    try {
+      const form = multipartPayload([
+        {
+          name: "audio",
+          value: Buffer.from([1, 2, 3]),
+          filename: "prompt.webm",
+          contentType: "audio/webm"
+        }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/transcriptions",
+        headers: form.headers,
+        payload: form.payload
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({
+        transcript: "a three ring circus",
+        interpretation: {
+          route: "generate",
+          reason: "Descriptive scene prompt."
+        }
+      });
     } finally {
       await app.close();
     }

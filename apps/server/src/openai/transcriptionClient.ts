@@ -14,6 +14,7 @@ export interface TranscriptionRequestOptions {
 interface OpenAiTranscriptionClientOptions {
   baseUrl?: string;
   model?: string;
+  prompt?: string;
   fetch?: typeof globalThis.fetch;
 }
 
@@ -21,12 +22,14 @@ export class OpenAiTranscriptionClient implements TranscriptionClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
   private readonly model: string;
+  private readonly prompt: string;
   private readonly fetch: typeof globalThis.fetch;
 
   constructor(apiKey: string, options: OpenAiTranscriptionClientOptions = {}) {
     this.apiKey = apiKey;
     this.baseUrl = options.baseUrl ?? "https://api.openai.com/v1";
     this.model = options.model ?? "gpt-4o-transcribe";
+    this.prompt = options.prompt ?? HOLODECK_TRANSCRIPTION_PROMPT;
     this.fetch = options.fetch ?? globalThis.fetch;
   }
 
@@ -50,6 +53,7 @@ export class OpenAiTranscriptionClient implements TranscriptionClient {
     form.append("response_format", "json");
     form.append("language", "en");
     form.append("temperature", "0");
+    form.append("prompt", this.prompt);
 
     const response = await this.fetch(`${this.baseUrl}/audio/transcriptions`, {
       method: "POST",
@@ -78,6 +82,14 @@ export class OpenAiTranscriptionClient implements TranscriptionClient {
     return text;
   }
 }
+
+const HOLODECK_TRANSCRIPTION_PROMPT = [
+  "This audio is from a WebXR holodeck voice interface.",
+  "Prefer short English command phrases over homophones or nonsense text.",
+  "Important command vocabulary includes: hide arch, show arch, hide holodeck, show holodeck, end program, reset world, recenter world, move world, rotate world, scale world, move me, reset my position, recenter me.",
+  "If the audio sounds like 'hide arch', transcribe it exactly as 'hide arch'.",
+  "If the audio sounds like a scene request, transcribe the user's scene prompt naturally."
+].join(" ");
 
 async function readErrorMessage(response: Response): Promise<string> {
   const body = await response.text();

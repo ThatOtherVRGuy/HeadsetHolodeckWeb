@@ -1,4 +1,8 @@
 import type { FastifyInstance } from "fastify";
+import type {
+  CommandInterpretation,
+  CommandInterpreter
+} from "../openai/commandInterpreter.js";
 import type { TranscriptionClient } from "../openai/transcriptionClient.js";
 import type { DownloadedSplat } from "../worldlabs/downloadSplat.js";
 import type { WorldLabsClient } from "../worldlabs/worldLabsClient.js";
@@ -7,6 +11,7 @@ import type { WorldResult } from "../worldlabs/worldTypes.js";
 
 export interface VoiceToWorldRouteDeps {
   transcriptionClient: TranscriptionClient;
+  commandInterpreter?: CommandInterpreter;
   worldLabsClient: Pick<WorldLabsClient, "generateWorldFromText">;
   splatDownloader?: (
     world: WorldResult,
@@ -85,8 +90,23 @@ export async function registerVoiceToWorldRoute(
         file.mimetype,
         { signal: abortController.signal }
       );
+      const interpretation = await interpretTranscriptForCommands(
+        transcript,
+        abortController.signal
+      );
 
-      return reply.send({ transcript });
+      if (interpretation?.route === "command" && interpretation.canonicalCommand) {
+        return reply.send({
+          transcript: interpretation.canonicalCommand,
+          rawTranscript: transcript,
+          interpretation
+        });
+      }
+
+      return reply.send({
+        transcript,
+        ...(interpretation ? { interpretation } : {})
+      });
     } catch (error) {
       if (abortController.signal.aborted) {
         request.log.info({ err: error }, "transcription request aborted");
@@ -106,6 +126,24 @@ export async function registerVoiceToWorldRoute(
     function removeAbortListeners() {
       request.raw.off("aborted", abort);
       reply.raw.off("close", abortIfResponseDidNotFinish);
+    }
+
+    async function interpretTranscriptForCommands(
+      transcript: string,
+      signal: AbortSignal
+    ): Promise<CommandInterpretation | null> {
+      if (!deps.commandInterpreter) {
+        return null;
+      }
+
+      try {
+        return await deps.commandInterpreter.interpretTranscript(transcript, {
+          signal
+        });
+      } catch (error) {
+        request.log.warn({ err: error }, "command interpretation failed");
+        return null;
+      }
     }
   });
 

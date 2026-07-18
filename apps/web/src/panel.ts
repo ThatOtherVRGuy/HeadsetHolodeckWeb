@@ -12,6 +12,10 @@ import type { VoiceToWorldCoordinator } from "./holodeck/coordinator/voiceToWorl
 import type { WorldRenderer } from "./holodeck/rendering/worldRenderer";
 import type { HolodeckApi } from "./holodeck/api/holodeckApiClient";
 import {
+  looksLikeVoiceCommandAttempt,
+  looksLikeWorldGenerationPrompt
+} from "./holodeck/voiceCommand/intent";
+import {
   buildPanelViewModel,
   type LoadedWorldPanelInfo,
   type PanelViewModel
@@ -176,6 +180,16 @@ export async function stopVoicePromptAndGenerateWorld(): Promise<void> {
       if (commandResult.handled) {
         controls.state.forceState("Ready");
         controls.state.setStatusMessage(commandResult.message);
+        return;
+      }
+
+      if (!looksLikeWorldGenerationPrompt(transcript)) {
+        controls.state.clearErrorAndReturnToIdle();
+        controls.state.setStatusMessage(commandResult.message);
+        console.info("[Holodeck] transcript was not generated", {
+          transcript,
+          commandLike: looksLikeVoiceCommandAttempt(transcript)
+        });
         return;
       }
 

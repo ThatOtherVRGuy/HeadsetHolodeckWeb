@@ -3,6 +3,7 @@ import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildServer } from "./app.js";
 import { readServerEnv } from "./config/env.js";
+import { OpenAiCommandInterpreter } from "./openai/commandInterpreter.js";
 import { OpenAiTranscriptionClient } from "./openai/transcriptionClient.js";
 import { downloadSplat } from "./worldlabs/downloadSplat.js";
 import { WorldLabsClient } from "./worldlabs/worldLabsClient.js";
@@ -23,6 +24,7 @@ const app = await buildServer({
   },
   voiceToWorld: {
     transcriptionClient: new OpenAiTranscriptionClient(env.openAiApiKey),
+    commandInterpreter: new OpenAiCommandInterpreter(env.openAiApiKey),
     worldLabsClient,
     splatDownloader: async (world, options) => {
       const downloaded = await downloadSplat(world, {

@@ -9,12 +9,31 @@ import {
   parseScaleAmount
 } from "./units";
 
-export type VoiceCommandTarget = "world";
+export type VoiceCommandTarget = "world" | "me";
+export type VoiceVisibilityTarget = "holodeck" | "arch";
 export type VoiceCommandAxis = "x" | "y" | "z";
 
 export type VoiceCommandIntent =
   | {
       kind: "endProgram";
+      response: string;
+    }
+  | {
+      kind: "setVisibility";
+      target: VoiceVisibilityTarget;
+      visible: boolean;
+      response: string;
+    }
+  | {
+      kind: "transformObject";
+      target: VoiceCommandTarget;
+      operation: "resetTransform";
+      response: string;
+    }
+  | {
+      kind: "transformObject";
+      target: VoiceCommandTarget;
+      operation: "recenter";
       response: string;
     }
   | {
@@ -48,11 +67,47 @@ export function parseVoiceCommandIntent(text: string): VoiceCommandIntent | null
     return endProgramIntent;
   }
 
-  if (!referencesWorldTarget(text)) {
+  const visibilityIntent = parseVisibilityIntent(text);
+  if (visibilityIntent) {
+    return visibilityIntent;
+  }
+
+  const target = targetForText(text);
+  if (!target) {
     return null;
   }
 
-  return parseMoveIntent(text) ?? parseRotateIntent(text) ?? parseScaleIntent(text);
+  return (
+    parseResetTransformIntent(text, target) ??
+    parseRecenterIntent(text, target) ??
+    parseMoveIntent(text, target) ??
+    parseRotateIntent(text, target) ??
+    parseScaleIntent(text, target)
+  );
+}
+
+export function looksLikeVoiceCommandAttempt(text: string): boolean {
+  return (
+    parseVisibilityIntent(text) !== null ||
+    visibilityForText(text) !== null ||
+    targetForText(text) !== null ||
+    /\b(move|shift|translate|raise|lower|rotate|turn|spin|scale|resize|grow|shrink|reset|restore|recenter|re-center|center|centre)\b/i.test(
+      text
+    ) ||
+    /\b(the arch|holodeck|archway|doorway|my view|my position)\b/i.test(text)
+  );
+}
+
+export function looksLikeWorldGenerationPrompt(text: string): boolean {
+  if (hasExplicitWorldGenerationRequest(text)) {
+    return true;
+  }
+
+  if (looksLikeVoiceCommandAttempt(text)) {
+    return false;
+  }
+
+  return hasDescriptiveSceneSubject(text);
 }
 
 function parseEndProgramIntent(text: string): VoiceCommandIntent | null {
@@ -66,7 +121,75 @@ function parseEndProgramIntent(text: string): VoiceCommandIntent | null {
   };
 }
 
-function parseMoveIntent(text: string): VoiceCommandIntent | null {
+function parseVisibilityIntent(text: string): VoiceCommandIntent | null {
+  const visible = visibilityForText(text);
+  if (visible === null) {
+    return null;
+  }
+
+  const target = visibilityTargetForText(text);
+  if (!target) {
+    return null;
+  }
+
+  return {
+    kind: "setVisibility",
+    target,
+    visible,
+    response: `${visible ? "Showing" : "Hiding"} ${visibilityTargetLabel(target)}.`
+  };
+}
+
+function visibilityForText(text: string): boolean | null {
+  if (/\b(show|display|reveal|restore|enable)\b/i.test(text)) {
+    return true;
+  }
+
+  if (/\b(hide|dismiss|remove|disable)\b/i.test(text)) {
+    return false;
+  }
+
+  return null;
+}
+
+function visibilityTargetForText(text: string): VoiceVisibilityTarget | null {
+  if (/\b(arch|archway|doorway)\b/i.test(text)) {
+    return "arch";
+  }
+
+  if (/\bholodeck|room|static room|environment shell\b/i.test(text)) {
+    return "holodeck";
+  }
+
+  return null;
+}
+
+function hasExplicitWorldGenerationRequest(text: string): boolean {
+  return (
+    /\b(create|generate|build|make|render)\b.+\b(world|scene|environment|place|room|landscape|panorama|splat)\b/i.test(
+      text
+    ) ||
+    /\b(put|place|drop|take|transport)\s+me\s+(in|into|inside|to)\b/i.test(text) ||
+    /\b(show)\s+me\s+(a|an|the)\b/i.test(text)
+  );
+}
+
+function hasDescriptiveSceneSubject(text: string): boolean {
+  const trimmed = text.trim();
+  const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+  if (wordCount < 4) {
+    return false;
+  }
+
+  return /\b(park|forest|city|street|room|hall|circus|beach|mountain|valley|desert|island|garden|castle|labyrinth|lounge|museum|station|ship|planet|world|scene|landscape)\b/i.test(
+    trimmed
+  );
+}
+
+function parseMoveIntent(
+  text: string,
+  target: VoiceCommandTarget
+): VoiceCommandIntent | null {
   if (!/\b(move|shift|translate|raise|lower)\b/i.test(text)) {
     return null;
   }
@@ -80,16 +203,75 @@ function parseMoveIntent(text: string): VoiceCommandIntent | null {
 
   return {
     kind: "transformObject",
-    target: "world",
+    target,
     operation: "move",
     axis: direction.axis,
     direction: direction.sign,
     amount,
-    response: `Moving world ${direction.label} ${amount.originalPhrase}.`
+    response: `Moving ${targetLabel(target)} ${direction.label} ${amount.originalPhrase}.`
   };
 }
 
-function parseRotateIntent(text: string): VoiceCommandIntent | null {
+function parseResetTransformIntent(
+  text: string,
+  target: VoiceCommandTarget
+): VoiceCommandIntent | null {
+  if (
+    !(
+      /\b(reset|restore)\s+(the\s+)?(world|scene|environment|it|me|myself|player|rig|camera|view|viewpoint)\b/i.test(
+        text
+      ) ||
+      /\b(reset|restore)\s+(my|mine)\s+(position|pose|view|viewpoint|camera|rig)\b/i.test(
+        text
+      ) ||
+      /\b(world|scene|environment|it|me|myself|player|rig|camera|view|viewpoint)\s+(transform|pose|position|rotation|scale)?\s*(reset|restore)\b/i.test(
+        text
+      )
+    )
+  ) {
+    return null;
+  }
+
+  return {
+    kind: "transformObject",
+    target,
+    operation: "resetTransform",
+    response: `Resetting ${targetLabel(target)} transform.`
+  };
+}
+
+function parseRecenterIntent(
+  text: string,
+  target: VoiceCommandTarget
+): VoiceCommandIntent | null {
+  if (
+    !(
+      /\b(recenter|re-center|center|centre)\s+(the\s+)?(world|scene|environment|it|me|myself|player|rig|camera|view|viewpoint)\b/i.test(
+        text
+      ) ||
+      /\b(recenter|re-center|center|centre)\s+(my|mine)\s+(position|pose|view|viewpoint|camera|rig)\b/i.test(
+        text
+      ) ||
+      /\b(world|scene|environment|it|me|myself|player|rig|camera|view|viewpoint)\s+(back\s+)?(to\s+)?(the\s+)?(center|centre)\b/i.test(
+        text
+      )
+    )
+  ) {
+    return null;
+  }
+
+  return {
+    kind: "transformObject",
+    target,
+    operation: "recenter",
+    response: `Recentering ${targetLabel(target)}.`
+  };
+}
+
+function parseRotateIntent(
+  text: string,
+  target: VoiceCommandTarget
+): VoiceCommandIntent | null {
   if (!/\b(rotate|turn|spin)\b/i.test(text)) {
     return null;
   }
@@ -102,15 +284,22 @@ function parseRotateIntent(text: string): VoiceCommandIntent | null {
   const axis = axisForRotation(text);
   return {
     kind: "transformObject",
-    target: "world",
+    target,
     operation: "rotate",
     axis,
     amount,
-    response: `Rotating world ${amount.originalPhrase} on ${axisLabel(axis)} axis.`
+    response: `Rotating ${targetLabel(target)} ${amount.originalPhrase} on ${axisLabel(axis)} axis.`
   };
 }
 
-function parseScaleIntent(text: string): VoiceCommandIntent | null {
+function parseScaleIntent(
+  text: string,
+  target: VoiceCommandTarget
+): VoiceCommandIntent | null {
+  if (target !== "world") {
+    return null;
+  }
+
   if (!/\b(make|scale|resize|grow|shrink)\b/i.test(text)) {
     return null;
   }
@@ -129,8 +318,23 @@ function parseScaleIntent(text: string): VoiceCommandIntent | null {
   };
 }
 
-function referencesWorldTarget(text: string): boolean {
-  return /\b(world|scene|environment|it)\b/i.test(text);
+function targetForText(text: string): VoiceCommandTarget | null {
+  if (referencesMeTarget(text)) {
+    return "me";
+  }
+
+  if (/\b(world|scene|environment|it)\b/i.test(text)) {
+    return "world";
+  }
+
+  return null;
+}
+
+function referencesMeTarget(text: string): boolean {
+  return (
+    /\b(me|myself|player|rig|xr rig|camera|viewpoint)\b/i.test(text) ||
+    /\b(my|mine)\s+(position|pose|view|viewpoint|camera|rig)\b/i.test(text)
+  );
 }
 
 function directionForMove(text: string):
@@ -177,4 +381,12 @@ function axisForRotation(text: string): VoiceCommandAxis {
 
 function axisLabel(axis: VoiceCommandAxis): string {
   return axis === "y" ? "up" : axis;
+}
+
+function targetLabel(target: VoiceCommandTarget): string {
+  return target === "me" ? "me" : "world";
+}
+
+function visibilityTargetLabel(target: VoiceVisibilityTarget): string {
+  return target === "holodeck" ? "holodeck" : "arch";
 }
