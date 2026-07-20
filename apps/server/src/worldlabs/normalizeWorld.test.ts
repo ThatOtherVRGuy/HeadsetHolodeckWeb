@@ -143,7 +143,7 @@ it("filters malformed page worlds and trims the echoed request page token", () =
         worlds: [
           null,
           undefined,
-          "not-an-object" as unknown as never,
+          "not-an-object",
           { world_id: "   " },
           { world_id: "world-123", display_name: "Valid World" },
           { world_id: "world-456", display_name: "Second Valid" }
@@ -189,7 +189,7 @@ it("treats non-array page worlds as an empty list", () => {
   expect(
     normalizeWorldPage(
       {
-        worlds: "oops" as unknown as never,
+        worlds: "oops",
         next_page_token: " next-token "
       },
       { pageSize: 10, pageToken: " request-token " }

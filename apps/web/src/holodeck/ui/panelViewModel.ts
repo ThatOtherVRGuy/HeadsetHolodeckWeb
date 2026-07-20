@@ -21,10 +21,13 @@ export interface PanelViewModelInput {
   selectedModelLabel: string;
   rendererLabel: string;
   transcript?: string;
+  lastVoiceCommand?: string;
+  lastVoiceResult?: string;
   loadedWorld?: LoadedWorldPanelInfo | null;
   browser?: WorldLabsBrowserState;
   appElapsedMs: number;
   worldElapsedMs: number | null;
+  holodeckVisible?: boolean;
 }
 
 export interface OpsPanelView {
@@ -46,6 +49,9 @@ export interface OpsPanelView {
   deleteActionLabel: string;
   confirmActionLabel: string;
   cancelActionLabel: string;
+  voiceCommandLabel: string;
+  voiceResultLabel: string;
+  holodeckToggleLabel: string;
 }
 
 export interface InfoPanelView {
@@ -65,6 +71,7 @@ export interface StatusPanelView {
   health: string;
   level: PanelStatusLevel;
   browser: string;
+  voice: string;
 }
 
 export interface BrowserWorldCardView {
@@ -85,8 +92,9 @@ export interface PanelViewModel {
 }
 
 export function buildPanelViewModel(input: PanelViewModelInput): PanelViewModel {
-  if (isBrowserMode(input.browser?.mode)) {
-    return buildBrowserPanelView(input, input.browser);
+  const browser = input.browser;
+  if (browser && isBrowserMode(browser.mode)) {
+    return buildBrowserPanelView(input, browser);
   }
 
   const message =
@@ -106,6 +114,9 @@ export function buildPanelViewModel(input: PanelViewModelInput): PanelViewModel 
       deleteConfirmTitle: "",
       deleteConfirmDetail: "",
       deleteConfirmVisible: false,
+      voiceCommandLabel: voiceCommandLineFor(input),
+      voiceResultLabel: voiceResultLineFor(input),
+      holodeckToggleLabel: holodeckToggleLabelFor(input),
       ...defaultBrowserActions()
     },
     info: {
@@ -123,7 +134,8 @@ export function buildPanelViewModel(input: PanelViewModelInput): PanelViewModel 
       message,
       health: healthLineFor(input.appElapsedMs, input.worldElapsedMs),
       level: levelFor(input),
-      browser: "BROWSER --"
+      browser: "BROWSER --",
+      voice: voiceStatusLineFor(input)
     }
   };
 }
@@ -275,7 +287,10 @@ function buildBrowserPanelView(
       loadActionLabel: "LOAD",
       deleteActionLabel: "DELETE",
       confirmActionLabel: "CONFIRM",
-      cancelActionLabel: isConfirming ? "CANCEL" : "BACK"
+      cancelActionLabel: isConfirming ? "CANCEL" : "BACK",
+      voiceCommandLabel: voiceCommandLineFor(input),
+      voiceResultLabel: voiceResultLineFor(input),
+      holodeckToggleLabel: holodeckToggleLabelFor(input)
     },
     info: {
       title: isConfirming ? "CONFIRM DELETE" : "WORLDLABS BROWSER",
@@ -302,7 +317,8 @@ function buildBrowserPanelView(
       message,
       health: healthLineFor(input.appElapsedMs, input.worldElapsedMs),
       level: browser.errorMessage ? "error" : isConfirming ? "warning" : "info",
-      browser: browserStatusLine(browser)
+      browser: browserStatusLine(browser),
+      voice: voiceStatusLineFor(input)
     }
   };
 }
@@ -322,6 +338,45 @@ function defaultBrowserActions() {
     confirmActionLabel: "CONFIRM",
     cancelActionLabel: "BACK"
   };
+}
+
+function voiceCommandLineFor(input: PanelViewModelInput): string {
+  const command = cleanPanelText(
+    input.lastVoiceCommand || input.transcript || "",
+    64
+  );
+
+  return command ? `VOICE ${command}` : "VOICE --";
+}
+
+function voiceResultLineFor(input: PanelViewModelInput): string {
+  const result = cleanPanelText(input.lastVoiceResult || "", 64);
+
+  return result ? `ACK ${result}` : "ACK --";
+}
+
+function holodeckToggleLabelFor(input: PanelViewModelInput): string {
+  return input.holodeckVisible === false ? "DECK ON" : "DECK OFF";
+}
+
+function voiceStatusLineFor(input: PanelViewModelInput): string {
+  if (input.isRecording || input.state.current === "ListeningForCommand") {
+    return "VOICE LISTENING";
+  }
+
+  if (input.state.current === "Interpreting") {
+    return "VOICE INTERPRETING";
+  }
+
+  if (input.lastVoiceResult) {
+    return cleanPanelText(`VOICE ${input.lastVoiceResult}`, 72);
+  }
+
+  if (input.lastVoiceCommand || input.transcript) {
+    return voiceCommandLineFor(input);
+  }
+
+  return "VOICE READY";
 }
 
 function buildBrowserCard(

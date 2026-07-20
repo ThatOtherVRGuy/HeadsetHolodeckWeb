@@ -48,6 +48,12 @@
     color: #ffcb1f;
     text-align: center;
   }
+
+  #voiceStatusText {
+    font-size: 0.72;
+    color: #9f83cc;
+    text-align: center;
+  }
 </style>
 <div class="status-panel">
   <div class="status-row">
@@ -55,5 +61,6 @@
     <span id="statusText">Holodeck systems standing by.</span>
   </div>
   <span id="browserStatusText">BROWSER --</span>
+  <span id="voiceStatusText">VOICE READY</span>
   <span id="healthText">--:--:--  RUN 0:00:00  WORLD --:--:--</span>
 </div>

@@ -7,28 +7,29 @@ import type {
 } from "./worldTypes.js";
 
 export function normalizeWorldSummary(
-  world: WorldLabsWorld
+  world: unknown
 ): WorldLabsWorldSummary | null {
   if (!isObject(world)) {
     return null;
   }
 
-  const worldId = readString(world.world_id);
+  const worldData = world as WorldLabsWorld;
+  const worldId = readString(worldData.world_id);
   if (!worldId) {
     return null;
   }
 
-  const spzUrls = world.assets?.splats?.spz_urls ?? {};
+  const spzUrls = worldData.assets?.splats?.spz_urls ?? {};
   return {
     worldId,
-    displayName: readString(world.display_name) || worldId,
-    model: readString(world.model),
-    status: readString(world.status),
-    createdAt: readString(world.created_at),
-    updatedAt: readString(world.updated_at),
-    thumbnailUrl: readString(world.assets?.thumbnail_url),
-    prompt: readString(world.world_prompt?.text_prompt),
-    hasPanorama: Boolean(readString(world.assets?.imagery?.pano_url)),
+    displayName: readString(worldData.display_name) || worldId,
+    model: readString(worldData.model),
+    status: readString(worldData.status),
+    createdAt: readString(worldData.created_at),
+    updatedAt: readString(worldData.updated_at),
+    thumbnailUrl: readString(worldData.assets?.thumbnail_url),
+    prompt: readString(worldData.world_prompt?.text_prompt),
+    hasPanorama: Boolean(readString(worldData.assets?.imagery?.pano_url)),
     hasSplat: Object.values(spzUrls).some((url) => readString(url).length > 0)
   };
 }

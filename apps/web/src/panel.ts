@@ -39,8 +39,10 @@ interface HolodeckPanelControls {
   openLocalSplatFilePicker: () => void;
   api: HolodeckApi;
   setShellVisible: (visible: boolean) => void;
+  isShellVisible?: () => boolean;
   executeVoiceCommand?: (transcript: string) => {
     handled: boolean;
+    ok?: boolean;
     message: string;
   };
 }
@@ -63,6 +65,8 @@ interface PanelSessionState {
   rendererLabel: string;
   loadedWorld: LoadedWorldPanelInfo | null;
   worldReadyAt: number | null;
+  lastVoiceCommand: string;
+  lastVoiceResult: string;
 }
 
 const panelSession: PanelSessionState = {
@@ -70,7 +74,9 @@ const panelSession: PanelSessionState = {
   transcript: "",
   rendererLabel: "None",
   loadedWorld: null,
-  worldReadyAt: null
+  worldReadyAt: null,
+  lastVoiceCommand: "",
+  lastVoiceResult: ""
 };
 
 function currentPanelView(controls: HolodeckPanelControls): PanelViewModel {
@@ -80,12 +86,15 @@ function currentPanelView(controls: HolodeckPanelControls): PanelViewModel {
     isGenerating: panelSession.isGenerating,
     selectedModelLabel: SELECTED_MODEL_LABEL,
     transcript: panelSession.transcript,
+    lastVoiceCommand: panelSession.lastVoiceCommand,
+    lastVoiceResult: panelSession.lastVoiceResult,
     rendererLabel: panelSession.rendererLabel,
     loadedWorld: panelSession.loadedWorld,
     browser: browserState,
     appElapsedMs: Date.now() - APP_STARTED_AT,
     worldElapsedMs:
-      panelSession.worldReadyAt === null ? null : Date.now() - panelSession.worldReadyAt
+      panelSession.worldReadyAt === null ? null : Date.now() - panelSession.worldReadyAt,
+    holodeckVisible: controls.isShellVisible?.() ?? true
   });
 }
 
@@ -105,6 +114,8 @@ export function resetGeneratedWorldPanelSession(): void {
   panelSession.rendererLabel = "None";
   panelSession.loadedWorld = null;
   panelSession.worldReadyAt = null;
+  panelSession.lastVoiceCommand = "";
+  panelSession.lastVoiceResult = "";
   updateOpsPanel();
 }
 
@@ -129,6 +140,8 @@ export async function startVoicePromptRecording(): Promise<void> {
     await controls.recorder.start();
     controls.state.forceState("ListeningForCommand");
     controls.state.setStatusMessage("Listening for world prompt.");
+    panelSession.lastVoiceCommand = "";
+    panelSession.lastVoiceResult = "Listening.";
     console.info("[Holodeck] voice recording started");
   } catch (error) {
     console.warn("[Holodeck] voice recording failed to start", error);
@@ -173,9 +186,12 @@ export async function stopVoicePromptAndGenerateWorld(): Promise<void> {
       const transcript = await controls.api.transcribeAudio(audio);
       console.info("[Holodeck] voice transcript received", { transcript });
       panelSession.transcript = transcript;
+      panelSession.lastVoiceCommand = transcript;
+      panelSession.lastVoiceResult = "Interpreting.";
       updateOpsPanel();
       const commandResult = controls.executeVoiceCommand(transcript);
       console.info("[Holodeck] voice command route result", commandResult);
+      panelSession.lastVoiceResult = commandResult.message;
 
       if (commandResult.handled) {
         controls.state.forceState("Ready");
@@ -194,6 +210,7 @@ export async function stopVoicePromptAndGenerateWorld(): Promise<void> {
       }
 
       console.info("[Holodeck] transcript was not a local command; generating world");
+      panelSession.lastVoiceResult = "Generating world.";
       const world = await controls.coordinator.generateFromTranscript(transcript);
       applyGeneratedWorldSession(world);
       return;
@@ -220,6 +237,8 @@ function applyGeneratedWorldSession(
   }
 
   panelSession.transcript = world.transcript;
+  panelSession.lastVoiceCommand = world.transcript;
+  panelSession.lastVoiceResult = "World ready.";
   panelSession.rendererLabel = hasSplatSource(world) ? "Splat" : "Panorama";
   panelSession.loadedWorld = {
     title: world.displayName || world.transcript || "WORLD LABS WORLD",
@@ -325,6 +344,9 @@ function applyOpsView(document: UIKitDocument, view: PanelViewModel): void {
   setText(document, "deleteWorldButton", view.ops.deleteActionLabel);
   setText(document, "confirmDeleteButton", view.ops.confirmActionLabel);
   setText(document, "cancelBrowserButton", view.ops.cancelActionLabel);
+  setText(document, "voiceCommandText", view.ops.voiceCommandLabel);
+  setText(document, "voiceResultText", view.ops.voiceResultLabel);
+  setText(document, "holodeckToggleButton", view.ops.holodeckToggleLabel);
   setElementDisplay(
     document,
     "worldDeleteConfirm",
@@ -365,6 +387,7 @@ function applyStatusView(document: UIKitDocument, view: PanelViewModel): void {
   setText(document, "statusModeText", view.status.mode);
   setText(document, "statusText", view.status.message);
   setText(document, "browserStatusText", view.status.browser);
+  setText(document, "voiceStatusText", view.status.voice);
   setText(document, "healthText", view.status.health);
 }
 
@@ -536,6 +559,22 @@ function cancelWorldLabsBrowser(controls: HolodeckPanelControls): void {
   signalBrowserUpdate(controls, "WorldLabs browser closed.");
 }
 
+function executeOpsPanelCommand(
+  controls: HolodeckPanelControls,
+  command: string
+): void {
+  if (!controls.executeVoiceCommand) {
+    controls.state.setStatusMessage("Voice command controls unavailable.");
+    return;
+  }
+
+  panelSession.lastVoiceCommand = command;
+  const result = controls.executeVoiceCommand(command);
+  panelSession.lastVoiceResult = result.message;
+  controls.state.setStatusMessage(result.message);
+  updateOpsPanel();
+}
+
 function bindClick(
   document: UIKitDocument,
   id: string,
@@ -698,6 +737,23 @@ export class PanelSystem extends createSystem({
         ),
         bindClick(document, "cancelBrowserButton", () =>
           cancelWorldLabsBrowser(controls)
+        ),
+        bindClick(document, "hideArchButton", () =>
+          executeOpsPanelCommand(controls, "hide arch")
+        ),
+        bindClick(document, "holodeckToggleButton", () =>
+          executeOpsPanelCommand(
+            controls,
+            controls.isShellVisible?.() === false
+              ? "show holodeck"
+              : "hide holodeck"
+          )
+        ),
+        bindClick(document, "resetWorldButton", () =>
+          executeOpsPanelCommand(controls, "reset world")
+        ),
+        bindClick(document, "recenterWorldButton", () =>
+          executeOpsPanelCommand(controls, "recenter world")
         ),
         ...Array.from({ length: 9 }, (_, index) =>
           bindClick(document, `worldCard${index}`, async () => {

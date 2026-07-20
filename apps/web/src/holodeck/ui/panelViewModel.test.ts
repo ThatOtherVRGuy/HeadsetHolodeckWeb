@@ -30,11 +30,32 @@ describe("buildPanelViewModel", () => {
     expect(view.ops.primaryActionLabel).toBe("Record");
     expect(view.ops.mode).toBe("IDLE");
     expect(view.ops.modelLabel).toBe("Model: Marble 1.1");
+    expect(view.ops.holodeckToggleLabel).toBe("DECK OFF");
     expect(view.info.title).toBe("NO WORLD LOADED");
     expect(view.info.source).toBe("SOURCE STATIC SHELL");
     expect(view.status.mode).toBe("READY");
     expect(view.status.message).toBe("Holodeck systems standing by.");
+    expect(view.status.voice).toBe("VOICE READY");
     expect(view.status.health).toMatch(/RUN 0:00:12  WORLD --:--:--$/);
+  });
+
+  it("labels the holodeck toggle from current visibility", () => {
+    const hiddenView = buildPanelViewModel({
+      state: {
+        current: "Ready",
+        errorMessage: "",
+        statusMessage: "Hiding holodeck."
+      },
+      isRecording: false,
+      isGenerating: false,
+      selectedModelLabel: "Marble 1.1",
+      rendererLabel: "Splat",
+      holodeckVisible: false,
+      appElapsedMs: 12_000,
+      worldElapsedMs: 1_000
+    });
+
+    expect(hiddenView.ops.holodeckToggleLabel).toBe("DECK ON");
   });
 
   it("shows recording state as generate-ready", () => {
@@ -57,6 +78,7 @@ describe("buildPanelViewModel", () => {
     expect(view.ops.detail).toBe("Listening for world prompt.");
     expect(view.status.mode).toBe("REC");
     expect(view.status.level).toBe("info");
+    expect(view.status.voice).toBe("VOICE LISTENING");
   });
 
   it("shows generation progress and transcript", () => {
@@ -82,6 +104,28 @@ describe("buildPanelViewModel", () => {
     expect(view.info.renderer).toBe("RENDERER Splat");
     expect(view.status.mode).toBe("GEN");
     expect(view.status.message).toBe("Constructing scene. Poll 3, 15s");
+  });
+
+  it("surfaces the last local voice command and acknowledgement", () => {
+    const view = buildPanelViewModel({
+      state: {
+        current: "Ready",
+        errorMessage: "",
+        statusMessage: "Hiding arch."
+      },
+      isRecording: false,
+      isGenerating: false,
+      selectedModelLabel: "Marble 1.1",
+      rendererLabel: "None",
+      lastVoiceCommand: "hide arch",
+      lastVoiceResult: "Hiding arch.",
+      appElapsedMs: 12_000,
+      worldElapsedMs: null
+    });
+
+    expect(view.ops.voiceCommandLabel).toBe("VOICE hide arch");
+    expect(view.ops.voiceResultLabel).toBe("ACK Hiding arch.");
+    expect(view.status.voice).toBe("VOICE Hiding arch.");
   });
 
   it("shows local splat ready details", () => {

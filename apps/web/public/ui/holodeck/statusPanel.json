@@ -51,12 +51,23 @@
         "sourceTag": "span",
         "type": "custom",
         "children": [
+          "VOICE READY"
+        ],
+        "properties": {
+          "id": "voiceStatusText"
+        },
+        "dataUid": "uid-6"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
           "--:--:--  RUN 0:00:00  WORLD --:--:--"
         ],
         "properties": {
           "id": "healthText"
         },
-        "dataUid": "uid-6"
+        "dataUid": "uid-7"
       }
     ],
     "properties": {
@@ -118,6 +129,13 @@
       "content": {
         "fontSize": "0.72",
         "color": "#ffcb1f",
+        "textAlign": "center"
+      }
+    },
+    "__id__voiceStatusText": {
+      "content": {
+        "fontSize": "0.72",
+        "color": "#9f83cc",
         "textAlign": "center"
       }
     }
@@ -183,63 +201,83 @@
         "column": 20
       }
     },
-    "uid-1": {
+    "__id__voiceStatusText": {
       "start": {
         "line": 51,
+        "column": 2
+      },
+      "end": {
+        "line": 51,
+        "column": 18
+      }
+    },
+    "uid-1": {
+      "start": {
+        "line": 57,
         "column": 0
       },
       "end": {
-        "line": 58,
+        "line": 65,
         "column": 6
       }
     },
     "uid-2": {
       "start": {
-        "line": 52,
+        "line": 58,
         "column": 2
       },
       "end": {
-        "line": 55,
+        "line": 61,
         "column": 8
       }
     },
     "uid-3": {
       "start": {
-        "line": 53,
+        "line": 59,
         "column": 4
       },
       "end": {
-        "line": 53,
+        "line": 59,
         "column": 60
       }
     },
     "uid-4": {
       "start": {
-        "line": 54,
+        "line": 60,
         "column": 4
       },
       "end": {
-        "line": 54,
+        "line": 60,
         "column": 62
       }
     },
     "uid-5": {
       "start": {
-        "line": 56,
+        "line": 62,
         "column": 2
       },
       "end": {
-        "line": 56,
+        "line": 62,
         "column": 48
       }
     },
     "uid-6": {
       "start": {
-        "line": 57,
+        "line": 63,
         "column": 2
       },
       "end": {
-        "line": 57,
+        "line": 63,
+        "column": 47
+      }
+    },
+    "uid-7": {
+      "start": {
+        "line": 64,
+        "column": 2
+      },
+      "end": {
+        "line": 64,
         "column": 68
       }
     }

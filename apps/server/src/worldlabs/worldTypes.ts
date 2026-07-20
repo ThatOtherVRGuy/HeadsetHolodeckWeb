@@ -24,7 +24,7 @@ export interface WorldLabsWorld {
 }
 
 export interface WorldLabsListResponse {
-  worlds?: WorldLabsWorld[];
+  worlds?: unknown;
   next_page_token?: string | null;
 }
 

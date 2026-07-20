@@ -107,6 +107,42 @@
     cursor: pointer;
   }
 
+  .voice-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 0.08;
+    padding: 0.14;
+    border-color: #ffcb1f;
+    border-width: 0.05;
+    border-radius: 0.1;
+  }
+
+  .voice-line {
+    color: #ffcb1f;
+    font-size: 0.42;
+    text-align: left;
+  }
+
+  .command-row {
+    display: flex;
+    flex-direction: row;
+    gap: 0.14;
+  }
+
+  .command-button {
+    width: 4.95;
+    height: 1.0;
+    padding: 0.1;
+    background-color: #9f83cc;
+    border-color: #9f83cc;
+    color: #050608;
+    font-size: 0.39;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 0.1;
+    cursor: pointer;
+  }
+
   .small-button {
     width: 6.3;
     height: 1.75;
@@ -350,6 +386,16 @@
         <button id="refreshWorldsButton" class="ops-button">Unload</button>
         <span id="opsModeText" class="page-label">IDLE</span>
         <button id="deleteWorldButton" class="ops-button">Delete</button>
+      </div>
+      <div class="voice-strip">
+        <span id="voiceCommandText" class="voice-line">VOICE --</span>
+        <span id="voiceResultText" class="voice-line">ACK --</span>
+        <div class="command-row">
+          <button id="hideArchButton" class="command-button">ARCH OFF</button>
+          <button id="holodeckToggleButton" class="command-button">DECK OFF</button>
+          <button id="resetWorldButton" class="command-button">WORLD RESET</button>
+          <button id="recenterWorldButton" class="command-button">WORLD CENTER</button>
+        </div>
       </div>
       <span id="selectedWorldText">WORLDLABS --</span>
       <div id="worldDeleteConfirm" class="confirm-panel">

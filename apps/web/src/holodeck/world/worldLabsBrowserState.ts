@@ -25,6 +25,11 @@ interface LoadWorldLabsPageOptions {
   append?: boolean;
 }
 
+type WorldLabsBrowserStateBase = Omit<
+  WorldLabsBrowserState,
+  "selectedWorld" | "canLoadSelectedWorld"
+>;
+
 export function createWorldLabsBrowserState(
   options: WorldLabsBrowserStateOptions = {}
 ): WorldLabsBrowserState {
@@ -142,7 +147,7 @@ export function failWorldLabsBrowser(
 }
 
 function buildWorldLabsBrowserState(
-  state: WorldLabsBrowserState
+  state: WorldLabsBrowserStateBase
 ): WorldLabsBrowserState {
   const worlds = filterHiddenWorlds(state.worlds, state.hiddenDeletedWorldIds);
   const selectedWorld =

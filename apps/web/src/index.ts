@@ -346,6 +346,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     openLocalSplatFilePicker: () => localSplatFileInput.click(),
     api,
     setShellVisible: setHolodeckVisible,
+    isShellVisible: () => holodeckVisible,
     executeVoiceCommand
   });
   localSplatFileInput.addEventListener("change", () => {
@@ -599,6 +600,11 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
 
 function tuneXrLocomotion(world: World): void {
   const locomotionSystem = world.getSystem(LocomotionSystem);
+  if (!locomotionSystem) {
+    console.warn("[Holodeck] XR locomotion system was not available for tuning");
+    return;
+  }
+
   locomotionSystem.config.slidingSpeed.value = 0;
   locomotionSystem.update = () => {};
 
@@ -608,6 +614,10 @@ function tuneXrLocomotion(world: World): void {
 
     try {
       const slideSystem = world.getSystem(SlideSystem);
+      if (!slideSystem) {
+        throw new Error("SlideSystem unavailable");
+      }
+
       slideSystem.config.maxSpeed.value = 0;
       installHolodeckMoveAxisOverride(slideSystem);
       console.info("[Holodeck] XR locomotion speed tuned", {
@@ -816,7 +826,7 @@ function movementSnapshot(
   let slideMaxSpeed: number | null = null;
 
   try {
-    slideMaxSpeed = world.getSystem(SlideSystem).config.maxSpeed.value;
+    slideMaxSpeed = world.getSystem(SlideSystem)?.config.maxSpeed.value ?? null;
   } catch {
     slideMaxSpeed = null;
   }
@@ -939,8 +949,8 @@ declare global {
     holodeckCompose?: HolodeckComposeController;
     holodeckDebug?: {
       world?: World;
-      locomotionSystem?: () => LocomotionSystem;
-      slideSystem?: () => SlideSystem;
+      locomotionSystem?: () => LocomotionSystem | undefined;
+      slideSystem?: () => SlideSystem | undefined;
       movementSnapshot?: () => unknown;
       splatFrame?: SplatFrameDiagnostics;
       splatWorldId?: string;
